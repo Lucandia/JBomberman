@@ -15,7 +15,6 @@ public class GameApp extends Application {
         
         // Use a StackPane as the root to allow layering of the map and the player
         StackPane root = new StackPane();
-        Pane gameLayer = new Pane();
 
         // Initialize the map and HUD
         MapModel mapModel = new MapModel(1, 300, 230); // Example dimensions
@@ -27,8 +26,7 @@ public class GameApp extends Application {
 
         // Layer the map and the player on the StackPane
         root.getChildren().add(mapView.getMapPane()); // Map as the base layer
-        gameLayer.getChildren().add(playerView.getPlayerSprite()); // Add Bomberman on top of the map
-        root.getChildren().add(gameLayer); // Add the game layer to the root
+        root.getChildren().add(playerView.getPlayerSprite()); // Add Bomberman on top of the map
 
         // For the HUD, use a BorderPane as the outer container
         BorderPane borderPane = new BorderPane();

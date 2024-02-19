@@ -1,5 +1,5 @@
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
@@ -11,7 +11,8 @@ import javafx.beans.property.SimpleDoubleProperty;
 public abstract class EntityModel {
 
     // Properties
-    private final ObjectProperty<ObservablePoint2D> position = new SimpleObjectProperty<>();
+    private final IntegerProperty x = new SimpleIntegerProperty();
+    private final IntegerProperty y = new SimpleIntegerProperty();
     private final DoubleProperty velocity = new SimpleDoubleProperty();
 
     /**
@@ -19,7 +20,7 @@ public abstract class EntityModel {
      */
     public EntityModel() {
         // Initialize with default values if necessary
-        this(new ObservablePoint2D(0, 0), 0);
+        this(0, 0, 0);
     }
 
     /**
@@ -27,18 +28,29 @@ public abstract class EntityModel {
      * 
      * @param initialPosition The initial position of the entity on the game board.
      */
-    public EntityModel(ObservablePoint2D initialPosition, double velocity) {
-        this.position.set(initialPosition);
+    public EntityModel(int x, int y, double velocity) {
+        this.x.set(x);
+        this.y.set(x);
         this.velocity.set(velocity);
     }
 
+
     /**
-     * Gets the position property of the entity.
+     * Gets the x property of the entity.
      * 
-     * @return The position property of the entity.
+     * @return The x property of the entity.
      */
-    public ObjectProperty<ObservablePoint2D> positionProperty() {
-        return position;
+    public IntegerProperty xProperty() {
+        return x;
+    }
+
+    /**
+     * Gets the y property of the entity.
+     * 
+     * @return The y property of the entity.
+     */
+    public IntegerProperty yProperty() {
+        return y;
     }
 
     /**
@@ -49,61 +61,17 @@ public abstract class EntityModel {
     public DoubleProperty velocityProperty() {
         return velocity;
     }
-    
-    /**
-     * Gets the velocity of the entity.
-     * 
-     * @return The velocity of the entity.
-     */
-    public double getVelocity() {
-        return velocity.get();
-    }
-    
 
     /**
-     * Gets the position of the entity.
+     * Sets the position of the entity using an ObservablePoint2D object.
      * 
-     * @return The position of the entity.
+     * @param position The new position of the entity.
      */
-    public ObservablePoint2D getPosition() {
-        return position.get();
-    }
-
-    /**
-     * Gets the X component of the entity's position.
-     * 
-     * @return The X component of the position property.
-     */
-    public double getX() {
-        return position.get().getX();
-    }
-
-    /**
-     * Gets the Y component of the entity's position.
-     * 
-     * @return The Y component of the position property.
-     */
-    public double getY() {
-        return position.get().getY();
-    }
-
-    /**
-     * Sets the entity's position using x and y coordinates.
-     * 
-     * @param x The X coordinate of the new position.
-     * @param y The Y coordinate of the new position.
-     */
-    public void setPosition(double x, double y) {
-        position.set(new ObservablePoint2D(x, y));
-    }
-
-    /**
-     * Sets the velocity of the entity.
-     * 
-     * @param velocity The velocity value to set.
-     */
-    public void setVelocity(double velocity) {
-        this.velocity.set(velocity);
+    public void move(int dx, int dy) {
+        int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
+        int y_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dy)); // explicit cast to int
+        xProperty().set(xProperty().get() + x_move);
+        yProperty().set(yProperty().get() + y_move);
     }
 
     /**

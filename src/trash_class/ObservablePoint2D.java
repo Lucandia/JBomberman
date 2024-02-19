@@ -1,3 +1,4 @@
+package trash_class;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Point2D;
@@ -119,7 +120,19 @@ public class ObservablePoint2D {
     public ObservablePoint2D multiply(double factor) {
         this.x.set(getX() * factor);
         this.y.set(getY() * factor);
-        return new ObservablePoint2D(getX() * factor, getY() * factor);
+        return new ObservablePoint2D(getX(), getY());
+    }
+
+    /**
+     * Multiplies the x and y coordinates of the point by the specified factor.
+     *
+     * @param factor The factor to multiply the coordinates by.
+     * @return A new ObservablePoint2D object with the updated coordinates.
+     */
+    public ObservablePoint2D multiply(ObservablePoint2D newPoint2d) {
+        this.x.set(getX() * newPoint2d.getX());
+        this.y.set(getY() * newPoint2d.getY());
+        return new ObservablePoint2D(getX(), getY());
     }
     
 }

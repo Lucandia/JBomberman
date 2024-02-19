@@ -1,4 +1,3 @@
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -14,8 +13,8 @@ public class PlayerModel extends EntityModel {
      * 
      * @param initialPosition The starting position of the player in the game world.
      */
-    public PlayerModel(ObservablePoint2D initialPosition, double velocity) {
-        super(initialPosition, velocity);
+    public PlayerModel(int initialX, int initialY, double velocity) {
+        super(initialX, initialY, velocity);
         // Set default values for lives and score or any additional setup.
         this.lives.set(3); // Example default lives
         this.score.set(0); // Initial score
@@ -62,11 +61,7 @@ public class PlayerModel extends EntityModel {
     @Override
     public void update(double elapsedTime) {
         // Update the player's state. This method would be called each frame or update cycle.
-
-        // Example: Update the player's position based on velocity
-        ObservablePoint2D velocity = new ObservablePoint2D(this.getVelocity(), getVelocity());
-        ObservablePoint2D newPosition = this.getPosition().add(velocity.multiply(elapsedTime));
-        this.setPosition(newPosition.getX(), newPosition.getY());
+        // Example: Update the player's position based on velocity and elapsed time.
         
         // Example movement update could be applied here, handling user input, etc.
     }
