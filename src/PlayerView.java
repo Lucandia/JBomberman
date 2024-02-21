@@ -44,8 +44,10 @@ public class PlayerView {
                 walkAnimation.stop();
             }
             walkAnimation = new Timeline(
-                new KeyFrame(Duration.seconds(0.3 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 15, 24))),
-                new KeyFrame(Duration.seconds(2 * 0.3 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 15, 24)))
+                new KeyFrame(Duration.seconds(0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 15, 24))),
+                new KeyFrame(Duration.seconds(2 * 0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24))),
+                new KeyFrame(Duration.seconds(3 * 0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 15, 24))),
+                new KeyFrame(Duration.seconds(4 * 0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24)))
             );
             walkAnimation.setCycleCount(Animation.INDEFINITE);
             walkAnimation.play();

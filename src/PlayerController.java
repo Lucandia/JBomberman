@@ -1,7 +1,11 @@
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 
 public class PlayerController {
+    private final Set<KeyCode> keysPressed = ConcurrentHashMap.newKeySet(); // per far muovere il player appena si preme un tasto
     private PlayerModel model;
     private PlayerView view;
     private Scene scene;
@@ -15,36 +19,54 @@ public class PlayerController {
 
     private void attachEventListeners() {
         scene.setOnKeyPressed(event -> {
-            int moveAmount = 2;
             KeyCode code = event.getCode();
-            switch (code) {
-                case UP:
-                    view.startWalking("UP");
-                    model.move(0, -moveAmount); 
-                    break;
-                case DOWN:
-                   view.startWalking("DOWN");
-                    model.move(0, moveAmount); 
-                    break;
-                case LEFT:
-                  view.startWalking("LEFT");
-                    model.move(-moveAmount, 0); 
-                    break;
-                case RIGHT:
-                    view.startWalking("RIGHT");
-                    model.move(moveAmount, 0); 
-                    break;
-                case DIGIT1:
-                    model.velocityProperty().set(model.velocityProperty().get() - 0.1);
-                    break;
-                case DIGIT2:
-                    model.velocityProperty().set(model.velocityProperty().get() + 0.1);
-                    break;
-                default:
-                    view.stopWalking(); // This will stop any walking animation if a key is pressed that is not for movement
-                    break;
+            if (!keysPressed.contains(code)) { // Check to prevent repeated calls for the same key press
+                keysPressed.add(code);
+                updateMovement(); // Move as soon as the key is pressed
             }
         });
-        scene.setOnKeyReleased(event -> view.stopWalking());
+        scene.setOnKeyReleased(event -> {
+            keysPressed.remove(event.getCode());
+            updateMovement();
+        });
     }
+    
+    private void updateMovement() {
+        int moveAmount = 2;
+        boolean moved = false; // il player e' fermo di default
+    
+        if (keysPressed.contains(KeyCode.UP)) {
+            model.startMoving("UP");
+            view.startWalking("UP");
+            moved = true;
+        }
+        if (keysPressed.contains(KeyCode.DOWN)) {
+            model.startMoving("DOWN");
+            view.startWalking("DOWN");
+            moved = true;
+        }
+        if (keysPressed.contains(KeyCode.LEFT)) {
+            model.startMoving("LEFT");
+            view.startWalking("LEFT");
+            moved = true;
+        }
+        if (keysPressed.contains(KeyCode.RIGHT)) {
+            model.startMoving("RIGHT");
+            view.startWalking("RIGHT");
+            moved = true;
+        }
+        if (keysPressed.contains(KeyCode.DIGIT1)) {
+            model.velocityProperty().set(model.velocityProperty().get() + 0.1);
+            moved = true;
+        }
+        if (keysPressed.contains(KeyCode.DIGIT2)) {
+            model.velocityProperty().set(model.velocityProperty().get() - 0.1);
+            moved = true;
+        }
+        if (!moved) {
+            model.stopMoving();
+            view.stopWalking(); // ferma il player
+        }
+    }
+    
 }

@@ -14,13 +14,18 @@ public abstract class EntityModel {
     private final IntegerProperty x = new SimpleIntegerProperty();
     private final IntegerProperty y = new SimpleIntegerProperty();
     private final DoubleProperty velocity = new SimpleDoubleProperty();
+    private double timeSinceLastMove = 0.0;
+    private final double delayMove = 0.07; // Time in seconds between moves
+
+    private boolean isMoving = false;
+    private int[] lastDirection = {0, 0};
 
     /**
      * Default constructor for EntityModel.
      */
     public EntityModel() {
         // Initialize with default values if necessary
-        this(0, 0, 0);
+        this(0, 0, 1);
     }
 
     /**
@@ -75,12 +80,58 @@ public abstract class EntityModel {
     }
 
     /**
-     * Abstract method to update the entity's state. This should be called
+     * Starts the walking animation for the entity in the specified direction.
+     * 
+     * @param direction The direction in which the entity should start walking.
+     */
+    public void startMoving(String direction) {
+        switch (direction) {
+            case "UP":
+                lastDirection[0] = 0;
+                lastDirection[1] = -1;
+                isMoving = true;
+                break;
+            case "DOWN":
+                lastDirection[0] = 0;
+                lastDirection[1] = 1;
+                isMoving = true;
+                break;
+            case "LEFT":
+                lastDirection[0] = -1;
+                lastDirection[1] = 0;
+                isMoving = true;
+                break;
+            case "RIGHT":
+                lastDirection[0] = 1;
+                lastDirection[1] = 0;
+                isMoving = true;
+                break;
+            default:
+                isMoving = false;
+                break;
+        }
+    }
+
+    /**
+     * Stops the walking animation for the entity.
+     */
+    public void stopMoving() {
+        isMoving = false;
+    }
+
+    /**
+     * Method to update the entity's state. This should be called
      * on every frame or update interval.
      * 
      * @param elapsedTime The time elapsed since the last update.
      */
-    public abstract void update(double elapsedTime);
+    public void update(double elapsedTime){
+        timeSinceLastMove += elapsedTime;
+        // il tempo di delay viene diviso per la velocita' in modo da diminuire se aumenta la velocita'
+        if (isMoving && timeSinceLastMove >= delayMove / velocity.get()) {
+            move(lastDirection[0], lastDirection[1]);
+            timeSinceLastMove = 0.0; // Reset the timer
+        }
+    }
 
-    // Additional common methods for game entities would go here
 }

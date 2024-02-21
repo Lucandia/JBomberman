@@ -58,9 +58,10 @@ public class PlayerModel extends EntityModel {
         }
     }
 
+
     @Override
     public void update(double elapsedTime) {
-        // Update the player's state. This method would be called each frame or update cycle.
+        super.update(elapsedTime);
         // Example: Update the player's position based on velocity and elapsed time.
         
         // Example movement update could be applied here, handling user input, etc.
