@@ -5,11 +5,11 @@ import javafx.scene.image.WritableImage;
 
 public class StageView {
     private Pane pane = new Pane(); // Pane to hold the stage and tiles
-    private int tileSize = 16; // Assuming each tile is 16x16 pixels
     private Image stageImage; // Background image of the stage
     private Image tilesImage; // Image containing tile sprites
 
     public StageView(int levelNumber, StageModel stage) {
+        int tileSize = stage.getTileSize(); // Get the size of each tile
         // Load stage and tiles images based on the level number
         stageImage = new Image(getClass().getResourceAsStream("resources/sprites/level" + levelNumber + "_stage.png"));
         tilesImage = new Image(getClass().getResourceAsStream("resources/sprites/level" + levelNumber + "_tiles.png"));

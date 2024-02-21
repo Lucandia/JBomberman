@@ -13,8 +13,8 @@ public class PlayerModel extends EntityModel {
      * 
      * @param initialPosition The starting position of the player in the game world.
      */
-    public PlayerModel(int initialX, int initialY, double velocity) {
-        super(initialX, initialY, velocity);
+    public PlayerModel(int initialX, int initialY, double velocity, StageModel stage) {
+        super(initialX, initialY, velocity,  new int[] {14, 14}, new int[] {7, 17}, stage);
         // Set default values for lives and score or any additional setup.
         this.lives.set(3); // Example default lives
         this.score.set(0); // Initial score

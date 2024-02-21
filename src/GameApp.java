@@ -10,20 +10,18 @@ public class GameApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // initialize playerModel
-        playerModel = new PlayerModel(32, 0, 1);
-        
-        // Use a StackPane as the root to allow layering of the map and the player
+                // Use a StackPane as the root to allow layering of the map and the player
         StackPane root = new StackPane();
         Pane gameLayer = new Pane();
 
         // Initialize the map and HUD
         // MapModel mapModel = new MapModel(1, 300, 230); // Example dimensions
         StageModel stageModel = new StageModel();
-        StageView stageView = new StageView(1, stageModel);
+        StageView stageView = new StageView(2, stageModel);
         // HUDView hudView = new HUDView(playerModel);
 
-        // Initialize the player view, and controller
+        // initialize playerModel, view, and controller
+        playerModel = new PlayerModel(32, 16, 1, stageModel);
         PlayerView playerView = new PlayerView(playerModel); // Pass a new Pane as the gamePane for player
 
         // Layer the map and the player on the StackPane

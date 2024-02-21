@@ -32,7 +32,6 @@ public class PlayerController {
     }
     
     private void updateMovement() {
-        int moveAmount = 2;
         boolean moved = false; // il player e' fermo di default
     
         if (keysPressed.contains(KeyCode.UP)) {

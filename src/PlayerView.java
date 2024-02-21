@@ -11,7 +11,7 @@ import java.util.Map;
 public class PlayerView {
     private final ImageView playerSprite;
     private PlayerModel model;
-    private String lastDirection = "DOWN"; // Default direction
+    private String lastDirection;
     // Create a fixed HashMap with keys and values
     private static final Map<String, Integer> directionSprite = Map.of("DOWN", 64, "LEFT", 112, "RIGHT", 160, "UP", 208);
     private Timeline walkAnimation = null;
@@ -27,8 +27,8 @@ public class PlayerView {
         playerSprite.setViewport(new Rectangle2D(64, 0, 15, 24)); // Adjust x, y, width, and height accordingly
 
         // Bind the ImageView's position to the model's position
-        playerSprite.xProperty().bind(model.xProperty());
-        playerSprite.yProperty().bind(model.yProperty());
+        playerSprite.layoutXProperty().bind(model.xProperty());
+        playerSprite.layoutYProperty().bind(model.yProperty());
     }
 
     public ImageView getPlayerSprite() {
