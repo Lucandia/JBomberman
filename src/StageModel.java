@@ -63,6 +63,12 @@ public class StageModel {
         return getTile(tileX, tileY);
     }
 
+    public int[] getTileStartCoordinates(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        return new int[] {tileX * tileSize, tileY * tileSize};
+    }
+
     public boolean isBorder(int x, int y) {
         return x < 2 * tileSize || x >= (width - 3) * tileSize || y < tileSize || y >= (height - 2) * tileSize;
     }

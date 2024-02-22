@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 public class PlayerModel extends EntityModel {
     private final IntegerProperty lives = new SimpleIntegerProperty();
     private final IntegerProperty score = new SimpleIntegerProperty();
+    private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
 
     /**
      * Constructs a new PlayerModel with the specified initial position.
@@ -14,7 +15,7 @@ public class PlayerModel extends EntityModel {
      * @param initialPosition The starting position of the player in the game world.
      */
     public PlayerModel(int initialX, int initialY, double velocity, StageModel stage) {
-        super(initialX, initialY, velocity,  new int[] {14, 14}, new int[] {7, 17}, stage);
+        super(initialX, initialY, velocity,  new int[] {13, 13}, new int[] {7, 17}, stage);
         // Set default values for lives and score or any additional setup.
         this.lives.set(3); // Example default lives
         this.score.set(0); // Initial score
@@ -36,6 +37,10 @@ public class PlayerModel extends EntityModel {
      */
     public IntegerProperty scoreProperty() {
         return this.score;
+    }
+
+    public IntegerProperty bombCapacityProperty() {
+        return this.bombCapacity;
     }
 
     /**

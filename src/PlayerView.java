@@ -43,11 +43,12 @@ public class PlayerView {
             if (walkAnimation != null && walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 walkAnimation.stop();
             }
+            double animationFrameTime = 0.2 / model.velocityProperty().get();
             walkAnimation = new Timeline(
-                new KeyFrame(Duration.seconds(0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 15, 24))),
-                new KeyFrame(Duration.seconds(2 * 0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24))),
-                new KeyFrame(Duration.seconds(3 * 0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 15, 24))),
-                new KeyFrame(Duration.seconds(4 * 0.2 / model.velocityProperty().get()), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24)))
+                new KeyFrame(Duration.seconds(animationFrameTime), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 15, 24))),
+                new KeyFrame(Duration.seconds(2 * animationFrameTime), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24))),
+                new KeyFrame(Duration.seconds(3 * animationFrameTime), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 15, 24))),
+                new KeyFrame(Duration.seconds(4 * animationFrameTime), e -> playerSprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24)))
             );
             walkAnimation.setCycleCount(Animation.INDEFINITE);
             walkAnimation.play();
@@ -56,7 +57,9 @@ public class PlayerView {
     }
 
     public void stopWalking() {
-        walkAnimation.stop();
+        if (walkAnimation != null && walkAnimation.getStatus() == Animation.Status.RUNNING) {
+            walkAnimation.stop();
+        }
         playerSprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection), 0, 15, 24));
     }
 }

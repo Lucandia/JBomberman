@@ -15,7 +15,7 @@ public abstract class EntityModel {
     private final IntegerProperty y = new SimpleIntegerProperty();
     private final DoubleProperty velocity = new SimpleDoubleProperty();
     private double timeSinceLastMove = 0.0;
-    private final double delayMove = 0.07; // Time in seconds between moves
+    private final double delayMove = 0.05; // Time in seconds between moves
     protected StageModel stage;
     private final int[] boundingBox = {0, 0};
     private final int[] boundingOffset = {0, 0};
@@ -58,6 +58,18 @@ public abstract class EntityModel {
      */
     public IntegerProperty xProperty() {
         return x;
+    }
+
+    public int getX() {
+        return x.get();
+    }
+
+    public int getY() {
+        return y.get();
+    }   
+
+    public StageModel getStage() {
+        return stage;
     }
 
     /**
@@ -125,8 +137,9 @@ public abstract class EntityModel {
         int[] center = centerOfMass();
         int tileX = center[0];
         int tileY = center[1];
+        int directionOffset = 2;
         if (dx != 0){
-            int tileXCollision = (int) center[0] + xSign * boundingBox[0] / 2 + 2;
+            int tileXCollision = (int) center[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
             // controlla la tile direttamente sull'asse x della bounding box
             if (stage.getTileAtPosition(tileXCollision, tileY) != null) return false;
             // scontro col bordo di una tile mentre sopra non c'e' nulla --> e' uno spigolo e bisogna fermarsi
@@ -139,7 +152,7 @@ public abstract class EntityModel {
         }
         // stessa cosa se lo spostamento e' sull'asse y
         else if (dy != 0){
-            int tileYCollision = (int) center[1] + ySign * boundingBox[1] / 2 + 2;
+            int tileYCollision = (int) center[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
             if (stage.getTileAtPosition(tileX, tileYCollision) != null) return false;
             int tileXCollision = (int) center[0] - boundingBox[0] / 2;
             if (stage.getTileAtPosition(tileXCollision, tileY) == null && stage.getTileAtPosition(tileXCollision, tileYCollision) != null) return false;

@@ -12,6 +12,7 @@ public class GameApp extends Application {
     public void start(Stage primaryStage) {
                 // Use a StackPane as the root to allow layering of the map and the player
         StackPane root = new StackPane();
+        Pane bombLayer = new Pane();
         Pane gameLayer = new Pane();
 
         // Initialize the map and HUD
@@ -27,6 +28,7 @@ public class GameApp extends Application {
         // Layer the map and the player on the StackPane
         root.getChildren().add(stageView.getPane()); // Map as the base layer
         gameLayer.getChildren().add(playerView.getPlayerSprite()); // Add Bomberman on top of the map
+        root.getChildren().add(bombLayer); // Add the game layer to the root
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
         // For the HUD, use a BorderPane as the outer container
@@ -40,14 +42,19 @@ public class GameApp extends Application {
         primaryStage.show();
 
         // Setup the controller with the scene
-        new PlayerController(playerModel, playerView, mainScene);
+        PlayerController playerController = new PlayerController(playerModel, playerView);
+        playerModel.bombCapacityProperty().set(3);
+        BombController bombController = new BombController(playerModel, bombLayer);
+        InputController inputController = new InputController(playerController, bombController, mainScene);
 
         // Create and start the game loop using AnimationTimer
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 // Update logic here
-                playerModel.update(1.0 / 30.0); // Assuming 60 FPS for calculation
+                // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
+                playerModel.update(1.0 / 60.0);
+                bombController.update(1.0 / 60.0);
             }
         };
         gameLoop.start();
