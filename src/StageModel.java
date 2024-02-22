@@ -79,6 +79,21 @@ public class StageModel {
         }
     }
 
+    public void destroyTileAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        if (tileX > 0 && tileX < width && tileY > 0 && tileY < height && tiles[tileX][tileY] != null && tiles[tileX][tileY].isDestructible()) {
+            tiles[tileX][tileY] = null;
+        }
+    }
+
+    public void addBombAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        tiles[tileX][tileY] = new Tile(tileX, tileY, true, false);
+        
+    }
+
     public int getTileSize() {
         return tileSize;
     }

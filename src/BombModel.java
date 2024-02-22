@@ -14,7 +14,7 @@ public class BombModel extends EntityModel{
         time = timer;
     }
 
-    public double getBlastRadius() {
+    public int getBlastRadius() {
         return blastRadius;
     }
 
