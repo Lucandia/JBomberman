@@ -20,8 +20,8 @@ public class BombView {
         // Set the initial viewport to show the first sprite
         bombSprite.setViewport(new Rectangle2D(0, 0, 16, 16));
         // Bind the ImageView's position to the model's position
-        bombSprite.layoutXProperty().bind(bombModel.xProperty());
-        bombSprite.layoutYProperty().bind(bombModel.yProperty());
+        bombSprite.layoutXProperty().set(bombModel.getX());
+        bombSprite.layoutYProperty().set(bombModel.getY());
 
         // Animation timer to cycle through the sprites
         bombAnimation = new Timeline(

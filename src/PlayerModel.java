@@ -8,6 +8,7 @@ public class PlayerModel extends EntityModel {
     private final IntegerProperty lives = new SimpleIntegerProperty();
     private final IntegerProperty score = new SimpleIntegerProperty();
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
+    private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
 
     /**
      * Constructs a new PlayerModel with the specified initial position.
@@ -29,7 +30,7 @@ public class PlayerModel extends EntityModel {
     public IntegerProperty livesProperty() {
         return this.lives;
     }
-
+    
     /**
      * Gets the score property of the player.
      * 
@@ -42,6 +43,11 @@ public class PlayerModel extends EntityModel {
     public IntegerProperty bombCapacityProperty() {
         return this.bombCapacity;
     }
+
+    public IntegerProperty bombRadiusProperty() {
+        return this.bombRadius;
+    }
+
 
     /**
      * Increases the player's score by a certain amount.

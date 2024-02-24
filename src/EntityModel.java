@@ -1,5 +1,3 @@
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
@@ -8,19 +6,18 @@ import javafx.beans.property.SimpleDoubleProperty;
  * It includes common properties like position, which can be observed
  * for changes using JavaFX's property system.
  */
-public abstract class EntityModel {
+public abstract class EntityModel extends XYModel{
 
     // Properties
-    private final IntegerProperty x = new SimpleIntegerProperty();
-    private final IntegerProperty y = new SimpleIntegerProperty();
     private final DoubleProperty velocity = new SimpleDoubleProperty();
     private double timeSinceLastMove = 0.0;
     private final double delayMove = 0.05; // Time in seconds between moves
-    protected StageModel stage;
     private final int[] boundingBox = {0, 0};
     private final int[] boundingOffset = {0, 0};
     private boolean isMoving = false;
     private int[] lastDirection = {0, 0};
+    protected StageModel stage;
+
 
     public EntityModel() {
         this(0, 0, 0.0, null);
@@ -36,10 +33,9 @@ public abstract class EntityModel {
      * @param initialPosition The initial position of the entity on the game board.
      */
     public EntityModel(int x, int y, double velocity, int[] boundingBox, int[] boundingOffset, StageModel stage) {
-        this.x.set(x);
-        this.y.set(y);
-        this.velocity.set(velocity);
+        super(x, y);
         this.stage = stage;
+        this.velocity.set(velocity);
         if (boundingBox!=null && boundingOffset.length == 2){
             this.boundingBox[0] = boundingBox[0];
             this.boundingBox[1] = boundingBox[1];
@@ -50,37 +46,6 @@ public abstract class EntityModel {
         }
     }
 
-
-    /**
-     * Gets the x property of the entity.
-     * 
-     * @return The x property of the entity.
-     */
-    public IntegerProperty xProperty() {
-        return x;
-    }
-
-    public int getX() {
-        return x.get();
-    }
-
-    public int getY() {
-        return y.get();
-    }   
-
-    public StageModel getStage() {
-        return stage;
-    }
-
-    /**
-     * Gets the y property of the entity.
-     * 
-     * @return The y property of the entity.
-     */
-    public IntegerProperty yProperty() {
-        return y;
-    }
-
     /**
      * Gets the velocity property of the entity.
      * 
@@ -88,6 +53,10 @@ public abstract class EntityModel {
      */
     public DoubleProperty velocityProperty() {
         return velocity;
+    }
+
+    public StageModel getStage() {
+        return stage;
     }
 
     public int[] getBoundingBox() {
@@ -113,7 +82,7 @@ public abstract class EntityModel {
     }
 
     public int[] centerOfMass() {
-        return new int[] {x.get() + boundingOffset[0], y.get() + boundingOffset[1]};
+        return new int[] {getX() + boundingOffset[0], getY() + boundingOffset[1]};
     }
 
     /**
@@ -138,26 +107,31 @@ public abstract class EntityModel {
         int tileX = center[0];
         int tileY = center[1];
         int directionOffset = 2;
+        Tile collisionTile = null;
         if (dx != 0){
             int tileXCollision = (int) center[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileY);
             // controlla la tile direttamente sull'asse x della bounding box
-            if (stage.getTileAtPosition(tileXCollision, tileY) != null) return false;
+            if (collisionTile != null && !collisionTile.isWalkable()) return false;
             // scontro col bordo di una tile mentre sopra non c'e' nulla --> e' uno spigolo e bisogna fermarsi
             int tileYCollision = (int) center[1] - boundingBox[1] / 2;
-            if (stage.getTileAtPosition(tileX, tileYCollision) == null && stage.getTileAtPosition(tileXCollision, tileYCollision) != null) return false;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileX, tileYCollision) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
             tileYCollision = (int) center[1] + boundingBox[1] / 2;
-            if (stage.getTileAtPosition(tileX, tileYCollision) == null && stage.getTileAtPosition(tileXCollision, tileYCollision) != null) return false;
-
-
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileX, tileYCollision) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
         }
         // stessa cosa se lo spostamento e' sull'asse y
         else if (dy != 0){
             int tileYCollision = (int) center[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
-            if (stage.getTileAtPosition(tileX, tileYCollision) != null) return false;
+            collisionTile = stage.getTileAtPosition(tileX, tileYCollision);
+            if (collisionTile != null && !collisionTile.isWalkable()) return false;
             int tileXCollision = (int) center[0] - boundingBox[0] / 2;
-            if (stage.getTileAtPosition(tileXCollision, tileY) == null && stage.getTileAtPosition(tileXCollision, tileYCollision) != null) return false;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileXCollision, tileY) == null &&  collisionTile != null && !collisionTile.isWalkable()) return false;
             tileXCollision = (int) center[0] + boundingBox[0] / 2;
-            if (stage.getTileAtPosition(tileXCollision, tileY) == null && stage.getTileAtPosition(tileXCollision, tileYCollision) != null) return false;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileXCollision, tileY) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
         }
         return true; // in tutte le direzioni della bouinding box non c'e' collisione
     }

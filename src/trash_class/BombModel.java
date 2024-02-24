@@ -1,17 +1,16 @@
-public class BombModel extends Tile{
-
+public class BombModel extends EntityModel{
     private int blastRadius = 2; // Default blast radius
     private boolean active = true;
     private double timer = 5.0; // Bomb timer in seconds
     private double walkableTime = 1.0; // time on which you can walk on the bomb
 
-    public BombModel(int x, int y, int radius) {
-        super(x, y, true, false, true);
+    public BombModel(int x, int y, StageModel stage, int radius) {
+        super(x, y, 0, new int[] {16, 16}, new int[] {8, 8}, stage);
         blastRadius = radius;
     }
 
-    public BombModel(int x, int y, int radius, double time) {
-        super(x, y, true, false, true);
+    public BombModel(int x, int y, StageModel stage, int radius, double time) {
+        super(x, y, 0, new int[] {16, 16}, new int[] {8, 8}, stage);
         blastRadius = radius;
         time = timer;
     }
@@ -42,7 +41,7 @@ public class BombModel extends Tile{
             timer -= elapsed;
             walkableTime -= elapsed;
             if (walkableTime <= 0) {
-                setWalkable(false);
+                stage.getTileAtPosition(getX(), getY()).setWalkable(false);
             }
             if (timer <= 0) {
                 // Bomb should explode

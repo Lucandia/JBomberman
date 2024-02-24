@@ -1,23 +1,36 @@
-public class Tile {
+public class Tile extends XYModel{
     protected boolean isDestructible;
     protected boolean isDisplayable = true;
-    protected int x, y;
+    protected boolean isWalkable = false;
 
     public Tile(int x, int y, boolean isDestructible) {
-        this.x = x;
-        this.y = y;
+        super(x, y);
         this.isDestructible = isDestructible;
     }
 
     public Tile(int x, int y, boolean isDestructible, boolean isDisplayable) {
-        this.x = x;
-        this.y = y;
+        super(x, y);
         this.isDestructible = isDestructible;
         this.isDisplayable = isDisplayable;
     }
 
+    public Tile(int x, int y, boolean isDestructible, boolean isDisplayable, boolean isWalkable) {
+        super(x, y);
+        this.isDestructible = isDestructible;
+        this.isDisplayable = isDisplayable;
+        this.isWalkable = isWalkable;
+    }
+
     public boolean isDestructible() {
         return isDestructible;
+    }
+
+    public boolean isWalkable() {
+        return isWalkable;
+    }
+
+    public void setWalkable(boolean walkable) {
+        isWalkable = walkable;
     }
 
     public boolean isDisplayable() {
