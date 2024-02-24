@@ -56,9 +56,9 @@ public class BombController {
                 for (int x = - blast; x <= + blast; x++) {
                     stage.destroyTileAtPosition(bomb.getX() + x * stage.getTileSize(), bomb.getY());
                 }
-                // for (int y = - blast; y <= blast; y++) {
-                //     stage.destroyTileAtPosition(bomb.getX(), bomb.getY() + y * stage.getTileSize());
-                // }
+                for (int y = - blast; y <= blast; y++) {
+                    stage.destroyTileAtPosition(bomb.getX(), bomb.getY() + y * stage.getTileSize());
+                }
                 BombView bombView = bombViews.get(i);
                 bombView.removeFromPane();
                 bombViews.remove(i);

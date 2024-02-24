@@ -1,50 +1,54 @@
-import javafx.scene.layout.Pane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Pane;
 
 public class StageView {
     private Pane pane = new Pane(); // Pane to hold the stage and tiles
     private Image stageImage; // Background image of the stage
     private Image tilesImage; // Image containing tile sprites
+    private StageModel stage;
+    private ImageView combinedView;
 
     public StageView(int levelNumber, StageModel stage) {
-        int tileSize = stage.getTileSize(); // Get the size of each tile
+        this.stage = stage;
         // Load stage and tiles images based on the level number
         stageImage = new Image(getClass().getResourceAsStream("resources/sprites/level" + levelNumber + "_stage.png"));
         tilesImage = new Image(getClass().getResourceAsStream("resources/sprites/level" + levelNumber + "_tiles.png"));
+        combinedView = new ImageView();
+        pane.getChildren().add(combinedView); // Add the combined image view to the pane
+        updateView(); // Initial update
+    }
 
-        // Create and add the background of the stage
-        ImageView background = new ImageView(stageImage);
-        pane.getChildren().add(background); // Add the stage background to the pane
+    public void updateView() {
+        int tileSize = stage.getTileSize();
+        int width = stage.getWidth() * tileSize;
+        int height = stage.getHeight() * tileSize;
+        WritableImage combinedImage = new WritableImage(width, height);
+        PixelWriter writer = combinedImage.getPixelWriter();
 
-        // Iterate over the stage tiles and add them to the pane
-        int width = stage.getWidth();
-        int height = stage.getHeight();
+        // Copy the stage background to the combined image
+        PixelReader stageReader = stageImage.getPixelReader();
+        writer.setPixels(0, 0, width, height, stageReader, 0, 0);
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        // Iterate over the tiles and add them to the combined image
+        PixelReader tilesReader = tilesImage.getPixelReader();
+        for (int x = 0; x < stage.getWidth(); x++) {
+            for (int y = 0; y < stage.getHeight(); y++) {
                 Tile tile = stage.getTile(x, y);
                 if (tile != null && tile.isDisplayable()) {
-                    // Determine the correct part of the tilesImage to use based on whether the tile is destructible
                     int srcX = tile.isDestructible() ? 17 : 0;
-
-                    // Create a subimage (sprite) for the tile
-                    WritableImage tileSprite = new WritableImage(tilesImage.getPixelReader(), srcX, 0, tileSize, tileSize);
-
-                    // Create an ImageView for the tile and set its position
-                    ImageView tileView = new ImageView(tileSprite);
-                    tileView.setX(x * tileSize);
-                    tileView.setY(y * tileSize);
-
-                    // Add the tile to the pane
-                    pane.getChildren().add(tileView);
+                    writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, srcX, 0);
                 }
             }
         }
+
+        combinedView.setImage(combinedImage);
     }
 
     public Pane getPane() {
-        return pane; // Return the pane containing the stage and tiles for display
+        return pane;
     }
 }

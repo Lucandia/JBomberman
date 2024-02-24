@@ -28,7 +28,7 @@ public class GameApp extends Application {
         // Layer the map and the player on the StackPane
         root.getChildren().add(stageView.getPane()); // Map as the base layer
         gameLayer.getChildren().add(playerView.getPlayerSprite()); // Add Bomberman on top of the map
-        root.getChildren().add(bombLayer); // Add the game layer to the root
+        root.getChildren().add(bombLayer); // Add the bomb layer to the root
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
         // For the HUD, use a BorderPane as the outer container
@@ -55,6 +55,7 @@ public class GameApp extends Application {
                 // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
                 playerModel.update(1.0 / 60.0);
                 bombController.update(1.0 / 60.0);
+                stageView.updateView();
             }
         };
         gameLoop.start();
