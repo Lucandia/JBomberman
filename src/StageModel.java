@@ -12,7 +12,7 @@ public class StageModel {
     
 
     public StageModel() {
-        this(0.6, 0.1); // Default destructible and non-destructible percentages
+        this(0.4, 0.1); // Default destructible and non-destructible percentages
     }
 
     public StageModel(double destructiblePercentage, double nonDestructiblePercentage) {
@@ -24,29 +24,30 @@ public class StageModel {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 if (x < 2 || x > width - 3 || y == 0 || y == height - 1 || (x % 2 == 1 && y % 2 == 0)) {
-                    tiles[x][y] = new Tile(x, y, false, false); // Non-destructible and not displayable
+                    tiles[x][y] = new Tile(x * tileSize, y * tileSize, false, false); // Non-destructible and not displayable
                 }
             }
         }
 
-        List<int[]> freePositions = new ArrayList<>();
+        List<int[]> freeIndex = new ArrayList<>();
         for (int x = 2; x < width - 2; x++) {
             for (int y = 1; y < height - 1; y++) {
-                // keep the top right corner always free to start the game
-                if (tiles[x][y] == null && (x != 2 && y != 1) && (x != 2 && y != 2) && (x != 3 && y != 1)) {
-                    freePositions.add(new int[] {x, y});
-                }
+                // lascia le posizioni nell'angolo in alto a sinistra libere per far muovere il giocatore
+                if (tiles[x][y] == null && !(x == 2 && y == 1) && !(x == 2 && y == 2) && !(x == 3 && y == 1)) {
+                    freeIndex.add(new int[] {x, y});
+                }   
             }
         }
+    
 
         // Randomly place destructible and non-destructible tiles
         for (int i = 0; i < destructibleTilesCount; i++) {
-            int[] position = freePositions.remove(rand.nextInt(freePositions.size()));
-            tiles[position[0]][position[1]] = new Tile(position[0], position[1], true);
+            int[] position = freeIndex.remove(rand.nextInt(freeIndex.size()));
+            tiles[position[0]][position[1]] = new Tile(position[0] * tileSize, position[1] * tileSize, true);
         }
         for (int i = 0; i < nonDestructibleTilesCount; i++) {
-            int[] position = freePositions.remove(rand.nextInt(freePositions.size()));
-            tiles[position[0]][position[1]] = new Tile(position[0], position[1], false);
+            int[] position = freeIndex.remove(rand.nextInt(freeIndex.size()));
+            tiles[position[0]][position[1]] = new Tile(position[0] * tileSize, position[1] * tileSize, false);
         }
     }
 
@@ -82,29 +83,43 @@ public class StageModel {
         return x < 2 * tileSize || x >= (width - 3) * tileSize || y < tileSize || y >= (height - 2) * tileSize;
     }
 
-    public void destroyTile(int x, int y) {
-        if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null && tiles[x][y].isDestructible()) {
+    public boolean destroyTile(int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
+            if (!tiles[x][y].isDestructible()) return true;
             tiles[x][y] = null;
+            return true;
         }
+        return false;
     }
 
-    public void destroyTile(int x, int y, ArrayList<int[]> avoidTiles) {
+    public boolean destroyTile(int x, int y, ArrayList<String> avoidTiles) {
+        // avoidTiles e' una lista di stringhe che contiene le coordinate delle bombe
+        // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null && tiles[x][y].isDestructible()) {
             if (tiles[x][y] instanceof BombModel) {
-                if (avoidTiles.contains(new int[] {x, y})) return;
-                avoidTiles.add(new int[] {x, y});
+                if (avoidTiles.contains(x + "," + y)) return false;
+                avoidTiles.add(x + "," + y);
                 DetonateBomb((BombModel) tiles[x][y], avoidTiles);
+                return true;
             }
             else {
                 tiles[x][y] = null;
+                return true;
             }
         }
+        return false;
     }
 
-    public void destroyTileAtPosition(int x, int y) {
+    public boolean canExplodeAtPosition(int x, int y) {
+        Tile tile = getTileAtPosition(x, y);
+        return tile == null || tile.isDestructible();
+    }
+    
+
+    public boolean destroyTileAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
-        destroyTile(tileX, tileY);
+        return destroyTile(tileX, tileY);
     }
 
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
@@ -118,35 +133,29 @@ public class StageModel {
     }
 
     public void DetonateBomb(BombModel bomb) {
-        int blast = bomb.getBlastRadius();
-        int tileX = (int) bomb.getX() / tileSize;
-        int tileY = (int) bomb.getY() / tileSize;
-        ArrayList<int[]> avoidTiles = new ArrayList<>();
-        avoidTiles.add(new int[] {tileX, tileY});
-        for (int x = - blast; x <= + blast; x++) {
-            if (x == 0) continue;
-            destroyTile(tileX + x, tileY, avoidTiles);
-        }
-        for (int y = - blast; y <= blast; y++) {
-            if (y == 0) continue;
-            destroyTile(tileX, tileY + y, avoidTiles);
-        }
-        tiles[tileX][tileY] = null;
+        DetonateBomb(bomb, new ArrayList<String>());
     }
 
-    public void DetonateBomb(BombModel bomb, ArrayList<int[]> avoidTiles) {
+    public void DetonateBomb(BombModel bomb, ArrayList<String> avoidTiles) {
         int blast = bomb.getBlastRadius();
+        bomb.explode();
         int tileX = (int) bomb.getX() / tileSize;
         int tileY = (int) bomb.getY() / tileSize;
-        for (int x = - blast; x <= + blast; x++) {
-            if (x == 0) continue;
-            if (avoidTiles.contains(new int[] {tileX + x, tileY})) continue;
-            destroyTile(tileX + x, tileY);
+        for (int x = -1 ; x >= -blast; x--) {
+            if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
+            if (destroyTile(tileX + x, tileY, avoidTiles)) break;
         }
-        for (int y = - blast; y <= blast; y++) {
-            if (y == 0) continue;
-            if (avoidTiles.contains(new int[] {tileX, tileY + y})) continue;
-            destroyTile(tileX, (int) tileY + y);
+        for (int x = 1 ; x <= blast; x++) {
+            if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
+            if (destroyTile(tileX + x, tileY, avoidTiles)) break;
+        }
+        for (int y = -1; y >= -blast; y--) {
+            if (avoidTiles.contains(tileX + "," + tileY + y)) continue;
+            if (destroyTile(tileX, tileY + y, avoidTiles)) break;
+        }
+        for (int y = 1 ; y <= blast; y++) {
+            if (avoidTiles.contains(tileX + "," + tileY + y)) continue;
+            if (destroyTile(tileX, tileY + y, avoidTiles)) break;
         }
         tiles[tileX][tileY] = null;
     }

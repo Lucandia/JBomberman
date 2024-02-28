@@ -57,9 +57,11 @@ public class PlayerView {
     }
 
     public void stopWalking() {
-        if (walkAnimation != null && walkAnimation.getStatus() == Animation.Status.RUNNING) {
+        if (walkAnimation != null) {
             walkAnimation.stop();
         }
-        playerSprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection), 0, 15, 24));
+        if (lastDirection != null) {
+            playerSprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection), 0, 15, 24));
+        }
     }
 }

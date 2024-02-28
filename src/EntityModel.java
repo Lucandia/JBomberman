@@ -94,8 +94,8 @@ public abstract class EntityModel extends XYModel{
         int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
         int y_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dy)); // explicit cast to int
         if (canMoveTo(dx, dy)) {
-            xProperty().set(xProperty().get() + x_move);
-            yProperty().set(yProperty().get() + y_move);
+            xProperty().set(getX() + x_move);
+            yProperty().set(getY() + y_move);
         }
     }
 

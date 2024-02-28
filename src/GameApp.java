@@ -22,7 +22,7 @@ public class GameApp extends Application {
         // HUDView hudView = new HUDView(playerModel);
 
         // initialize playerModel, view, and controller
-        playerModel = new PlayerModel(32, 16, 1, stageModel);
+        playerModel = new PlayerModel(32, 16, 1.3, stageModel);
         PlayerView playerView = new PlayerView(playerModel); // Pass a new Pane as the gamePane for player
 
         // Layer the map and the player on the StackPane

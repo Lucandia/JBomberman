@@ -29,7 +29,7 @@ public class BombController {
             int[] startPosition = stage.getTileStartCoordinates(currentX.get() + bombPlayerYOffset[0], currentY.get() + bombPlayerYOffset[1]);
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
                 bombsPosition.add(new int[]{startPosition[0], startPosition[1]});
-                BombView bombView = new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane);
+                BombView bombView = new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage);
                 bombViews.add(bombView);
             }
         }
@@ -48,7 +48,7 @@ public class BombController {
             int[] position = bombsPosition.get(i);
             BombModel bomb = stage.getBombAtPosition(position[0], position[1]);
             if (bomb == null) {
-                bombViews.get(i).removeFromPane();
+                bombViews.get(i).update();
                 bombViews.remove(i);
                 bombsPosition.remove(i);
             }
@@ -56,7 +56,7 @@ public class BombController {
                 bomb.update(elapsed);
                 if (!bomb.isActive()) {
                     stage.DetonateBomb(bomb);
-                    bombViews.get(i).removeFromPane();
+                    bombViews.get(i).update();
                     bombViews.remove(i);
                     bombsPosition.remove(i);
                 }
