@@ -9,13 +9,13 @@ import javafx.beans.property.SimpleDoubleProperty;
 public abstract class EntityModel extends XYModel{
 
     // Properties
-    private final DoubleProperty velocity = new SimpleDoubleProperty();
-    private double timeSinceLastMove = 0.0;
-    private final double delayMove = 0.05; // Time in seconds between moves
-    private final int[] boundingBox = {0, 0};
-    private final int[] boundingOffset = {0, 0};
-    private boolean isMoving = false;
-    private int[] lastDirection = {0, 0};
+    protected final DoubleProperty velocity = new SimpleDoubleProperty();
+    protected double timeSinceLastMove = 0.0;
+    protected final double delayMove = 0.05; // Time in seconds between moves
+    protected final int[] boundingBox = {0, 0};
+    protected final int[] boundingOffset = {0, 0};
+    protected boolean isMoving = false;
+    protected int[] lastDirection = {0, 0};
     protected StageModel stage;
 
 
@@ -67,6 +67,14 @@ public abstract class EntityModel extends XYModel{
         return boundingOffset;
     }
 
+    public int[] getLastDirection() {
+        return lastDirection;
+    }
+
+    public boolean isMoving() {
+        return isMoving;
+    }
+
     public void setBoundingBox(int[] boundingBox) {
         this.boundingBox[0] = boundingBox[0];
         this.boundingBox[1] = boundingBox[1];
@@ -97,6 +105,7 @@ public abstract class EntityModel extends XYModel{
             xProperty().set(getX() + x_move);
             yProperty().set(getY() + y_move);
         }
+        else isMoving = false;
     }
 
     // Check if the entity can move to a new position
@@ -141,6 +150,15 @@ public abstract class EntityModel extends XYModel{
      * 
      * @param direction The direction in which the entity should start walking.
      */
+    public void startMoving(int[] direction) {
+            lastDirection[0] = direction[0];
+            lastDirection[1] = direction[1];
+            isMoving = true;
+            if (direction[0] == 0 && direction[1] == 0) {
+                isMoving = false;
+            }
+    }
+
     public void startMoving(String direction) {
         switch (direction) {
             case "UP":

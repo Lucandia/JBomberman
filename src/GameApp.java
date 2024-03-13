@@ -3,6 +3,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.animation.AnimationTimer;
+import java.util.Random;
 
 public class GameApp extends Application {
 
@@ -22,12 +23,14 @@ public class GameApp extends Application {
         // HUDView hudView = new HUDView(playerModel);
 
         // initialize playerModel, view, and controller
-        playerModel = new PlayerModel(32, 16, 1.3, stageModel);
-        PlayerView playerView = new PlayerView(playerModel); // Pass a new Pane as the gamePane for player
-
+        playerModel = new PlayerModel(32, 12, 1.3, stageModel);
+        EntityView playerView = new EntityView(playerModel, "bomberman", 3); // Pass a new Pane as the gamePane for player
+        int numberOfEnemies = 7;
+        String enemyType = "1";
+        EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer);
         // Layer the map and the player on the StackPane
         root.getChildren().add(stageView.getPane()); // Map as the base layer
-        gameLayer.getChildren().add(playerView.getPlayerSprite()); // Add Bomberman on top of the map
+        gameLayer.getChildren().add(playerView.getEntitySprite()); // Add Bomberman on top of the map
         root.getChildren().add(bombLayer); // Add the bomb layer to the root
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
@@ -43,7 +46,7 @@ public class GameApp extends Application {
 
         // Setup the controller with the scene
         PlayerController playerController = new PlayerController(playerModel, playerView);
-        playerModel.bombCapacityProperty().set(3);
+        playerModel.bombCapacityProperty().set(7);
         BombController bombController = new BombController(playerModel, bombLayer);
         InputController inputController = new InputController(playerController, bombController, mainScene);
 
@@ -53,6 +56,7 @@ public class GameApp extends Application {
             public void handle(long now) {
                 // Update logic here
                 // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
+                enemiesController.update(1.0 / 60.0);
                 playerModel.update(1.0 / 60.0);
                 bombController.update(1.0 / 60.0);
                 stageView.updateView();

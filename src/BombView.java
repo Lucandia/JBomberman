@@ -56,114 +56,128 @@ public class BombView {
         int bombX = (int) bombSprite.layoutXProperty().get();
         int bombY = (int) bombSprite.layoutYProperty().get();
 
+        // Generate explosion at the bomb position
+        ImageView mainExplosionSprite = new ImageView(explosionImage);
+        mainExplosionSprite.setViewport(new Rectangle2D(32, 32, size, size)); // Set to the initial frame
+        mainExplosionSprite.layoutXProperty().set(bombX); // Centering the explosion sprite
+        mainExplosionSprite.layoutYProperty().set(bombY);
+        explosionSprites.add(mainExplosionSprite);
+        pane.getChildren().add(mainExplosionSprite);
+
         // Generate explosion on the positive x axis
         int max_dx = radius;
-        for (int dx = 0; dx <= radius; dx++) {
+        for (int dx = 1; dx <= radius; dx++) {
+            Tile tile = stage.getTileAtPosition(bombX + dx * size, bombY);
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
-                if (stage.getTileAtPosition(bombX + (dx+1) * size, bombY) != null) {
+                Tile nextTile = stage.getTileAtPosition(bombX + (dx+1) * size, bombY);
+                if (tile != null && tile.isDestructible()){
+                    max_dx = dx;
+                }
+                else if (nextTile != null && !nextTile.isDestructible()) {
                     max_dx = dx;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
-                int rect_x = 2;
-                if (dx == 0) {
-                    rect_x = 2;
-                }
-                else if (dx > 0 && dx < max_dx) {
-                    rect_x = 3;
-                }
-                else if (dx == max_dx) {
+                int rect_x = 3;
+                int rect_y = 2;
+                if (dx == max_dx) {
                     rect_x = 4;
                 }
-                explosionSprite.setViewport(new Rectangle2D(rect_x * size, 32, size, size)); // Set to the initial frame
+                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
                 explosionSprite.layoutXProperty().set(bombX + dx * size); // Centering the explosion sprite
                 explosionSprite.layoutYProperty().set(bombY);
                 explosionSprites.add(explosionSprite);
                 pane.getChildren().add(explosionSprite);
             }
-            if (dx == max_dx) {
-                break;
-            }
+            else break;
+            if (dx == max_dx) break;
         }
 
         // Generate explosion on the negative x axis
         int min_dx = -radius;
         for (int dx = -1; dx >= -radius; dx--) {
+            Tile tile = stage.getTileAtPosition(bombX + dx * size, bombY);
             // Check the explosion to display
-            if (stage.getTileAtPosition(bombX + dx * size, bombY) != null) break;
             if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
-                if (stage.getTileAtPosition(bombX + (dx-1) * size, bombY) != null) {
+                Tile nextTile = stage.getTileAtPosition(bombX + (dx-1) * size, bombY);
+                if (tile != null && tile.isDestructible()){
+                    min_dx = dx;
+                }
+                else if (nextTile != null && !nextTile.isDestructible()) {
                     min_dx = dx;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
-                int rect_x = 2;
-                if (dx < 0 && dx > min_dx) {
-                    rect_x = 1;
-                }
-                else if (dx == min_dx) {
+                int rect_x = 1;
+                int rect_y = 2;
+                if (dx == min_dx) {
                     rect_x = 0;
                 }
-                explosionSprite.setViewport(new Rectangle2D(rect_x * size, 32, size, size)); // Set to the initial frame
+                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
                 explosionSprite.layoutXProperty().set(bombX + dx * size); // Centering the explosion sprite
                 explosionSprite.layoutYProperty().set(bombY);
                 explosionSprites.add(explosionSprite);
                 pane.getChildren().add(explosionSprite);
             }
+            else break;
+            if (dx == min_dx) break;
         }
 
         // Generate explosion on the positive y axis
         int max_dy = radius;
-        for (int dy = 0; dy <= radius; dy++) {
+        for (int dy = 1; dy <= radius; dy++) {
+            Tile tile = stage.getTileAtPosition(bombX, bombY + dy * size);
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
-                if (stage.getTileAtPosition(bombX, bombY + (dy+1) * size) != null) {
+                Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy+1) * size);
+                if (tile != null && tile.isDestructible()){
+                    max_dy = dy;
+                }
+                else if (nextTile != null && !nextTile.isDestructible()) {
                     max_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
-                int rect_y = 2;
-                if (dy == 0) {
-                    rect_y = 2;
-                }
-                else if (dy > 0 && dy < max_dy) {
-                    rect_y = 3;
-                }
-                else if (dy == max_dy) {
+                int rect_x = 2;
+                int rect_y = 3;
+                if (dy == max_dy) {
                     rect_y = 4;
                 }
-                explosionSprite.setViewport(new Rectangle2D(32, rect_y * size, size, size)); // Set to the initial frame
+                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
                 explosionSprite.layoutXProperty().set(bombX); // Centering the explosion sprite
                 explosionSprite.layoutYProperty().set(bombY + dy * size);
                 explosionSprites.add(explosionSprite);
                 pane.getChildren().add(explosionSprite);
             }
-            if (dy == max_dy) {
-                break;
-            }
+            else break;
+            if (dy == max_dy) break;
         }
 
         // Generate explosion on the negative y axis
         int min_dy = -radius;
         for (int dy = -1; dy >= -radius; dy--) {
+            Tile tile = stage.getTileAtPosition(bombX, bombY + dy * size);
             // Check the explosion to display
-            if (stage.getTileAtPosition(bombX, bombY + dy * size) != null) break;
             if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
-                if (stage.getTileAtPosition(bombX, bombY + (dy-1) * size) != null) {
+                Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy-1) * size);
+                if (tile != null && tile.isDestructible()){
+                    min_dy = dy;
+                }
+                else if (nextTile != null && !nextTile.isDestructible()) {
                     min_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
-                int rect_y = 2;
-                if (dy < 0 && dy > min_dy) {
-                    rect_y = 1;
-                }
-                else if (dy == min_dy) {
+                int rect_x = 2;
+                int rect_y = 1;
+                if (dy == min_dy) {
                     rect_y = 0;
                 }
-                explosionSprite.setViewport(new Rectangle2D(32, rect_y * size, size, size)); // Set to the initial frame
+                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
                 explosionSprite.layoutXProperty().set(bombX); // Centering the explosion sprite
                 explosionSprite.layoutYProperty().set(bombY + dy * size);
                 explosionSprites.add(explosionSprite);
                 pane.getChildren().add(explosionSprite);
             }
+            else break;
+            if (dy == min_dy) break;
         }
     
         // Create and play the explosion animation

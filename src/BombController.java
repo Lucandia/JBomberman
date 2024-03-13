@@ -1,11 +1,12 @@
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import javafx.scene.layout.Pane;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
 public class BombController {
-    private ArrayList<int[]> bombsPosition = new ArrayList<>();
-    private ArrayList<BombView> bombViews = new ArrayList<>();
+    private LinkedHashMap<BombModel, BombView> bombMap = new LinkedHashMap<>();
     private Pane pane;
     private StageModel stage;
     private IntegerProperty currentX = new SimpleIntegerProperty();
@@ -25,42 +26,68 @@ public class BombController {
     }
 
     public void input() {
-        if (bombsPosition.size() < maxBombs.get()) {
+        if (bombMap.size() < maxBombs.get()) {
             int[] startPosition = stage.getTileStartCoordinates(currentX.get() + bombPlayerYOffset[0], currentY.get() + bombPlayerYOffset[1]);
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
-                bombsPosition.add(new int[]{startPosition[0], startPosition[1]});
-                BombView bombView = new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage);
-                bombViews.add(bombView);
+                bombMap.put(stage.getBombAtPosition(startPosition[0], startPosition[1]), new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage));
             }
         }
     }
 
-    public BombModel[] getBombsPosition() {
-        return bombsPosition.toArray(new BombModel[0]);
+    public boolean destroyTile(int x, int y) {
+        // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
+        Tile tile = stage.getTile(x, y);
+        if (tile == null) return false;
+        else if (tile.isDestructible()) {
+            if (tile instanceof BombModel) {
+                // Se la bomba e' gia' stata esaminata, non la esplodo
+                DetonateBomb((BombModel) tile);
+                return true;
+            }
+            else {
+                stage.destroyTile(x, y);
+                return true;
+            }
+        }
+        return true;
     }
 
-    public void removeBomb(int[] position) {
-        bombsPosition.remove(position);
+    public void DetonateBomb(BombModel bomb) {
+        int blast = bomb.getBlastRadius();
+        bomb.explode();
+        bombMap.get(bomb).update();
+        int tileX = (int) bomb.getX() / stage.getTileSize();
+        int tileY = (int) bomb.getY() / stage.getTileSize();
+        stage.setTile(tileX, tileY, null);
+        for (int x = -1; x >= -blast; x--) {
+            // if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
+            if (destroyTile(tileX + x, tileY)) break;
+        }
+        for (int x = 1; x <= blast; x++) {
+            // if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
+            if (destroyTile(tileX + x, tileY)) break;
+        }
+        for (int y = -1; y >= -blast; y--) {
+            // if (avoidTiles.contains(tileX + "," + tileY + y)) continue;
+            if (destroyTile(tileX, tileY + y)) break;
+        }
+        for (int y = 1; y <= blast; y++) {
+            // if (avoidTiles.contains(tileX + "," + tileY + y)) continue;
+            if (destroyTile(tileX, tileY + y)) break;
+        }
     }
 
     public void update(double elapsed) {
-        for (int i = bombsPosition.size() - 1; i >= 0; i--) { // itera in ordine inverso per evitare problemi di rimozione
-            int[] position = bombsPosition.get(i);
-            BombModel bomb = stage.getBombAtPosition(position[0], position[1]);
-            if (bomb == null) {
-                bombViews.get(i).update();
-                bombViews.remove(i);
-                bombsPosition.remove(i);
+        List<BombModel> toRemove = new ArrayList<>();
+        for (BombModel bomb : bombMap.keySet()) {
+            bomb.update(elapsed);
+            if (!bomb.isActive()) {
+                DetonateBomb(bomb);
+                toRemove.add(bomb); // Mark this bomb for removal
             }
-            else{
-                bomb.update(elapsed);
-                if (!bomb.isActive()) {
-                    stage.DetonateBomb(bomb);
-                    bombViews.get(i).update();
-                    bombViews.remove(i);
-                    bombsPosition.remove(i);
-                }
-            }
+        }
+        for (BombModel bomb : toRemove) {
+            bombMap.remove(bomb);
         }
     }
 }

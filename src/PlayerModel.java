@@ -8,7 +8,7 @@ public class PlayerModel extends EntityModel {
     private final IntegerProperty lives = new SimpleIntegerProperty();
     private final IntegerProperty score = new SimpleIntegerProperty();
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
-    private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
+    private final IntegerProperty bombRadius = new SimpleIntegerProperty(2);
 
     /**
      * Constructs a new PlayerModel with the specified initial position.

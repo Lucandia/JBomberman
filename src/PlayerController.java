@@ -1,8 +1,8 @@
 public class PlayerController {
     private PlayerModel model;
-    private PlayerView view;
+    private EntityView view;
 
-    public PlayerController(PlayerModel model, PlayerView view) {
+    public PlayerController(PlayerModel model, EntityView view) {
         this.model = model;
         this.view = view;
     }

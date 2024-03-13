@@ -33,6 +33,7 @@ public class BombModel extends Tile{
 
     public void explode() {
         active.set(false);
+        setTimer(0);
     }
 
     public double getTimer() {
