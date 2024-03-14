@@ -29,7 +29,10 @@ public class StageModel {
                 }
             }
         }
-
+        // lascia la posizione in alto a sinsitra per il giocatore
+        tiles[2][1] = new EmptyTile(2, 1);
+        tiles[2][2] = new EmptyTile(2, 2);
+        tiles[3][1] = new EmptyTile(3, 1);
         for (int x = 2; x < width - 2; x++) {
             for (int y = 1; y < height - 1; y++) {
                 // lascia le posizioni nell'angolo in alto a sinistra libere per far muovere il giocatore
@@ -39,7 +42,6 @@ public class StageModel {
             }
         }
     
-
         // Randomly place destructible and non-destructible tiles
         for (int i = 0; i < destructibleTilesCount; i++) {
             int[] position = freeTileIndex.remove(rand.nextInt(freeTileIndex.size()));
@@ -48,6 +50,11 @@ public class StageModel {
         for (int i = 0; i < nonDestructibleTilesCount; i++) {
             int[] position = freeTileIndex.remove(rand.nextInt(freeTileIndex.size()));
             tiles[position[0]][position[1]] = new Tile(position[0] * tileSize, position[1] * tileSize, false);
+        }
+
+        // in all the other freeTileIndex, add empty tiles
+        for (int[] position : freeTileIndex) {
+            tiles[position[0]][position[1]] = new EmptyTile(position[0], position[1]);
         }
     }
 
@@ -58,10 +65,24 @@ public class StageModel {
         return null; // Out of bounds
     }
 
+    public EmptyTile getEmptyTile(int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            if (tiles[x][y] instanceof EmptyTile)
+            return (EmptyTile) tiles[x][y];
+        }
+        return new EmptyTile(x, y); // Out of bounds
+    }
+
     public Tile getTileAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
         return getTile(tileX, tileY);
+    }
+
+    public EmptyTile getEmptyTileAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        return getEmptyTile(tileX, tileY);
     }
 
     public List<int[]> getFreeTileIndex() {
@@ -72,6 +93,12 @@ public class StageModel {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             tiles[x][y] = tile;
         }
+    }
+
+    public void setTileAtPosition(int x, int y, Tile tile) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        setTile(tileX, tileY, tile);
     }
 
     public BombModel getBombAtPosition(int x, int y) {
@@ -96,7 +123,7 @@ public class StageModel {
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
             if (!tiles[x][y].isDestructible()) return true;
-            setTile(x, y, null);
+            setTile(x, y, new EmptyTile(x, y));
             freeTileIndex.add(new int[] {x, y});
             return true;
         }
@@ -117,7 +144,7 @@ public class StageModel {
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
-        if (tiles[tileX][tileY] != null) {
+        if (!(tiles[tileX][tileY] instanceof EmptyTile)) {
             return false;
         }
         tiles[tileX][tileY] = new BombModel(tileX * tileSize, tileY * tileSize, bombRadius);

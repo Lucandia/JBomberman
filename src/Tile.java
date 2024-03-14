@@ -21,12 +21,17 @@ public class Tile extends XYModel{
         this.isWalkable = isWalkable;
     }
 
+    // ignora le tile che non sono mostrate
     public boolean isDestructible() {
         return isDestructible;
     }
 
     public boolean isWalkable() {
         return isWalkable;
+    }
+
+    public boolean isDetonable() {
+        return isDestructible && isDisplayable;
     }
 
     public void setWalkable(boolean walkable) {
@@ -38,6 +43,5 @@ public class Tile extends XYModel{
     }
 
     public void update() {
-
     }; // Implement according to your rendering logic
 }

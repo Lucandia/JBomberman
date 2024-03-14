@@ -44,6 +44,7 @@ public abstract class EntityModel extends XYModel{
             this.boundingOffset[0] = boundingOffset[0];
             this.boundingOffset[1] = boundingOffset[1];
         }
+        stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
     }
 
     /**
@@ -99,13 +100,26 @@ public abstract class EntityModel extends XYModel{
      * @param position The new position of the entity.
      */
     public void move(int dx, int dy) {
+        EmptyTile oldTile = stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]);
         int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
         int y_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dy)); // explicit cast to int
-        if (canMoveTo(dx, dy)) {
+        if (canMoveTo(dx, dy) && (checkCollision(dx, dy) == null || checkCollision(dx, dy) == this)) {
             xProperty().set(getX() + x_move);
             yProperty().set(getY() + y_move);
+            // Update tiles occupancy
+            oldTile.setOccupant(null);
+            stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
         }
         else isMoving = false;
+    }
+
+    public EntityModel checkCollision(int dx, int dy) {
+        int xSign = Integer.signum(dx);
+        int ySign = Integer.signum(dy);
+        int directionOffset = 3;
+        int tileXCollision = (int) centerOfMass()[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
+        int tileYCollision = (int) centerOfMass()[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
+        return stage.getEmptyTileAtPosition(tileXCollision, tileYCollision).getOccupant();
     }
 
     // Check if the entity can move to a new position
@@ -116,31 +130,31 @@ public abstract class EntityModel extends XYModel{
         int tileX = center[0];
         int tileY = center[1];
         int directionOffset = 2;
-        Tile collisionTile = null;
+        Tile collisionTile;
         if (dx != 0){
             int tileXCollision = (int) center[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileY);
             // controlla la tile direttamente sull'asse x della bounding box
-            if (collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (!collisionTile.isWalkable()) return false;
             // scontro col bordo di una tile mentre sopra non c'e' nulla --> e' uno spigolo e bisogna fermarsi
             int tileYCollision = (int) center[1] - boundingBox[1] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileX, tileYCollision) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
             tileYCollision = (int) center[1] + boundingBox[1] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileX, tileYCollision) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
         }
         // stessa cosa se lo spostamento e' sull'asse y
         else if (dy != 0){
             int tileYCollision = (int) center[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
             collisionTile = stage.getTileAtPosition(tileX, tileYCollision);
-            if (collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (!collisionTile.isWalkable()) return false;
             int tileXCollision = (int) center[0] - boundingBox[0] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileXCollision, tileY) == null &&  collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
             tileXCollision = (int) center[0] + boundingBox[0] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileXCollision, tileY) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
         }
         return true; // in tutte le direzioni della bouinding box non c'e' collisione
     }

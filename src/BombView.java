@@ -71,10 +71,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
                 Tile nextTile = stage.getTileAtPosition(bombX + (dx+1) * size, bombY);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     max_dx = dx;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     max_dx = dx;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -100,10 +100,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
                 Tile nextTile = stage.getTileAtPosition(bombX + (dx-1) * size, bombY);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     min_dx = dx;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     min_dx = dx;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -129,10 +129,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
                 Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy+1) * size);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     max_dy = dy;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     max_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -158,10 +158,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
                 Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy-1) * size);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     min_dy = dy;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     min_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);

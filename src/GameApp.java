@@ -23,7 +23,7 @@ public class GameApp extends Application {
         // HUDView hudView = new HUDView(playerModel);
 
         // initialize playerModel, view, and controller
-        playerModel = new PlayerModel(32, 12, 1.3, stageModel);
+        playerModel = new PlayerModel(32, 6, 1.3, stageModel);
         EntityView playerView = new EntityView(playerModel, "bomberman", 3); // Pass a new Pane as the gamePane for player
         int numberOfEnemies = 7;
         String enemyType = "1";

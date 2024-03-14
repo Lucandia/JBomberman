@@ -69,7 +69,6 @@ public class PlayerModel extends EntityModel {
         }
     }
 
-
     @Override
     public void update(double elapsedTime) {
         super.update(elapsedTime);

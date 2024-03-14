@@ -65,7 +65,6 @@ public class EntityView {
             // );
             walkAnimation = new Timeline();
             IntStream.range(0, frames).forEach(i -> {
-                if (spriteName == "bomberman") System.out.println(animationFrameTime * (i + 1));
                 walkAnimation.getKeyFrames().add(
                     new KeyFrame(Duration.seconds(animationFrameTime * (i + 1)), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16 * i, 0, 15, 24)))
                 );

@@ -37,8 +37,8 @@ public class BombController {
     public boolean destroyTile(int x, int y) {
         // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
         Tile tile = stage.getTile(x, y);
-        if (tile == null) return false;
-        else if (tile.isDestructible()) {
+        if (tile instanceof EmptyTile) return false;
+        else if (tile.isDetonable()) {
             if (tile instanceof BombModel) {
                 // Se la bomba e' gia' stata esaminata, non la esplodo
                 DetonateBomb((BombModel) tile);
@@ -58,7 +58,7 @@ public class BombController {
         bombMap.get(bomb).update();
         int tileX = (int) bomb.getX() / stage.getTileSize();
         int tileY = (int) bomb.getY() / stage.getTileSize();
-        stage.setTile(tileX, tileY, null);
+        stage.destroyTile(tileX, tileY);
         for (int x = -1; x >= -blast; x--) {
             // if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
             if (destroyTile(tileX + x, tileY)) break;

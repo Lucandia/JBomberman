@@ -37,8 +37,8 @@ public class BombController {
     public boolean destroyTile(int x, int y) {
         // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
         Tile tile = stage.getTile(x, y);
-        if (tile == null) return false;
-        else if (tile.isDestructible()) {
+        if (tile instanceof EmptyTile) return false;
+        else if (tile.isDetonable()) {
             if (tile instanceof BombModel) {
                 // Se la bomba e' gia' stata esaminata, non la esplodo
                 DetonateBomb((BombModel) tile);
@@ -58,7 +58,7 @@ public class BombController {
         bombMap.get(bomb).update();
         int tileX = (int) bomb.getX() / stage.getTileSize();
         int tileY = (int) bomb.getY() / stage.getTileSize();
-        stage.setTile(tileX, tileY, null);
+        stage.destroyTile(tileX, tileY);
         for (int x = -1; x >= -blast; x--) {
             // if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
             if (destroyTile(tileX + x, tileY)) break;
@@ -225,10 +225,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
                 Tile nextTile = stage.getTileAtPosition(bombX + (dx+1) * size, bombY);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     max_dx = dx;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     max_dx = dx;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -254,10 +254,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
                 Tile nextTile = stage.getTileAtPosition(bombX + (dx-1) * size, bombY);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     min_dx = dx;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     min_dx = dx;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -283,10 +283,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
                 Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy+1) * size);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     max_dy = dy;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     max_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -312,10 +312,10 @@ public class BombView {
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
                 Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy-1) * size);
-                if (tile != null && tile.isDestructible()){
+                if (tile.isDetonable()){
                     min_dy = dy;
                 }
-                else if (nextTile != null && !nextTile.isDestructible()) {
+                else if (!nextTile.isDestructible()) {
                     min_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -363,6 +363,93 @@ public class BombView {
             pane.getChildren().remove(bombSprite);
             }
         }
+}
+
+public class EmptyTile extends Tile{
+    private EntityModel occupant = null;
+
+    public EmptyTile(int x, int y) {
+        super(x, y, true, false, true);
+    }
+
+    // Method to check if the tile is occupied
+    public boolean isOccupied() {
+        return occupant != null;
+    }
+
+    public boolean isDetonable() {
+        return false;
+    }
+
+    // Method to get the occupant
+    public EntityModel getOccupant() {
+        return occupant;
+    }
+
+    // Method to set the occupant
+    public void setOccupant(EntityModel occupant) {
+        this.occupant = occupant;
+    }
+}import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import javafx.scene.layout.Pane;
+
+public class EnemiesController {
+    private List<EnemyModel> enemies = new ArrayList<EnemyModel>();
+    private List<EntityView> views = new ArrayList<EntityView>();
+    private List<int[]> directions = new ArrayList<int []>();
+
+    public EnemiesController(int numberOfEnemies, String enemyType, StageModel stageModel, Pane gameLayer) {
+        List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
+        Random random = new Random();
+        for (int i = 0; i < numberOfEnemies; i++) {
+            int randomIndex = random.nextInt(freeTileIndex.size());
+            int[] tileIndex = freeTileIndex.get(randomIndex);
+            EnemyModel enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, 0.8, new int[] {7, 5}, new int[] {8, 17}, stageModel, Integer.parseInt(enemyType) * 100);
+            if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) instanceof EmptyTile && !stageModel.getEmptyTile(tileIndex[0], tileIndex[1] - 1).isOccupied() || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) instanceof EmptyTile && stageModel.getEmptyTile(tileIndex[0], tileIndex[1] + 1).isOccupied()) {
+                enemyModel.startMoving("UP");
+            } else {
+                enemyModel.startMoving("RIGHT");
+            }
+            EntityView enemyView = new EntityView(enemyModel, "enemy" + enemyType, 4);
+            gameLayer.getChildren().add(enemyView.getEntitySprite());
+            addEnemy(enemyModel, enemyView);
+        }
+    }
+
+    public void addEnemy(EnemyModel enemy, EntityView enemyView) {
+        enemies.add(enemy);
+        views.add(enemyView);
+        directions.add(enemy.getLastDirection());
+    }
+
+    public void removeEnemy(EnemyModel enemy) {
+        int index = enemies.indexOf(enemy);
+        if (index != -1) {
+            enemies.remove(index);
+            views.remove(index);
+            directions.remove(index);
+        }
+    }
+
+    public void update(double elapsed) {
+        for (int i = 0; i < enemies.size(); i++) {
+            EnemyModel enemy = enemies.get(i);
+            enemy.update(elapsed);
+            int[] lastDirection = enemies.get(i).getLastDirection();
+            if (enemy.getLastDirection()[0] != lastDirection[0] || enemy.getLastDirection()[1] != lastDirection[1]) {
+                directions.set(i, lastDirection);
+            }
+            String stringDirection = "";
+            if (directions.get(i)[0] == 0 && directions.get(i)[1] == 1) stringDirection = "DOWN";
+            else if (directions.get(i)[0] == 0 && directions.get(i)[1] == -1) stringDirection = "UP";
+            else if (directions.get(i)[0] == 1 && directions.get(i)[1] == 0) stringDirection = "RIGHT";
+            else if (directions.get(i)[0] == -1 && directions.get(i)[1] == 0) stringDirection = "LEFT";
+            if (enemy.isMoving()) views.get(i).startWalking(stringDirection);
+            else views.get(i).stopWalking();
+        }
+    }
 }
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -458,6 +545,7 @@ public abstract class EntityModel extends XYModel{
             this.boundingOffset[0] = boundingOffset[0];
             this.boundingOffset[1] = boundingOffset[1];
         }
+        stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
     }
 
     /**
@@ -479,6 +567,14 @@ public abstract class EntityModel extends XYModel{
 
     public int[] getBoundingOffset() {
         return boundingOffset;
+    }
+
+    public int[] getLastDirection() {
+        return lastDirection;
+    }
+
+    public boolean isMoving() {
+        return isMoving;
     }
 
     public void setBoundingBox(int[] boundingBox) {
@@ -505,12 +601,26 @@ public abstract class EntityModel extends XYModel{
      * @param position The new position of the entity.
      */
     public void move(int dx, int dy) {
+        EmptyTile oldTile = stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]);
         int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
         int y_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dy)); // explicit cast to int
-        if (canMoveTo(dx, dy)) {
+        if (canMoveTo(x_move, y_move) && checkCollision(x_move, y_move) == null) {
             xProperty().set(getX() + x_move);
             yProperty().set(getY() + y_move);
+            // Update tiles occupancy
+            oldTile.setOccupant(null);
+            stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[0]).setOccupant(this);
         }
+        else isMoving = false;
+    }
+
+    public EntityModel checkCollision(int dx, int dy) {
+        int xSign = Integer.signum(dx);
+        int ySign = Integer.signum(dy);
+        int directionOffset = 3;
+        int tileXCollision = (int) centerOfMass()[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
+        int tileYCollision = (int) centerOfMass()[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
+        return stage.getEmptyTileAtPosition(tileXCollision, tileYCollision).getOccupant();
     }
 
     // Check if the entity can move to a new position
@@ -521,31 +631,31 @@ public abstract class EntityModel extends XYModel{
         int tileX = center[0];
         int tileY = center[1];
         int directionOffset = 2;
-        Tile collisionTile = null;
+        Tile collisionTile;
         if (dx != 0){
             int tileXCollision = (int) center[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileY);
             // controlla la tile direttamente sull'asse x della bounding box
-            if (collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (!collisionTile.isWalkable()) return false;
             // scontro col bordo di una tile mentre sopra non c'e' nulla --> e' uno spigolo e bisogna fermarsi
             int tileYCollision = (int) center[1] - boundingBox[1] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileX, tileYCollision) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
             tileYCollision = (int) center[1] + boundingBox[1] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileX, tileYCollision) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
         }
         // stessa cosa se lo spostamento e' sull'asse y
         else if (dy != 0){
             int tileYCollision = (int) center[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
             collisionTile = stage.getTileAtPosition(tileX, tileYCollision);
-            if (collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (!collisionTile.isWalkable()) return false;
             int tileXCollision = (int) center[0] - boundingBox[0] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileXCollision, tileY) == null &&  collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
             tileXCollision = (int) center[0] + boundingBox[0] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
-            if (stage.getTileAtPosition(tileXCollision, tileY) == null && collisionTile != null && !collisionTile.isWalkable()) return false;
+            if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
         }
         return true; // in tutte le direzioni della bouinding box non c'e' collisione
     }
@@ -622,7 +732,10 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
+
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 
 public class EntityView {
@@ -630,11 +743,21 @@ public class EntityView {
     private EntityModel model;
     private String lastDirection;
     // Create a fixed HashMap with keys and values
-    private static final Map<String, Integer> directionSprite = Map.of("DOWN", 64, "LEFT", 112, "RIGHT", 160, "UP", 208);
+    private Map<String, Integer> directionSprite = new HashMap<>();
     private Timeline walkAnimation = null;
+    private String spriteName;
+    private int frames = 0;
     
-    public EntityView(EntityModel model, String spriteName) {
+    public EntityView(EntityModel model, String spriteName, int frames) {
         this.model = model;
+        this.frames = frames;
+        this.spriteName = spriteName;
+        this.directionSprite = Map.of(
+            "DOWN", 16 * frames * 1 + 1,
+            "LEFT", 16 * frames * 2 + 1,
+            "RIGHT", 16 * frames * 3 + 1,
+            "UP", 16 * frames * 4 + 1
+        );
         
         // Load the sprite image
         Image image = new Image(getClass().getResourceAsStream("resources/sprites/" + spriteName + ".png"));
@@ -661,12 +784,27 @@ public class EntityView {
                 walkAnimation.stop();
             }
             double animationFrameTime = 0.2 / model.velocityProperty().get();
-            walkAnimation = new Timeline(
-                new KeyFrame(Duration.seconds(animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 16, 24))),
-                new KeyFrame(Duration.seconds(2 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24))),
-                new KeyFrame(Duration.seconds(3 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 16, 24))),
-                new KeyFrame(Duration.seconds(4 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24)))
-            );
+            // walkAnimation = new Timeline(
+            //     new KeyFrame(Duration.seconds(animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 16, 24))),
+            //     new KeyFrame(Duration.seconds(2 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24))),
+            //     new KeyFrame(Duration.seconds(3 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 16, 24))),
+            //     new KeyFrame(Duration.seconds(4 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24)))
+            // );
+            walkAnimation = new Timeline();
+            IntStream.range(0, frames).forEach(i -> {
+                walkAnimation.getKeyFrames().add(
+                    new KeyFrame(Duration.seconds(animationFrameTime * (i + 1)), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16 * i, 0, 15, 24)))
+                );
+            });
+
+            // reverse the animation for the bomberman
+            if (spriteName == "bomberman"){
+                IntStream.range(-frames+2, 0).forEach(i -> {
+                    walkAnimation.getKeyFrames().add(
+                        new KeyFrame(Duration.seconds(animationFrameTime * (frames * 2 + i - 1)), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16 * i, 0, 15, 24)))
+                    );
+                });
+            }
             walkAnimation.setCycleCount(Animation.INDEFINITE);
             walkAnimation.play();
         }
@@ -678,7 +816,7 @@ public class EntityView {
             walkAnimation.stop();
         }
         if (lastDirection != null) {
-            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection), 0, 16, 24));
+            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection) + 16, 0, 15, 24));
         }
     }
 }
@@ -687,7 +825,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.animation.AnimationTimer;
-import java.util.List;
 import java.util.Random;
 
 public class GameApp extends Application {
@@ -709,24 +846,10 @@ public class GameApp extends Application {
 
         // initialize playerModel, view, and controller
         playerModel = new PlayerModel(32, 12, 1.3, stageModel);
-        EntityView playerView = new EntityView(playerModel, "bomberman"); // Pass a new Pane as the gamePane for player
+        EntityView playerView = new EntityView(playerModel, "bomberman", 3); // Pass a new Pane as the gamePane for player
         int numberOfEnemies = 7;
         String enemyType = "1";
-        List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
-        Random random = new Random();
-        for (int i = 0; i < numberOfEnemies; i++) {
-            int randomIndex = random.nextInt(freeTileIndex.size());
-            int[] tileIndex = freeTileIndex.get(randomIndex);
-            EnemyModel enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, 1.3, new int[] {7, 5}, new int[] {8, 17}, stageModel, Integer.parseInt(enemyType) * 100);
-            if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) == null || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) == null) {
-                enemyModel.startMoving("UP");
-            } else {
-                enemyModel.startMoving("RIGHT");
-            }
-            EntityView enemyView = new EntityView(enemyModel, "enemy" + enemyType);
-            gameLayer.getChildren().add(enemyView.getEntitySprite());
-        }
-
+        EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer);
         // Layer the map and the player on the StackPane
         root.getChildren().add(stageView.getPane()); // Map as the base layer
         gameLayer.getChildren().add(playerView.getEntitySprite()); // Add Bomberman on top of the map
@@ -755,6 +878,7 @@ public class GameApp extends Application {
             public void handle(long now) {
                 // Update logic here
                 // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
+                enemiesController.update(1.0 / 60.0);
                 playerModel.update(1.0 / 60.0);
                 bombController.update(1.0 / 60.0);
                 stageView.updateView();
@@ -994,7 +1118,10 @@ public class StageModel {
                 }
             }
         }
-
+        // lascia la posizione in alto a sinsitra per il giocatore
+        tiles[2][1] = new EmptyTile(2, 1);
+        tiles[2][2] = new EmptyTile(2, 2);
+        tiles[3][1] = new EmptyTile(3, 1);
         for (int x = 2; x < width - 2; x++) {
             for (int y = 1; y < height - 1; y++) {
                 // lascia le posizioni nell'angolo in alto a sinistra libere per far muovere il giocatore
@@ -1004,7 +1131,6 @@ public class StageModel {
             }
         }
     
-
         // Randomly place destructible and non-destructible tiles
         for (int i = 0; i < destructibleTilesCount; i++) {
             int[] position = freeTileIndex.remove(rand.nextInt(freeTileIndex.size()));
@@ -1013,6 +1139,11 @@ public class StageModel {
         for (int i = 0; i < nonDestructibleTilesCount; i++) {
             int[] position = freeTileIndex.remove(rand.nextInt(freeTileIndex.size()));
             tiles[position[0]][position[1]] = new Tile(position[0] * tileSize, position[1] * tileSize, false);
+        }
+
+        // in all the other freeTileIndex, add empty tiles
+        for (int[] position : freeTileIndex) {
+            tiles[position[0]][position[1]] = new EmptyTile(position[0], position[1]);
         }
     }
 
@@ -1023,10 +1154,24 @@ public class StageModel {
         return null; // Out of bounds
     }
 
+    public EmptyTile getEmptyTile(int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            if (tiles[x][y] instanceof EmptyTile)
+            return (EmptyTile) tiles[x][y];
+        }
+        return new EmptyTile(x, y); // Out of bounds
+    }
+
     public Tile getTileAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
         return getTile(tileX, tileY);
+    }
+
+    public EmptyTile getEmptyTileAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        return getEmptyTile(tileX, tileY);
     }
 
     public List<int[]> getFreeTileIndex() {
@@ -1037,6 +1182,12 @@ public class StageModel {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             tiles[x][y] = tile;
         }
+    }
+
+    public void setTileAtPosition(int x, int y, Tile tile) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        setTile(tileX, tileY, tile);
     }
 
     public BombModel getBombAtPosition(int x, int y) {
@@ -1061,7 +1212,7 @@ public class StageModel {
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
             if (!tiles[x][y].isDestructible()) return true;
-            setTile(x, y, null);
+            setTile(x, y, new EmptyTile(x, y));
             freeTileIndex.add(new int[] {x, y});
             return true;
         }
@@ -1082,7 +1233,7 @@ public class StageModel {
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
-        if (tiles[tileX][tileY] != null) {
+        if (!(tiles[tileX][tileY] instanceof EmptyTile)) {
             return false;
         }
         tiles[tileX][tileY] = new BombModel(tileX * tileSize, tileY * tileSize, bombRadius);
@@ -1181,12 +1332,17 @@ public class Tile extends XYModel{
         this.isWalkable = isWalkable;
     }
 
+    // ignora le tile che non sono mostrate
     public boolean isDestructible() {
         return isDestructible;
     }
 
     public boolean isWalkable() {
         return isWalkable;
+    }
+
+    public boolean isDetonable() {
+        return isDestructible && isDisplayable;
     }
 
     public void setWalkable(boolean walkable) {
@@ -1198,7 +1354,6 @@ public class Tile extends XYModel{
     }
 
     public void update() {
-
     }; // Implement according to your rendering logic
 }
 import javafx.beans.property.IntegerProperty;

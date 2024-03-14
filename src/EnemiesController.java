@@ -14,8 +14,8 @@ public class EnemiesController {
         for (int i = 0; i < numberOfEnemies; i++) {
             int randomIndex = random.nextInt(freeTileIndex.size());
             int[] tileIndex = freeTileIndex.get(randomIndex);
-            EnemyModel enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, 0.8, new int[] {7, 5}, new int[] {8, 17}, stageModel, Integer.parseInt(enemyType) * 100);
-            if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) == null || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) == null) {
+            EnemyModel enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, 0.8, new int[] {15, 15}, new int[] {8, 17}, stageModel, Integer.parseInt(enemyType) * 100);
+            if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) instanceof EmptyTile || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) instanceof EmptyTile) {
                 enemyModel.startMoving("UP");
             } else {
                 enemyModel.startMoving("RIGHT");
