@@ -123,6 +123,12 @@ public class StageModel {
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
             if (!tiles[x][y].isDestructible()) return true;
+            if ((tiles[x][y] instanceof EmptyTile || tiles[x][y] instanceof BombModel) && ((EmptyTile) tiles[x][y]).isOccupied()) {
+                EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
+                EntityModel occupant = occupiedTile.getOccupant();
+                System.out.println(occupant.getLife());
+                occupant.loseLife();
+            }
             setTile(x, y, new EmptyTile(x, y));
             freeTileIndex.add(new int[] {x, y});
             return true;
@@ -147,7 +153,9 @@ public class StageModel {
         if (!(tiles[tileX][tileY] instanceof EmptyTile)) {
             return false;
         }
+        EntityModel previousOccupant = ((EmptyTile) tiles[tileX][tileY]).getOccupant();
         tiles[tileX][tileY] = new BombModel(tileX * tileSize, tileY * tileSize, bombRadius);
+        ((EmptyTile) tiles[tileX][tileY]).setOccupant(previousOccupant);
         return true;
     }
 

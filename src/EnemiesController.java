@@ -42,20 +42,18 @@ public class EnemiesController {
     }
 
     public void update(double elapsed) {
-        for (int i = 0; i < enemies.size(); i++) {
+        for (int i = enemies.size()-1; i >= 0; i--) {
             EnemyModel enemy = enemies.get(i);
+            if (enemy.isDead()) {
+                views.get(i).update(elapsed);
+                removeEnemy(enemy);
+            }
             enemy.update(elapsed);
             int[] lastDirection = enemies.get(i).getLastDirection();
             if (enemy.getLastDirection()[0] != lastDirection[0] || enemy.getLastDirection()[1] != lastDirection[1]) {
                 directions.set(i, lastDirection);
             }
-            String stringDirection = "";
-            if (directions.get(i)[0] == 0 && directions.get(i)[1] == 1) stringDirection = "DOWN";
-            else if (directions.get(i)[0] == 0 && directions.get(i)[1] == -1) stringDirection = "UP";
-            else if (directions.get(i)[0] == 1 && directions.get(i)[1] == 0) stringDirection = "RIGHT";
-            else if (directions.get(i)[0] == -1 && directions.get(i)[1] == 0) stringDirection = "LEFT";
-            if (enemy.isMoving()) views.get(i).startWalking(stringDirection);
-            else views.get(i).stopWalking();
+            views.get(i).update(elapsed);
         }
     }
 }

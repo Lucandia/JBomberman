@@ -58,17 +58,6 @@ public class PlayerModel extends EntityModel {
         this.score.set(this.score.get() + points);
     }
 
-    /**
-     * Decreases the player's lives by one.
-     * Trigger game over or other logic when lives reach zero.
-     */
-    public void loseLife() {
-        this.lives.set(this.lives.get() - 1);
-        if (this.lives.get() <= 0) {
-            // Trigger game over or other logic.
-        }
-    }
-
     @Override
     public void update(double elapsedTime) {
         super.update(elapsedTime);

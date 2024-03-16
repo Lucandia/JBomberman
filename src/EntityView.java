@@ -92,4 +92,17 @@ public class EntityView {
             EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection) + 16, 0, 15, 24));
         }
     }
+
+    public void update(double elapsed) {
+        if (model.isDead()) {
+            EntitySprite.setVisible(false);
+            return;
+        }
+        if (model.isMoving()) {
+            startWalking(model.getLastDirectionString());
+        }
+        else {
+            stopWalking();
+        }
+    }
 }

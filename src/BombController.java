@@ -37,7 +37,10 @@ public class BombController {
     public boolean destroyTile(int x, int y) {
         // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
         Tile tile = stage.getTile(x, y);
-        if (tile instanceof EmptyTile) return false;
+        if (tile == null) return true; // Tile is out of bounds
+        else if (!tile.isDestructible()) {
+            return true;
+        }
         else if (tile.isDetonable()) {
             if (tile instanceof BombModel) {
                 // Se la bomba e' gia' stata esaminata, non la esplodo
@@ -49,30 +52,31 @@ public class BombController {
                 return true;
             }
         }
-        return true;
+        return false;
     }
 
     public void DetonateBomb(BombModel bomb) {
         int blast = bomb.getBlastRadius();
+        System.out.println("Blast radius: " + blast);
         bomb.explode();
         bombMap.get(bomb).update();
         int tileX = (int) bomb.getX() / stage.getTileSize();
         int tileY = (int) bomb.getY() / stage.getTileSize();
         stage.destroyTile(tileX, tileY);
         for (int x = -1; x >= -blast; x--) {
-            // if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
+            System.out.println("Tile at " + tileX + x + ", " + tileY );
             if (destroyTile(tileX + x, tileY)) break;
         }
         for (int x = 1; x <= blast; x++) {
-            // if (avoidTiles.contains(tileX + x + "," + tileY)) continue;
+            System.out.println("Tile at " + tileX + x + ", " + tileY);
             if (destroyTile(tileX + x, tileY)) break;
         }
         for (int y = -1; y >= -blast; y--) {
-            // if (avoidTiles.contains(tileX + "," + tileY + y)) continue;
+            System.out.println("Tile at " + tileX + ", " + tileY + y);
             if (destroyTile(tileX, tileY + y)) break;
         }
         for (int y = 1; y <= blast; y++) {
-            // if (avoidTiles.contains(tileX + "," + tileY + y)) continue;
+            System.out.println("Tile at " + tileX + ", " + tileY + y);
             if (destroyTile(tileX, tileY + y)) break;
         }
     }

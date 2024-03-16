@@ -56,8 +56,12 @@ public class GameApp extends Application {
             public void handle(long now) {
                 // Update logic here
                 // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
+                if (playerModel.isDead()) {
+                    System.out.println("Game Over");
+                    stop();
+                }
                 enemiesController.update(1.0 / 60.0);
-                playerModel.update(1.0 / 60.0);
+                playerController.update(1.0 / 60.0);
                 bombController.update(1.0 / 60.0);
                 stageView.updateView();
             }

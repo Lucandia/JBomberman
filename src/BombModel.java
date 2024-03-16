@@ -1,7 +1,7 @@
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.BooleanProperty;
 
-public class BombModel extends Tile{
+public class BombModel extends EmptyTile{
 
     private int blastRadius = 1; // Default blast radius
     private BooleanProperty active = new SimpleBooleanProperty(true);
@@ -9,14 +9,18 @@ public class BombModel extends Tile{
     private double walkableTime = 1.0; // time on which you can walk on the bomb
 
     public BombModel(int x, int y, int radius) {
-        super(x, y, true, false, true);
+        super(x, y);
         blastRadius = radius;
     }
 
     public BombModel(int x, int y, int radius, double time) {
-        super(x, y, true, false, true);
+        super(x, y);
         blastRadius = radius;
         time = timer;
+    }
+
+    public boolean isDetonable() {
+        return true;
     }
 
     public int getBlastRadius() {

@@ -12,7 +12,7 @@ public class EmptyTile extends Tile{
     }
 
     public boolean isDetonable() {
-        return false;
+        return isOccupied();
     }
 
     // Method to get the occupant

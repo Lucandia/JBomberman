@@ -1,5 +1,7 @@
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 
 /**
  * This class represents the abstract model for any entity in the game.
@@ -9,6 +11,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 public abstract class EntityModel extends XYModel{
 
     // Properties
+    private final IntegerProperty life = new SimpleIntegerProperty(100);
     protected final DoubleProperty velocity = new SimpleDoubleProperty();
     protected double timeSinceLastMove = 0.0;
     protected final double delayMove = 0.05; // Time in seconds between moves
@@ -47,6 +50,22 @@ public abstract class EntityModel extends XYModel{
         stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
     }
 
+    public void loseLife() {
+        this.life.set(this.life.get() - 100);
+    }
+
+    public void loseLife(int amount) {
+        this.life.set(this.life.get() - amount);
+    }
+
+    public boolean isDead() {
+        return this.life.get() <= 0;
+    }
+
+    public int getLife() {
+        return life.get();
+    }
+
     /**
      * Gets the velocity property of the entity.
      * 
@@ -70,6 +89,14 @@ public abstract class EntityModel extends XYModel{
 
     public int[] getLastDirection() {
         return lastDirection;
+    }
+
+    public String getLastDirectionString() {
+        if (lastDirection[0] == 0 && lastDirection[1] == -1) return "UP";
+        else if (lastDirection[0] == 0 && lastDirection[1] == 1) return "DOWN";
+        else if (lastDirection[0] == -1 && lastDirection[1] == 0) return "LEFT";
+        else if (lastDirection[0] == 1 && lastDirection[1] == 0) return "RIGHT";
+        else return "";
     }
 
     public boolean isMoving() {
@@ -215,6 +242,10 @@ public abstract class EntityModel extends XYModel{
      * @param elapsedTime The time elapsed since the last update.
      */
     public void update(double elapsedTime){
+        if (isDead()) {
+            stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(null);
+            return;
+        }
         timeSinceLastMove += elapsedTime;
         // il tempo di delay viene diviso per la velocita' in modo da diminuire se aumenta la velocita'
         if (isMoving && timeSinceLastMove >= delayMove / velocity.get()) {

@@ -10,11 +10,9 @@ public class PlayerController {
     public void input(String directionString) {    
         if (directionString != null) {
             model.startMoving(directionString);
-            view.startWalking(directionString);
         }
         else {
             model.stopMoving();
-            view.stopWalking(); // ferma il player
         }
     }
     
@@ -24,5 +22,7 @@ public class PlayerController {
 
     public void update(double elapsed) {
         model.update(elapsed);
+        view.update(elapsed);
     }
+
 }
