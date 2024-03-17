@@ -3,7 +3,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.animation.AnimationTimer;
-import java.util.Random;
 
 public class GameApp extends Application {
 

@@ -1,8 +1,10 @@
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.BooleanProperty;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BombModel extends EmptyTile{
-
+    private List<String> detonatePositions = new ArrayList<>();
     private int blastRadius = 1; // Default blast radius
     private BooleanProperty active = new SimpleBooleanProperty(true);
     private double timer = 5.0; // Bomb timer in seconds
@@ -61,5 +63,17 @@ public class BombModel extends EmptyTile{
                 explode();
             }
         }
+    }
+
+    public List<String> getDetonatePositions() {
+        return detonatePositions;
+    }
+
+    public void addDetonatePosition(int x, int y) {
+        detonatePositions.add(x + "," + y);
+    }
+
+    public boolean containsDetonatePosition(int x, int y) {
+        return detonatePositions.contains(x + "," + y);
     }
 }

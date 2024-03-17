@@ -47,6 +47,7 @@ public class EnemiesController {
             if (enemy.isDead()) {
                 views.get(i).update(elapsed);
                 removeEnemy(enemy);
+                continue;
             }
             enemy.update(elapsed);
             int[] lastDirection = enemies.get(i).getLastDirection();

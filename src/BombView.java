@@ -15,13 +15,13 @@ public class BombView {
     private ImageView bombSprite;
     private Timeline bombAnimation = null;
     private StageModel stage;
-    private int radius;
     private BooleanProperty active = new SimpleBooleanProperty(false);
     private Pane pane;
+    private BombModel model;
 
     public BombView(BombModel bombModel, Pane pane, StageModel stage) {
         this.pane = pane;
-        this.radius = bombModel.getBlastRadius();
+        this.model = bombModel;
         this.stage = stage;
         active.bind(bombModel.activeProperty());
         // Assuming the sprite sheet is in the same package as the BombView
@@ -46,15 +46,16 @@ public class BombView {
     }
 
     public void playExplosionAnimation() { // Ensure to pass the correct pane where the game is rendered
+        int radius = model.getBlastRadius();
         final int size = stage.getTileSize(); // Adjust according to your sprite size
         Image explosionImage = new Image(getClass().getResourceAsStream("resources/sprites/explosion.png"));
-        
         // List to hold all explosion sprites
         List<ImageView> explosionSprites = new ArrayList<>();
-    
         // Assuming the bomb is placed in the center of the tile
         int bombX = (int) bombSprite.layoutXProperty().get();
         int bombY = (int) bombSprite.layoutYProperty().get();
+        int tileX = (int) bombX / size;
+        int tileY = (int) bombY / size;
 
         // Generate explosion at the bomb position
         ImageView mainExplosionSprite = new ImageView(explosionImage);
@@ -67,28 +68,23 @@ public class BombView {
         // Generate explosion on the positive x axis
         int max_dx = radius;
         for (int dx = 1; dx <= radius; dx++) {
-            Tile tile = stage.getTileAtPosition(bombX + dx * size, bombY);
-            // Check the explosion to display
-            if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
-                Tile nextTile = stage.getTileAtPosition(bombX + (dx+1) * size, bombY);
-                if (tile.isDetonable()){
+            if (model.containsDetonatePosition(tileX + dx, tileY)) {
+                // Check the explosion to display
+                if (!model.containsDetonatePosition(tileX + dx + 1, tileY)) {
                     max_dx = dx;
                 }
-                else if (!nextTile.isDestructible()) {
-                    max_dx = dx;
+                    ImageView explosionSprite = new ImageView(explosionImage);
+                    int rect_x = 3;
+                    int rect_y = 2;
+                    if (dx == max_dx) {
+                        rect_x = 4;
+                    }
+                    explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
+                    explosionSprite.layoutXProperty().set(bombX + dx * size); // Centering the explosion sprite
+                    explosionSprite.layoutYProperty().set(bombY);
+                    explosionSprites.add(explosionSprite);
+                    pane.getChildren().add(explosionSprite);
                 }
-                ImageView explosionSprite = new ImageView(explosionImage);
-                int rect_x = 3;
-                int rect_y = 2;
-                if (dx == max_dx) {
-                    rect_x = 4;
-                }
-                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
-                explosionSprite.layoutXProperty().set(bombX + dx * size); // Centering the explosion sprite
-                explosionSprite.layoutYProperty().set(bombY);
-                explosionSprites.add(explosionSprite);
-                pane.getChildren().add(explosionSprite);
-            }
             else break;
             if (dx == max_dx) break;
         }
@@ -96,14 +92,9 @@ public class BombView {
         // Generate explosion on the negative x axis
         int min_dx = -radius;
         for (int dx = -1; dx >= -radius; dx--) {
-            Tile tile = stage.getTileAtPosition(bombX + dx * size, bombY);
             // Check the explosion to display
-            if (stage.canExplodeAtPosition(bombX + dx * size, bombY)) {
-                Tile nextTile = stage.getTileAtPosition(bombX + (dx-1) * size, bombY);
-                if (tile.isDetonable()){
-                    min_dx = dx;
-                }
-                else if (!nextTile.isDestructible()) {
+            if (model.containsDetonatePosition(tileX + dx, tileY)) {
+                if (!model.containsDetonatePosition(tileX + dx - 1, tileY)) {
                     min_dx = dx;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -125,14 +116,9 @@ public class BombView {
         // Generate explosion on the positive y axis
         int max_dy = radius;
         for (int dy = 1; dy <= radius; dy++) {
-            Tile tile = stage.getTileAtPosition(bombX, bombY + dy * size);
             // Check the explosion to display
-            if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
-                Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy+1) * size);
-                if (tile.isDetonable()){
-                    max_dy = dy;
-                }
-                else if (!nextTile.isDestructible()) {
+            if (model.containsDetonatePosition(tileX, tileY + dy)) {
+                if (!model.containsDetonatePosition(tileX, tileY + dy + 1)) {
                     max_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
@@ -154,14 +140,9 @@ public class BombView {
         // Generate explosion on the negative y axis
         int min_dy = -radius;
         for (int dy = -1; dy >= -radius; dy--) {
-            Tile tile = stage.getTileAtPosition(bombX, bombY + dy * size);
             // Check the explosion to display
             if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
-                Tile nextTile = stage.getTileAtPosition(bombX, bombY + (dy-1) * size);
-                if (tile.isDetonable()){
-                    min_dy = dy;
-                }
-                else if (!nextTile.isDestructible()) {
+                if (!model.containsDetonatePosition(tileX, tileY + dy - 1)){
                     min_dy = dy;
                 }
                 ImageView explosionSprite = new ImageView(explosionImage);
