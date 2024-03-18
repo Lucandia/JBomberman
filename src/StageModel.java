@@ -5,6 +5,7 @@ import java.util.Random;
 public class StageModel {
     private final int width = 17;
     private final int height = 13;
+    private double powerUpProbability = 0.2; // 10% chance of adding a PowerUp tile
     private final int tileSize = 16; // Assuming each tile is 16x16 pixels
     private final List<int[]> freeTileIndex = new ArrayList<>();
     private Tile[][] tiles = new Tile[width][height];
@@ -129,7 +130,20 @@ public class StageModel {
                 System.out.println(occupant.getLife());
                 occupant.loseLife();
             }
-            setTile(x, y, new EmptyTile(x, y));
+            // Randomly add a PowerUp tile
+            else if (!(tiles[x][y] instanceof EmptyTile)){
+                if (rand.nextDouble() < powerUpProbability) { 
+                    setTile(x, y, new PowerUpBlast(x, y));
+                }
+                else if (rand.nextDouble() < powerUpProbability) { 
+                    setTile(x, y, new PowerUpBomb(x, y));
+                }
+                else if (rand.nextDouble() < powerUpProbability / 2) { 
+                    setTile(x, y, new PowerUpSpeed(x, y));
+                }
+                else setTile(x, y, new EmptyTile(x, y));
+            }
+            else setTile(x, y, new EmptyTile(x, y));
             freeTileIndex.add(new int[] {x, y});
             return true;
         }

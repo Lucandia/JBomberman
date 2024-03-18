@@ -42,6 +42,10 @@ public class Tile extends XYModel{
         return isDisplayable;
     }
 
+    public void setDisplayable(boolean displayable) {
+        isDisplayable = displayable;
+    }
+
     public void update() {
     }; // Implement according to your rendering logic
 }

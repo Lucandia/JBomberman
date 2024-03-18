@@ -27,6 +27,8 @@ public class BombController {
 
     public void input() {
         if (bombMap.size() < maxBombs.get()) {
+            System.out.println("Max bomb" + maxBombs.get());
+            System.out.println("Current bomb" + bombMap.size());
             int[] startPosition = stage.getTileStartCoordinates(currentX.get() + bombPlayerYOffset[0], currentY.get() + bombPlayerYOffset[1]);
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
                 bombMap.put(stage.getBombAtPosition(startPosition[0], startPosition[1]), new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage));
@@ -439,6 +441,7 @@ public class EnemiesController {
             if (enemy.isDead()) {
                 views.get(i).update(elapsed);
                 removeEnemy(enemy);
+                continue;
             }
             enemy.update(elapsed);
             int[] lastDirection = enemies.get(i).getLastDirection();
@@ -909,7 +912,6 @@ public class GameApp extends Application {
 
         // Setup the controller with the scene
         PlayerController playerController = new PlayerController(playerModel, playerView);
-        playerModel.bombCapacityProperty().set(7);
         BombController bombController = new BombController(playerModel, bombLayer);
         InputController inputController = new InputController(playerController, bombController, mainScene);
 
@@ -1059,7 +1061,7 @@ public class PlayerModel extends EntityModel {
     private final IntegerProperty lives = new SimpleIntegerProperty();
     private final IntegerProperty score = new SimpleIntegerProperty();
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
-    private final IntegerProperty bombRadius = new SimpleIntegerProperty(2);
+    private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
 
     /**
      * Constructs a new PlayerModel with the specified initial position.
@@ -1095,10 +1097,21 @@ public class PlayerModel extends EntityModel {
         return this.bombCapacity;
     }
 
+    public void increaseBombCapacity() {
+        this.bombCapacity.set(this.bombCapacity.get() + 1);
+    }
+
     public IntegerProperty bombRadiusProperty() {
         return this.bombRadius;
     }
 
+    public void increaseBombRadius() {
+        this.bombRadius.set(this.bombRadius.get() + 1);
+    }
+
+    public void increaseSpeed() {
+        this.velocity.set(this.velocity.get() + 0.2);
+    }
 
     /**
      * Increases the player's score by a certain amount.
@@ -1120,13 +1133,81 @@ public class PlayerModel extends EntityModel {
     // Additional player-specific methods can be added below
 }
 
-import java.util.ArrayList;
+public abstract class PowerUp extends EmptyTile{
+    private PowerUpType type;
+    private boolean applied = false;
+
+    public PowerUp(int x, int y, PowerUpType type) {
+        super(x, y);
+        this.type = type;
+        setDisplayable(true);
+    }
+
+    @Override
+    public void setOccupant(EntityModel occupant) {
+        super.setOccupant(occupant);
+        if (applied) return;
+        if (occupant instanceof PlayerModel) {
+            applyPowerUp((PlayerModel) occupant);
+        }
+        setDisplayable(false);
+        applied = true;
+    }
+
+    public abstract void applyPowerUp(PlayerModel playerModel);
+ 
+    public PowerUpType getType() {
+        return type;
+    }
+}
+public class PowerUpBlast extends PowerUp{
+
+    public PowerUpBlast(int x, int y) {
+        super(x, y, PowerUpType.blast);
+    }
+
+    @Override
+    public void applyPowerUp(PlayerModel playerModel){
+        playerModel.increaseBombRadius();
+    }
+
+}
+public class PowerUpBomb extends PowerUp{
+
+    public PowerUpBomb(int x, int y) {
+        super(x, y, PowerUpType.bomb);
+    }
+
+    @Override
+    public void applyPowerUp(PlayerModel playerModel){
+        playerModel.increaseBombCapacity();
+    }
+
+}
+public class PowerUpSpeed extends PowerUp{
+
+    public PowerUpSpeed(int x, int y) {
+        super(x, y, PowerUpType.speed);
+    }
+
+    @Override
+    public void applyPowerUp(PlayerModel playerModel){
+        playerModel.increaseSpeed();
+    }
+
+}
+enum PowerUpType {
+  blast,
+  bomb,
+  speed,
+}import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class StageModel {
     private final int width = 17;
     private final int height = 13;
+    private double powerUpProbability = 0.2; // 10% chance of adding a PowerUp tile
     private final int tileSize = 16; // Assuming each tile is 16x16 pixels
     private final List<int[]> freeTileIndex = new ArrayList<>();
     private Tile[][] tiles = new Tile[width][height];
@@ -1251,7 +1332,20 @@ public class StageModel {
                 System.out.println(occupant.getLife());
                 occupant.loseLife();
             }
-            setTile(x, y, new EmptyTile(x, y));
+            // Randomly add a PowerUp tile
+            else if (!(tiles[x][y] instanceof EmptyTile)){
+                if (rand.nextDouble() < powerUpProbability) { 
+                    setTile(x, y, new PowerUpBlast(x, y));
+                }
+                else if (rand.nextDouble() < powerUpProbability) { 
+                    setTile(x, y, new PowerUpBomb(x, y));
+                }
+                else if (rand.nextDouble() < powerUpProbability / 2) { 
+                    setTile(x, y, new PowerUpSpeed(x, y));
+                }
+                else setTile(x, y, new EmptyTile(x, y));
+            }
+            else setTile(x, y, new EmptyTile(x, y));
             freeTileIndex.add(new int[] {x, y});
             return true;
         }
@@ -1336,9 +1430,15 @@ public class StageView {
         for (int x = 0; x < stage.getWidth(); x++) {
             for (int y = 0; y < stage.getHeight(); y++) {
                 Tile tile = stage.getTile(x, y);
-                if (tile != null && tile.isDisplayable()) {
-                    int srcX = tile.isDestructible() ? 17 : 0;
-                    writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, srcX, 0);
+                if (tile.isDisplayable()) {
+                    if (tile instanceof PowerUp) {
+                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("resources/sprites/pup_" + ((PowerUp) tile).getType().toString() + ".png")).getPixelReader();
+                        writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, powerUpReader, 0, 0);
+                    }
+                    else {
+                        int srcX = tile.isDestructible() ? 17 : 0;
+                        writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, srcX, 0);
+                    }
                 }
             }
         }
@@ -1392,6 +1492,10 @@ public class Tile extends XYModel{
 
     public boolean isDisplayable() {
         return isDisplayable;
+    }
+
+    public void setDisplayable(boolean displayable) {
+        isDisplayable = displayable;
     }
 
     public void update() {

@@ -45,7 +45,6 @@ public class GameApp extends Application {
 
         // Setup the controller with the scene
         PlayerController playerController = new PlayerController(playerModel, playerView);
-        playerModel.bombCapacityProperty().set(7);
         BombController bombController = new BombController(playerModel, bombLayer);
         InputController inputController = new InputController(playerController, bombController, mainScene);
 
