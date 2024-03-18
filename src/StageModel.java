@@ -164,7 +164,7 @@ public class StageModel {
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
-        if (!(tiles[tileX][tileY] instanceof EmptyTile)) {
+        if (!(tiles[tileX][tileY] instanceof EmptyTile) || tiles[tileX][tileY] instanceof BombModel) {
             return false;
         }
         EntityModel previousOccupant = ((EmptyTile) tiles[tileX][tileY]).getOccupant();
