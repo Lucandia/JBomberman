@@ -3,6 +3,8 @@ import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.animation.AnimationTimer;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.BorderPane;
 
 public class GameApp extends Application {
 
@@ -23,6 +25,7 @@ public class GameApp extends Application {
 
         // initialize playerModel, view, and controller
         playerModel = new PlayerModel(32, 6, 1.3, stageModel);
+        stageModel.setPlayer(playerModel);
         EntityView playerView = new EntityView(playerModel, "bomberman", 3); // Pass a new Pane as the gamePane for player
         int numberOfEnemies = 7;
         String enemyType = "1";
@@ -34,9 +37,10 @@ public class GameApp extends Application {
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
         // For the HUD, use a BorderPane as the outer container
+        HUDView hudView = new HUDView(playerModel);
         BorderPane borderPane = new BorderPane();
         borderPane.setCenter(root); // Set the game (map + player) as the center
-        // borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
+        borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
 
         Scene mainScene = new Scene(borderPane, 272, 208);
         primaryStage.setTitle("JBomberman");
@@ -47,7 +51,7 @@ public class GameApp extends Application {
         PlayerController playerController = new PlayerController(playerModel, playerView);
         BombController bombController = new BombController(playerModel, bombLayer);
         InputController inputController = new InputController(playerController, bombController, mainScene);
-
+        
         // Create and start the game loop using AnimationTimer
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override

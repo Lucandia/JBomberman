@@ -5,8 +5,7 @@ import javafx.beans.property.SimpleIntegerProperty;
  * PlayerModel represents the state and behavior of a player in the game.
  */
 public class PlayerModel extends EntityModel {
-    private final IntegerProperty lives = new SimpleIntegerProperty();
-    private final IntegerProperty score = new SimpleIntegerProperty();
+    private final IntegerProperty score = new SimpleIntegerProperty(0);
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
     private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
 
@@ -18,8 +17,8 @@ public class PlayerModel extends EntityModel {
     public PlayerModel(int initialX, int initialY, double velocity, StageModel stage) {
         super(initialX, initialY, velocity,  new int[] {13, 13}, new int[] {7, 17}, stage);
         // Set default values for lives and score or any additional setup.
-        this.lives.set(3); // Example default lives
         this.score.set(0); // Initial score
+        this.life.set(3); // Initial lives
     }
 
     /**
@@ -27,8 +26,22 @@ public class PlayerModel extends EntityModel {
      * 
      * @return The lives property.
      */
-    public IntegerProperty livesProperty() {
-        return this.lives;
+    public IntegerProperty lifeProperty() {
+        return this.life;
+    }
+
+    @Override
+    public void loseLife(int amount) {
+        this.life.set(life.get() - 1);
+    }
+
+    @Override
+    public EntityModel checkCollision(int dx, int dy) {
+        EntityModel occupant = super.checkCollision(dx, dy);
+        if (occupant instanceof EnemyModel) {
+            loseLife(1);
+        }
+        return occupant;
     }
     
     /**
@@ -57,7 +70,8 @@ public class PlayerModel extends EntityModel {
     }
 
     public void increaseSpeed() {
-        this.velocity.set(this.velocity.get() + 0.2);
+        // this.velocity.set(this.velocity.get() + 0.3);
+        if (this.delayMove > 0.01) this.delayMove -= 0.01;
     }
 
     /**

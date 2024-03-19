@@ -27,8 +27,6 @@ public class BombController {
 
     public void input() {
         if (bombMap.size() < maxBombs.get()) {
-            System.out.println("Max bomb" + maxBombs.get());
-            System.out.println("Current bomb" + bombMap.size());
             int[] startPosition = stage.getTileStartCoordinates(currentX.get() + bombPlayerYOffset[0], currentY.get() + bombPlayerYOffset[1]);
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
                 bombMap.put(stage.getBombAtPosition(startPosition[0], startPosition[1]), new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage));

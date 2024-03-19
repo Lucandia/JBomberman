@@ -10,6 +10,8 @@ public class StageModel {
     private final List<int[]> freeTileIndex = new ArrayList<>();
     private Tile[][] tiles = new Tile[width][height];
     private Random rand = new Random();
+    private PlayerModel player;
+    private int damage = 100;
     
 
     public StageModel() {
@@ -57,6 +59,10 @@ public class StageModel {
         for (int[] position : freeTileIndex) {
             tiles[position[0]][position[1]] = new EmptyTile(position[0], position[1]);
         }
+    }
+
+    public void setPlayer(PlayerModel player) {
+        this.player = player;
     }
 
     public Tile getTile(int x, int y) {
@@ -127,8 +133,17 @@ public class StageModel {
             if ((tiles[x][y] instanceof EmptyTile || tiles[x][y] instanceof BombModel) && ((EmptyTile) tiles[x][y]).isOccupied()) {
                 EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
                 EntityModel occupant = occupiedTile.getOccupant();
-                System.out.println(occupant.getLife());
-                occupant.loseLife();
+                occupant.loseLife(damage);
+                if (occupant.isDead()) {
+                    setTile(x, y, new EmptyTile(x, y));
+                }
+                else{
+                    setTile(x, y, new EmptyTile(x, y));
+                    ((EmptyTile) tiles[x][y]).setOccupant(occupant);
+                }
+                if (player != null && !(occupant instanceof PlayerModel)) {
+                    player.addScore(damage);
+                }
             }
             // Randomly add a PowerUp tile
             else if (!(tiles[x][y] instanceof EmptyTile)){

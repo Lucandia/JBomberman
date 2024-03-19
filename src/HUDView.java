@@ -1,22 +1,38 @@
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
+import javafx.scene.text.Font;
 
 public class HUDView {
-    private HBox hudPane = new HBox(10);
-    private Text scoreText = new Text();
-    private Text livesText = new Text();
+    private HBox hudPane;
+    private Label scoreLabel;
+    private Label livesLabel;
+    private Label bombCapacityLabel;
+    private Label bombRadiusLabel;
 
-    public HUDView(PlayerModel model) {
-        hudPane.getChildren().addAll(scoreText, livesText);
+    public HUDView(PlayerModel playerModel) {
+        hudPane = new HBox(10);
+        hudPane.setAlignment(Pos.TOP_CENTER);
+        
+        scoreLabel = new Label();
+        livesLabel = new Label();
+        bombCapacityLabel = new Label();
+        bombRadiusLabel = new Label();
+        
+        scoreLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        livesLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        bombCapacityLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        bombRadiusLabel.setFont(new Font("Pixelify Sans Regular", 14));
 
-        // Bind the HUD elements to the model
-        scoreText.textProperty().bind(model.scoreProperty().asString("Score: %d"));
-        livesText.textProperty().bind(model.livesProperty().asString("Lives: %d"));
+        scoreLabel.textProperty().bind(playerModel.scoreProperty().asString("Score: %d"));
+        livesLabel.textProperty().bind(playerModel.lifeProperty().asString("life: %d"));
+        bombCapacityLabel.textProperty().bind(playerModel.bombCapacityProperty().asString("Bombs: %d"));
+        bombRadiusLabel.textProperty().bind(playerModel.bombRadiusProperty().asString("Radius: %d"));
+
+        hudPane.getChildren().addAll(scoreLabel, livesLabel, bombCapacityLabel, bombRadiusLabel);
     }
 
     public HBox getHudPane() {
         return hudPane;
     }
-
-    // Methods to update the view
 }

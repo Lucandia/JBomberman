@@ -11,10 +11,10 @@ import javafx.beans.property.SimpleIntegerProperty;
 public abstract class EntityModel extends XYModel{
 
     // Properties
-    private final IntegerProperty life = new SimpleIntegerProperty(100);
+    protected final IntegerProperty life = new SimpleIntegerProperty(100);
     protected final DoubleProperty velocity = new SimpleDoubleProperty();
     protected double timeSinceLastMove = 0.0;
-    protected final double delayMove = 0.05; // Time in seconds between moves
+    protected double delayMove = 0.05; // Time in seconds between moves
     protected final int[] boundingBox = {0, 0};
     protected final int[] boundingOffset = {0, 0};
     protected boolean isMoving = false;
@@ -50,16 +50,12 @@ public abstract class EntityModel extends XYModel{
         stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
     }
 
-    public void loseLife() {
-        this.life.set(this.life.get() - 100);
-    }
-
     public void loseLife(int amount) {
-        this.life.set(this.life.get() - amount);
+        this.life.set(getLife() - amount);
     }
 
     public boolean isDead() {
-        return this.life.get() <= 0;
+        return getLife() <= 0;
     }
 
     public int getLife() {

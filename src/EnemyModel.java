@@ -17,6 +17,14 @@ public class EnemyModel extends EntityModel {
         this.points.set(3); // Example default lives
     }
 
+    public EntityModel checkCollision(int dx, int dy) {
+        EntityModel occupant = super.checkCollision(dx, dy);
+        if (occupant instanceof PlayerModel) {
+            occupant.loseLife(1);
+        }
+        return occupant;
+    }
+
     /**
      * Gets the lives property of the player.
      * 
@@ -24,17 +32,6 @@ public class EnemyModel extends EntityModel {
      */
     public IntegerProperty pointsProperty() {
         return this.points;
-    }
-
-    /**
-     * Decreases the player's lives by one.
-     * Trigger game over or other logic when lives reach zero.
-     */
-    public void loseLife(int loss) {
-        this.points.set(this.points.get() - loss);
-        if (this.points.get() <= 0) {
-            
-        }
     }
 
     @Override
