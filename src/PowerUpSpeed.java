@@ -1,9 +1,5 @@
-public class PowerUpSpeed extends PowerUp{
-
-    public PowerUpSpeed(int x, int y) {
-        super(x, y, PowerUpType.speed);
-    }
-
+public class PowerUpSpeed implements PowerUpBehaviour{
+    
     @Override
     public void applyPowerUp(PlayerModel playerModel){
         playerModel.increaseSpeed();

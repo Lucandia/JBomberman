@@ -1,12 +1,7 @@
-public class PowerUpBomb extends PowerUp{
-
-    public PowerUpBomb(int x, int y) {
-        super(x, y, PowerUpType.bomb);
-    }
-
+public class PowerUpBomb implements PowerUpBehaviour{
+    
     @Override
     public void applyPowerUp(PlayerModel playerModel){
         playerModel.increaseBombCapacity();
     }
-
 }

@@ -1,8 +1,4 @@
-public class PowerUpBlast extends PowerUp{
-
-    public PowerUpBlast(int x, int y) {
-        super(x, y, PowerUpType.blast);
-    }
+public class PowerUpBlast implements PowerUpBehaviour{
 
     @Override
     public void applyPowerUp(PlayerModel playerModel){

@@ -39,8 +39,8 @@ public class StageView {
             for (int y = 0; y < stage.getHeight(); y++) {
                 Tile tile = stage.getTile(x, y);
                 if (tile.isDisplayable()) {
-                    if (tile instanceof PowerUp) {
-                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("resources/sprites/pup_" + ((PowerUp) tile).getType().toString() + ".png")).getPixelReader();
+                    if (tile instanceof SpecialTile) {
+                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("resources/sprites/" + ((SpecialTile) tile).getType().toString() + ".png")).getPixelReader();
                         writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, powerUpReader, 0, 0);
                     }
                     else {

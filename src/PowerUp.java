@@ -1,11 +1,18 @@
-public abstract class PowerUp extends EmptyTile{
-    private PowerUpType type;
+public class PowerUp extends SpecialTile{
     private boolean applied = false;
+    private PowerUpBehaviour behaviour;
 
-    public PowerUp(int x, int y, PowerUpType type) {
-        super(x, y);
-        this.type = type;
-        setDisplayable(true);
+    public PowerUp(int x, int y, SpecialTileType type) {
+        super(x, y, type);
+        if (type == SpecialTileType.pupBlast) {
+            this.behaviour = new PowerUpBlast();
+        }
+        else if (type == SpecialTileType.pupBomb) {
+            this.behaviour = new PowerUpBomb();
+        }
+        else if (type == SpecialTileType.pupSpeed) {
+            this.behaviour = new PowerUpSpeed();
+        }
     }
 
     @Override
@@ -19,9 +26,7 @@ public abstract class PowerUp extends EmptyTile{
         applied = true;
     }
 
-    public abstract void applyPowerUp(PlayerModel playerModel);
- 
-    public PowerUpType getType() {
-        return type;
-    }
+    public void applyPowerUp(PlayerModel playerModel) {
+        behaviour.applyPowerUp(playerModel);
+    };
 }

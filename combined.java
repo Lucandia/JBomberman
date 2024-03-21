@@ -27,8 +27,6 @@ public class BombController {
 
     public void input() {
         if (bombMap.size() < maxBombs.get()) {
-            System.out.println("Max bomb" + maxBombs.get());
-            System.out.println("Current bomb" + bombMap.size());
             int[] startPosition = stage.getTileStartCoordinates(currentX.get() + bombPlayerYOffset[0], currentY.get() + bombPlayerYOffset[1]);
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
                 bombMap.put(stage.getBombAtPosition(startPosition[0], startPosition[1]), new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage));
@@ -471,6 +469,14 @@ public class EnemyModel extends EntityModel {
         this.points.set(3); // Example default lives
     }
 
+    public EntityModel checkCollision(int dx, int dy) {
+        EntityModel occupant = super.checkCollision(dx, dy);
+        if (occupant instanceof PlayerModel) {
+            occupant.loseLife(1);
+        }
+        return occupant;
+    }
+
     /**
      * Gets the lives property of the player.
      * 
@@ -478,17 +484,6 @@ public class EnemyModel extends EntityModel {
      */
     public IntegerProperty pointsProperty() {
         return this.points;
-    }
-
-    /**
-     * Decreases the player's lives by one.
-     * Trigger game over or other logic when lives reach zero.
-     */
-    public void loseLife(int loss) {
-        this.points.set(this.points.get() - loss);
-        if (this.points.get() <= 0) {
-            
-        }
     }
 
     @Override
@@ -513,10 +508,10 @@ import javafx.beans.property.SimpleIntegerProperty;
 public abstract class EntityModel extends XYModel{
 
     // Properties
-    private final IntegerProperty life = new SimpleIntegerProperty(100);
+    protected final IntegerProperty life = new SimpleIntegerProperty(100);
     protected final DoubleProperty velocity = new SimpleDoubleProperty();
     protected double timeSinceLastMove = 0.0;
-    protected final double delayMove = 0.05; // Time in seconds between moves
+    protected double delayMove = 0.05; // Time in seconds between moves
     protected final int[] boundingBox = {0, 0};
     protected final int[] boundingOffset = {0, 0};
     protected boolean isMoving = false;
@@ -552,16 +547,12 @@ public abstract class EntityModel extends XYModel{
         stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
     }
 
-    public void loseLife() {
-        this.life.set(this.life.get() - 100);
-    }
-
     public void loseLife(int amount) {
-        this.life.set(this.life.get() - amount);
+        this.life.set(getLife() - amount);
     }
 
     public boolean isDead() {
-        return this.life.get() <= 0;
+        return getLife() <= 0;
     }
 
     public int getLife() {
@@ -870,6 +861,8 @@ import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.animation.AnimationTimer;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.BorderPane;
 
 public class GameApp extends Application {
 
@@ -890,6 +883,7 @@ public class GameApp extends Application {
 
         // initialize playerModel, view, and controller
         playerModel = new PlayerModel(32, 6, 1.3, stageModel);
+        stageModel.setPlayer(playerModel);
         EntityView playerView = new EntityView(playerModel, "bomberman", 3); // Pass a new Pane as the gamePane for player
         int numberOfEnemies = 7;
         String enemyType = "1";
@@ -901,9 +895,10 @@ public class GameApp extends Application {
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
         // For the HUD, use a BorderPane as the outer container
+        HUDView hudView = new HUDView(playerModel);
         BorderPane borderPane = new BorderPane();
         borderPane.setCenter(root); // Set the game (map + player) as the center
-        // borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
+        borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
 
         Scene mainScene = new Scene(borderPane, 272, 208);
         primaryStage.setTitle("JBomberman");
@@ -914,7 +909,7 @@ public class GameApp extends Application {
         PlayerController playerController = new PlayerController(playerModel, playerView);
         BombController bombController = new BombController(playerModel, bombLayer);
         InputController inputController = new InputController(playerController, bombController, mainScene);
-
+        
         // Create and start the game loop using AnimationTimer
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
@@ -938,27 +933,43 @@ public class GameApp extends Application {
         launch(args);
     }
 }
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
+import javafx.scene.text.Font;
 
 public class HUDView {
-    private HBox hudPane = new HBox(10);
-    private Text scoreText = new Text();
-    private Text livesText = new Text();
+    private HBox hudPane;
+    private Label scoreLabel;
+    private Label livesLabel;
+    private Label bombCapacityLabel;
+    private Label bombRadiusLabel;
 
-    public HUDView(PlayerModel model) {
-        hudPane.getChildren().addAll(scoreText, livesText);
+    public HUDView(PlayerModel playerModel) {
+        hudPane = new HBox(10);
+        hudPane.setAlignment(Pos.TOP_CENTER);
+        
+        scoreLabel = new Label();
+        livesLabel = new Label();
+        bombCapacityLabel = new Label();
+        bombRadiusLabel = new Label();
+        
+        scoreLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        livesLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        bombCapacityLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        bombRadiusLabel.setFont(new Font("Pixelify Sans Regular", 14));
 
-        // Bind the HUD elements to the model
-        scoreText.textProperty().bind(model.scoreProperty().asString("Score: %d"));
-        livesText.textProperty().bind(model.livesProperty().asString("Lives: %d"));
+        scoreLabel.textProperty().bind(playerModel.scoreProperty().asString("Score: %d"));
+        livesLabel.textProperty().bind(playerModel.lifeProperty().asString("life: %d"));
+        bombCapacityLabel.textProperty().bind(playerModel.bombCapacityProperty().asString("Bombs: %d"));
+        bombRadiusLabel.textProperty().bind(playerModel.bombRadiusProperty().asString("Radius: %d"));
+
+        hudPane.getChildren().addAll(scoreLabel, livesLabel, bombCapacityLabel, bombRadiusLabel);
     }
 
     public HBox getHudPane() {
         return hudPane;
     }
-
-    // Methods to update the view
 }
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1058,8 +1069,7 @@ import javafx.beans.property.SimpleIntegerProperty;
  * PlayerModel represents the state and behavior of a player in the game.
  */
 public class PlayerModel extends EntityModel {
-    private final IntegerProperty lives = new SimpleIntegerProperty();
-    private final IntegerProperty score = new SimpleIntegerProperty();
+    private final IntegerProperty score = new SimpleIntegerProperty(0);
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
     private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
 
@@ -1071,8 +1081,8 @@ public class PlayerModel extends EntityModel {
     public PlayerModel(int initialX, int initialY, double velocity, StageModel stage) {
         super(initialX, initialY, velocity,  new int[] {13, 13}, new int[] {7, 17}, stage);
         // Set default values for lives and score or any additional setup.
-        this.lives.set(3); // Example default lives
         this.score.set(0); // Initial score
+        this.life.set(3); // Initial lives
     }
 
     /**
@@ -1080,8 +1090,22 @@ public class PlayerModel extends EntityModel {
      * 
      * @return The lives property.
      */
-    public IntegerProperty livesProperty() {
-        return this.lives;
+    public IntegerProperty lifeProperty() {
+        return this.life;
+    }
+
+    @Override
+    public void loseLife(int amount) {
+        this.life.set(life.get() - 1);
+    }
+
+    @Override
+    public EntityModel checkCollision(int dx, int dy) {
+        EntityModel occupant = super.checkCollision(dx, dy);
+        if (occupant instanceof EnemyModel) {
+            loseLife(1);
+        }
+        return occupant;
     }
     
     /**
@@ -1110,7 +1134,8 @@ public class PlayerModel extends EntityModel {
     }
 
     public void increaseSpeed() {
-        this.velocity.set(this.velocity.get() + 0.2);
+        // this.velocity.set(this.velocity.get() + 0.3);
+        if (this.delayMove > 0.01) this.delayMove -= 0.01;
     }
 
     /**
@@ -1133,14 +1158,21 @@ public class PlayerModel extends EntityModel {
     // Additional player-specific methods can be added below
 }
 
-public abstract class PowerUp extends EmptyTile{
-    private PowerUpType type;
+public class PowerUp extends SpecialTile{
     private boolean applied = false;
+    private PowerUpBehaviour behaviour;
 
-    public PowerUp(int x, int y, PowerUpType type) {
-        super(x, y);
-        this.type = type;
-        setDisplayable(true);
+    public PowerUp(int x, int y, SpecialTileType type) {
+        super(x, y, type);
+        if (type == SpecialTileType.pupBlast) {
+            this.behaviour = new PowerUpBlast();
+        }
+        else if (type == SpecialTileType.pupBomb) {
+            this.behaviour = new PowerUpBomb();
+        }
+        else if (type == SpecialTileType.pupSpeed) {
+            this.behaviour = new PowerUpSpeed();
+        }
     }
 
     @Override
@@ -1154,17 +1186,13 @@ public abstract class PowerUp extends EmptyTile{
         applied = true;
     }
 
-    public abstract void applyPowerUp(PlayerModel playerModel);
- 
-    public PowerUpType getType() {
-        return type;
-    }
+    public void applyPowerUp(PlayerModel playerModel) {
+        behaviour.applyPowerUp(playerModel);
+    };
 }
-public class PowerUpBlast extends PowerUp{
-
-    public PowerUpBlast(int x, int y) {
-        super(x, y, PowerUpType.blast);
-    }
+public interface PowerUpBehaviour {
+    void applyPowerUp(PlayerModel playerModel);
+}public class PowerUpBlast implements PowerUpBehaviour{
 
     @Override
     public void applyPowerUp(PlayerModel playerModel){
@@ -1172,34 +1200,55 @@ public class PowerUpBlast extends PowerUp{
     }
 
 }
-public class PowerUpBomb extends PowerUp{
-
-    public PowerUpBomb(int x, int y) {
-        super(x, y, PowerUpType.bomb);
-    }
-
+public class PowerUpBomb implements PowerUpBehaviour{
+    
     @Override
     public void applyPowerUp(PlayerModel playerModel){
         playerModel.increaseBombCapacity();
     }
-
 }
-public class PowerUpSpeed extends PowerUp{
-
-    public PowerUpSpeed(int x, int y) {
-        super(x, y, PowerUpType.speed);
-    }
-
+public class PowerUpSpeed implements PowerUpBehaviour{
+    
     @Override
     public void applyPowerUp(PlayerModel playerModel){
         playerModel.increaseSpeed();
     }
 
 }
-enum PowerUpType {
-  blast,
-  bomb,
-  speed,
+public abstract class SpecialTile extends EmptyTile{
+    protected SpecialTileType type;
+
+    public SpecialTile(int x, int y, SpecialTileType type) {
+        super(x, y);
+        setType(type);
+        setDisplayable(true);
+    }
+
+    public SpecialTileType getType() {
+        return type;
+    }
+
+    public void setType(SpecialTileType type) {
+        this.type = type;
+    }
+}
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+enum SpecialTileType {
+  pupBlast,
+  pupBomb,
+  pupSpeed,
+  nextLevelDoor;
+
+  public static SpecialTileType getRandomPowerUpType()  {
+    List<SpecialTileType> values = Arrays.asList(values());
+    values.remove(SpecialTileType.nextLevelDoor);
+    int size = values.size();
+    Random random = new Random();
+    return values.get(random.nextInt(size));
+  }
 }import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -1212,6 +1261,8 @@ public class StageModel {
     private final List<int[]> freeTileIndex = new ArrayList<>();
     private Tile[][] tiles = new Tile[width][height];
     private Random rand = new Random();
+    private PlayerModel player;
+    private int damage = 100;
     
 
     public StageModel() {
@@ -1259,6 +1310,10 @@ public class StageModel {
         for (int[] position : freeTileIndex) {
             tiles[position[0]][position[1]] = new EmptyTile(position[0], position[1]);
         }
+    }
+
+    public void setPlayer(PlayerModel player) {
+        this.player = player;
     }
 
     public Tile getTile(int x, int y) {
@@ -1329,19 +1384,24 @@ public class StageModel {
             if ((tiles[x][y] instanceof EmptyTile || tiles[x][y] instanceof BombModel) && ((EmptyTile) tiles[x][y]).isOccupied()) {
                 EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
                 EntityModel occupant = occupiedTile.getOccupant();
-                System.out.println(occupant.getLife());
-                occupant.loseLife();
+                occupant.loseLife(damage);
+                if (occupant.isDead()) {
+                    setTile(x, y, new EmptyTile(x, y));
+                }
+                else{
+                    setTile(x, y, new EmptyTile(x, y));
+                    ((EmptyTile) tiles[x][y]).setOccupant(occupant);
+                }
+                if (player != null && !(occupant instanceof PlayerModel)) {
+                    player.addScore(damage);
+                }
             }
             // Randomly add a PowerUp tile
+            // ...
+
             else if (!(tiles[x][y] instanceof EmptyTile)){
-                if (rand.nextDouble() < powerUpProbability) { 
-                    setTile(x, y, new PowerUpBlast(x, y));
-                }
-                else if (rand.nextDouble() < powerUpProbability) { 
-                    setTile(x, y, new PowerUpBomb(x, y));
-                }
-                else if (rand.nextDouble() < powerUpProbability / 2) { 
-                    setTile(x, y, new PowerUpSpeed(x, y));
+                if (rand.nextDouble() < powerUpProbability) {
+                    setTile(x, y, new PowerUp(x, y, SpecialTileType.getRandomPowerUpType())); // Create a new instance of PowerUp
                 }
                 else setTile(x, y, new EmptyTile(x, y));
             }
@@ -1366,7 +1426,7 @@ public class StageModel {
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
-        if (!(tiles[tileX][tileY] instanceof EmptyTile)) {
+        if (!(tiles[tileX][tileY] instanceof EmptyTile) || tiles[tileX][tileY] instanceof BombModel) {
             return false;
         }
         EntityModel previousOccupant = ((EmptyTile) tiles[tileX][tileY]).getOccupant();
@@ -1431,8 +1491,8 @@ public class StageView {
             for (int y = 0; y < stage.getHeight(); y++) {
                 Tile tile = stage.getTile(x, y);
                 if (tile.isDisplayable()) {
-                    if (tile instanceof PowerUp) {
-                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("resources/sprites/pup_" + ((PowerUp) tile).getType().toString() + ".png")).getPixelReader();
+                    if (tile instanceof SpecialTile) {
+                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("resources/sprites/pup_" + ((SpecialTile) tile).getType().toString() + ".png")).getPixelReader();
                         writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, powerUpReader, 0, 0);
                     }
                     else {

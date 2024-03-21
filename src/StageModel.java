@@ -5,13 +5,17 @@ import java.util.Random;
 public class StageModel {
     private final int width = 17;
     private final int height = 13;
-    private double powerUpProbability = 0.2; // 10% chance of adding a PowerUp tile
+    private double powerUpProbability = 0.8; // 10% chance of adding a PowerUp tile
     private final int tileSize = 16; // Assuming each tile is 16x16 pixels
+    final int freeSlots = 110; // Number of free slots in the stage
+    private final int destructibleTilesStart;
+    private int destructedTiles = 0;
     private final List<int[]> freeTileIndex = new ArrayList<>();
     private Tile[][] tiles = new Tile[width][height];
     private Random rand = new Random();
     private PlayerModel player;
     private int damage = 100;
+    private SpecialTile nextLevelDoor;
     
 
     public StageModel() {
@@ -19,9 +23,9 @@ public class StageModel {
     }
 
     public StageModel(double destructiblePercentage, double nonDestructiblePercentage) {
-        final int freeSlots = 110; // Number of free slots in the stage
         // Calculate the total number of free positions
         int destructibleTilesCount = (int) (freeSlots * destructiblePercentage);
+        destructibleTilesStart = destructibleTilesCount;
         int nonDestructibleTilesCount = (int) ((freeSlots-destructibleTilesCount) * nonDestructiblePercentage);
 
         // Fill the stage with non-walkable borders and predefined tiles
@@ -96,6 +100,10 @@ public class StageModel {
         return freeTileIndex;
     }
 
+    public SpecialTile getNextLevelDoor() {
+        return nextLevelDoor;
+    }
+
     public void setTile(int x, int y, Tile tile) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             tiles[x][y] = tile;
@@ -129,39 +137,44 @@ public class StageModel {
 
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
+            // the tile is not destructible
             if (!tiles[x][y].isDestructible()) return true;
+            // the tile is empty but occupied
             if ((tiles[x][y] instanceof EmptyTile || tiles[x][y] instanceof BombModel) && ((EmptyTile) tiles[x][y]).isOccupied()) {
                 EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
                 EntityModel occupant = occupiedTile.getOccupant();
                 occupant.loseLife(damage);
                 if (occupant.isDead()) {
-                    setTile(x, y, new EmptyTile(x, y));
+                    occupant = null;
                 }
-                else{
-                    setTile(x, y, new EmptyTile(x, y));
-                    ((EmptyTile) tiles[x][y]).setOccupant(occupant);
-                }
+                // if (!(occupiedTile instanceof SpecialTile && ((SpecialTile) occupiedTile).getType() == SpecialTileType.nextLevelDoor)) {
+                //     setTile(x, y, new EmptyTile(x, y));
+                // }
+                ((EmptyTile) tiles[x][y]).setOccupant(occupant);
                 if (player != null && !(occupant instanceof PlayerModel)) {
                     player.addScore(damage);
                 }
             }
-            // Randomly add a PowerUp tile
+            // the tiles is destructible tile, in case add powerup or next level door
             else if (!(tiles[x][y] instanceof EmptyTile)){
-                if (rand.nextDouble() < powerUpProbability) { 
-                    setTile(x, y, new PowerUpBlast(x, y));
-                }
-                else if (rand.nextDouble() < powerUpProbability) { 
-                    setTile(x, y, new PowerUpBomb(x, y));
-                }
-                else if (rand.nextDouble() < powerUpProbability / 2) { 
-                    setTile(x, y, new PowerUpSpeed(x, y));
+                double nextLevelDoorProbability = (double) destructedTiles / destructibleTilesStart;
+                if (this.nextLevelDoor == null && rand.nextDouble() < nextLevelDoorProbability) {
+                        setTile(x, y, new SpecialTile(x, y, SpecialTileType.nextLevelDoor)); // Create a new instance of NextLevelDoor
+                        this.nextLevelDoor = (SpecialTile) tiles[x][y];
+                } 
+                else if (rand.nextDouble() < powerUpProbability) {
+                    setTile(x, y, new PowerUp(x, y, SpecialTileType.getRandomPowerUpType())); // Create a new instance of PowerUp
                 }
                 else setTile(x, y, new EmptyTile(x, y));
+                destructedTiles++;
             }
+            // the tile was simply empty
             else setTile(x, y, new EmptyTile(x, y));
             freeTileIndex.add(new int[] {x, y});
+            // tile destroyed
             return true;
         }
+        // tile out of bounds
         return false;
     }
 
@@ -179,7 +192,8 @@ public class StageModel {
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
-        if (!(tiles[tileX][tileY] instanceof EmptyTile) || tiles[tileX][tileY] instanceof BombModel) {
+        Tile tile = tiles[tileX][tileY];
+        if (!(tile instanceof EmptyTile) || tile instanceof BombModel || tile == this.nextLevelDoor) {
             return false;
         }
         EntityModel previousOccupant = ((EmptyTile) tiles[tileX][tileY]).getOccupant();
