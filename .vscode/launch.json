@@ -6,6 +6,14 @@
     "configurations": [
         {
             "type": "java",
+            "name": "PreGameSetup",
+            "request": "launch",
+            "mainClass": "PreGameSetup",
+            "vmArgs": "--module-path /Users/lmonari/Documents/software/java/javafx-sdk-21.0.2/lib --add-modules javafx.controls,javafx.fxml",
+            "projectName": "JBomberman_2902632a"
+        },
+        {
+            "type": "java",
             "name": "GameApp",
             "request": "launch",
             "mainClass": "GameApp",
@@ -18,6 +26,6 @@
             "request": "launch",
             "vmArgs": "--module-path /Users/lmonari/Documents/software/java/javafx-sdk-21.0.2/lib --add-modules javafx.controls,javafx.fxml",
             "mainClass": "${file}"
-        }
+        },
     ]
 }

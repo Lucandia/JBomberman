@@ -2,13 +2,28 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.animation.AnimationTimer;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.BorderPane;
 
 public class GameApp extends Application {
+    private int avatar;
+    private PlayerData data;
 
-    private PlayerModel playerModel;
+    // public static void main(String[] args) {
+    //     launch(args);
+    // }
+
+    public Void initializeGame(PlayerData data) {
+        this.avatar = Integer.parseInt(data.getAvatar()) - 1;
+        this.data = data;
+        System.out.println("Game initialized with player data: " + data.getDataString());
+        return null;
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -24,9 +39,9 @@ public class GameApp extends Application {
         // HUDView hudView = new HUDView(playerModel);
 
         // initialize playerModel, view, and controller
-        playerModel = new PlayerModel(32, 6, 1.3, stageModel);
+        PlayerModel playerModel = new PlayerModel(32, 6, 1.3, stageModel);
         stageModel.setPlayer(playerModel);
-        EntityView playerView = new EntityView(playerModel, "bomberman", 3); // Pass a new Pane as the gamePane for player
+        EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar); // Pass a new Pane as the gamePane for player
         int numberOfEnemies = 7;
         String enemyType = "1";
         EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer);
@@ -59,6 +74,7 @@ public class GameApp extends Application {
                 // Update logic here
                 // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
                 if (playerModel.isDead()) {
+                    savePlayerData();
                     System.out.println("Game Over");
                     stop();
                 }
@@ -71,7 +87,42 @@ public class GameApp extends Application {
         gameLoop.start();
     }
 
-    public static void main(String[] args) {
-        launch(args);
+
+    public void savePlayerData() {
+        try {
+            // Get the path to the JAR file
+            String jarPath = new File(GameApp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            // Get the directory of the JAR file
+            String dirPath = new File(jarPath).getParent();
+            // Construct the path to the players.txt file in the same directory
+            File file = new File(dirPath, "savedGames.txt");
+            // Prepare data to save
+            String dataToSave = data.getDataString();
+            // Check if data for the player already exists and needs to be updated, or append new data
+            List<String> lines = file.exists() ? Files.readAllLines(file.toPath()) : new ArrayList<>();
+            boolean dataExists = false;
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                String nickname = line.split(",")[0];
+                if (nickname.equals(data.getNickname())) {
+                    lines.set(i, dataToSave); // Update existing data
+                    dataExists = true;
+                    break;
+                }
+            }
+            if (!dataExists) {
+                lines.add(dataToSave); // Append new player data
+            }
+            // Write data to the file
+            Files.write(file.toPath(), lines);
+        } catch (URISyntaxException e) {
+            System.err.println("Error parsing URI: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO error occurred: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+        }
     }
+
+
 }

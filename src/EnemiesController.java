@@ -20,7 +20,7 @@ public class EnemiesController {
             } else {
                 enemyModel.startMoving("RIGHT");
             }
-            EntityView enemyView = new EntityView(enemyModel, "enemy" + enemyType, 4);
+            EntityView enemyView = new EntityView(enemyModel, "enemy" + enemyType);
             gameLayer.getChildren().add(enemyView.getEntitySprite());
             addEnemy(enemyModel, enemyView);
         }

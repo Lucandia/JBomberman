@@ -18,26 +18,35 @@ public class EntityView {
     // Create a fixed HashMap with keys and values
     private Map<String, Integer> directionSprite = new HashMap<>();
     private Timeline walkAnimation = null;
-    private String spriteName;
-    private int frames = 0;
+    private boolean autoReverse = false;
+    // private String spriteName;
+    private int frames = 4;
+    int row = 0;
+
+    public EntityView(EntityModel model, String spriteName)
+    {
+        this(model, spriteName, false, 4, 0);
+    }
     
-    public EntityView(EntityModel model, String spriteName, int frames) {
+    public EntityView(EntityModel model, String spriteName, boolean autoReverse, int frames, int row) {
         this.model = model;
+        this.autoReverse = autoReverse;
         this.frames = frames;
-        this.spriteName = spriteName;
+        this.row = row;
+        // this.spriteName = spriteName;
         this.directionSprite = Map.of(
-            "DOWN", 16 * frames * 1 + 1,
-            "LEFT", 16 * frames * 2 + 1,
-            "RIGHT", 16 * frames * 3 + 1,
-            "UP", 16 * frames * 4 + 1
+            "DOWN",  16 + 16 * frames * 0,
+            "LEFT",  16 + 16 * frames * 1,
+            "RIGHT", 16 + 16 * frames * 2,
+            "UP",    16 + 16 * frames * 3
         );
         
         // Load the sprite image
         Image image = new Image(getClass().getResourceAsStream("resources/sprites/" + spriteName + ".png"));
         this.EntitySprite = new ImageView(image);
         
-        // Set the viewport to show only the part of the image you need
-        EntitySprite.setViewport(new Rectangle2D(64, 0, 16, 24)); // Adjust x, y, width, and height accordingly
+        // Set the default sprite for the entity
+        EntitySprite.setViewport(new Rectangle2D(directionSprite.get("DOWN") + 16, 24 * row, 16, 24)); 
 
         // Bind the ImageView's position to the model's position
         EntitySprite.layoutXProperty().bind(model.xProperty());
@@ -51,37 +60,25 @@ public class EntityView {
     public void startWalking(String direction) {
         if (lastDirection != direction) {
             lastDirection = direction;
-            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24)); // Iniziliazza la direzione del bomberman
+            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 24 * row, 16, 24)); // Iniziliazza la direzione della view
             // Stop the current animation if it's running
             if (walkAnimation != null && walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 walkAnimation.stop();
             }
             double animationFrameTime = 0.2 / model.velocityProperty().get();
-            // walkAnimation = new Timeline(
-            //     new KeyFrame(Duration.seconds(animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 16, 24))),
-            //     new KeyFrame(Duration.seconds(2 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24))),
-            //     new KeyFrame(Duration.seconds(3 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 16, 24))),
-            //     new KeyFrame(Duration.seconds(4 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24)))
-            // );
             walkAnimation = new Timeline();
-            IntStream.range(0, frames).forEach(i -> {
+            IntStream.range( 0, frames).forEach(i -> {
                 walkAnimation.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(animationFrameTime * (i + 1)), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16 * i, 0, 15, 24)))
+                    new KeyFrame(Duration.seconds(animationFrameTime * i), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16 * i, 24 * row, 16, 24)))
                 );
             });
-
-            // reverse the animation for the bomberman
-            if (spriteName == "bomberman"){
-                IntStream.range(-frames+2, 0).forEach(i -> {
-                    walkAnimation.getKeyFrames().add(
-                        new KeyFrame(Duration.seconds(animationFrameTime * (frames * 2 + i - 1)), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16 * i, 0, 15, 24)))
-                    );
-                });
-            }
+            walkAnimation.setAutoReverse(autoReverse);
             walkAnimation.setCycleCount(Animation.INDEFINITE);
             walkAnimation.play();
         }
-        walkAnimation.play();
+        if (walkAnimation.getStatus() !=  Animation.Status.RUNNING){
+            walkAnimation.play();
+        }
     }
 
     public void stopWalking() {
@@ -89,8 +86,12 @@ public class EntityView {
             walkAnimation.stop();
         }
         if (lastDirection != null) {
-            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection) + 16, 0, 15, 24));
+            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection) + 16, 24 * row, 16, 24));
         }
+    }
+
+    public void setFrames(int frames) {
+        this.frames = frames;
     }
 
     public void update(double elapsed) {
