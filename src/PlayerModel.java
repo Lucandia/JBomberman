@@ -8,6 +8,8 @@ public class PlayerModel extends EntityModel {
     private final IntegerProperty score = new SimpleIntegerProperty(0);
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
     private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
+    private int recoveryTime = 10;
+    private boolean recovering = false;
 
     /**
      * Constructs a new PlayerModel with the specified initial position.
@@ -32,7 +34,9 @@ public class PlayerModel extends EntityModel {
 
     @Override
     public void loseLife(int amount) {
+        if (this.recovering) return;
         this.life.set(life.get() - 1);
+        this.recovering = true;
     }
 
     @Override
@@ -86,11 +90,14 @@ public class PlayerModel extends EntityModel {
     @Override
     public void update(double elapsedTime) {
         super.update(elapsedTime);
-        // Example: Update the player's position based on velocity and elapsed time.
-        
-        // Example movement update could be applied here, handling user input, etc.
+        if (this.recovering) {
+            this.recoveryTime--;
+            if (this.recoveryTime == 0) {
+                this.recovering = false;
+                this.recoveryTime = 10;
+            }
+        }
     }
     
-    // Additional player-specific methods can be added below
 }
 

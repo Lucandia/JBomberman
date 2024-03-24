@@ -38,6 +38,7 @@ public class BombController {
         // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
         Tile tile = stage.getTile(x, y);
         if (tile == null) return true; // Tile is out of bounds
+        // the tile is destructible
         else if (!tile.isDestructible()) {
             return true;
         }

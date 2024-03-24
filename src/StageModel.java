@@ -137,6 +137,7 @@ public class StageModel {
 
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
+            System.out.println(tiles[x][y].getClass());
             // the tile is not destructible
             if (!tiles[x][y].isDestructible()) return true;
             // the tile is empty but occupied
@@ -147,13 +148,18 @@ public class StageModel {
                 if (occupant.isDead()) {
                     occupant = null;
                 }
-                // if (!(occupiedTile instanceof SpecialTile && ((SpecialTile) occupiedTile).getType() == SpecialTileType.nextLevelDoor)) {
-                //     setTile(x, y, new EmptyTile(x, y));
-                // }
+                // destroy the tile if it is not a next level door
+                if (!(occupiedTile instanceof SpecialTile) || ((SpecialTile) occupiedTile).getType() != SpecialTileType.nextLevelDoor) {
+                    setTile(x, y, new EmptyTile(x, y));
+                }
                 ((EmptyTile) tiles[x][y]).setOccupant(occupant);
                 if (player != null && !(occupant instanceof PlayerModel)) {
                     player.addScore(damage);
                 }
+            }
+            // the tile is a special tile (but not a next level door)
+            else if (tiles[x][y] instanceof PowerUp) {
+                setTile(x, y, new EmptyTile(x, y));
             }
             // the tiles is destructible tile, in case add powerup or next level door
             else if (!(tiles[x][y] instanceof EmptyTile)){
@@ -169,7 +175,9 @@ public class StageModel {
                 destructedTiles++;
             }
             // the tile was simply empty
-            else setTile(x, y, new EmptyTile(x, y));
+            else {
+                setTile(x, y, new EmptyTile(x, y));
+            }
             freeTileIndex.add(new int[] {x, y});
             // tile destroyed
             return true;

@@ -26,6 +26,11 @@ public class PowerUp extends SpecialTile{
         applied = true;
     }
 
+    @Override
+    public boolean isDetonable() {
+        return true;
+    }
+
     public void applyPowerUp(PlayerModel playerModel) {
         behaviour.applyPowerUp(playerModel);
     };

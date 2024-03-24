@@ -28,7 +28,7 @@ public class PreGameSetup extends Application {
         ComboBox<String> avatarComboBox = new ComboBox<>();
         avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
         avatarComboBox.setValue("1"); // Default to the first avatar
-        updateAvatarPreview("1"); // Update the avatar preview based on the default value (1
+        updateAvatarPreview("1"); // Update the avatar preview based on the default value (1)
         avatarComboBox.setOnAction(e -> updateAvatarPreview(avatarComboBox.getValue()));
 
         Button startGameButton = new Button("Start Game");
