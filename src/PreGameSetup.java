@@ -27,7 +27,8 @@ public class PreGameSetup extends Application {
         TextField nicknameField = new TextField();
         ComboBox<String> avatarComboBox = new ComboBox<>();
         avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
-
+        avatarComboBox.setValue("1"); // Default to the first avatar
+        updateAvatarPreview("1"); // Update the avatar preview based on the default value (1
         avatarComboBox.setOnAction(e -> updateAvatarPreview(avatarComboBox.getValue()));
 
         Button startGameButton = new Button("Start Game");
@@ -95,7 +96,7 @@ public class PreGameSetup extends Application {
         Image avatarImage = new Image(getClass().getResourceAsStream("resources/sprites/bomberman.png"));
         int avatarIndex = Integer.parseInt(avatarNumber) - 1; // Assuming avatarNumber starts at 1
         avatarPreview.setImage(avatarImage); // avatarPreview should be an ImageView
-        avatarPreview.setViewport(new Rectangle2D(0, 24 * avatarIndex, 48, 24)); // Update this to match your sprite sheet
+        avatarPreview.setViewport(new Rectangle2D(0, 24 * avatarIndex, 47, 24)); // Update this to match your sprite sheet
     }
 
     public static void main(String[] args) {

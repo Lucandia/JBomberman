@@ -35,7 +35,7 @@ public class GameApp extends Application {
         // Initialize the map and HUD
         // MapModel mapModel = new MapModel(1, 300, 230); // Example dimensions
         StageModel stageModel = new StageModel();
-        StageView stageView = new StageView(2, stageModel);
+        StageView stageView = new StageView(1, stageModel);
         // HUDView hudView = new HUDView(playerModel);
 
         // initialize playerModel, view, and controller
@@ -57,7 +57,7 @@ public class GameApp extends Application {
         borderPane.setCenter(root); // Set the game (map + player) as the center
         borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
 
-        Scene mainScene = new Scene(borderPane, 272, 208);
+        Scene mainScene = new Scene(borderPane, 272, 232);
         primaryStage.setTitle("JBomberman");
         primaryStage.setScene(mainScene);
         primaryStage.show();

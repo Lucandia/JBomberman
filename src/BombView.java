@@ -161,17 +161,20 @@ public class BombView {
             if (dy == min_dy) break;
         }
     
+        double frameTime = 0.1; // Time between each frame of the explosion animation
         // Create and play the explosion animation
         Timeline explosionAnimation = new Timeline();
         for (int frameIndex = 0; frameIndex < 5; frameIndex++) { // For each frame of the explosion
             final int index = frameIndex;
-            explosionAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(index * 0.1), e -> {
+            explosionAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(index * frameTime), e -> {
                 for (ImageView sprite : explosionSprites) {
                     Rectangle2D viewport = sprite.getViewport();
                     sprite.setViewport(new Rectangle2D(viewport.getMinX() + 16 * 5 * index, viewport.getMinY(), size, size));
                 }
             }));
         }
+        explosionAnimation.setCycleCount(2); // Play the animation 2 times
+        explosionAnimation.setAutoReverse(true); // Reverse the animation
         explosionAnimation.setOnFinished(e -> explosionSprites.forEach(sprite -> pane.getChildren().remove(sprite))); // Remove sprites after animation
         explosionAnimation.play();
     }

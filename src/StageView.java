@@ -44,9 +44,13 @@ public class StageView {
                         writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, powerUpReader, 0, 0);
                     }
                     else {
-                        int srcX = tile.isDestructible() ? 17 : 0;
+                        int srcX = tile.isDestructible() ? 16 : 0;
                         writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, srcX, 0);
                     }
+                }
+                else if (tile instanceof EmptyTile && !stage.getTile(x, y - 1).isDestructible()){
+                    // if the tile is not displayable, but the tile above it is not destructible, display the shadow tile
+                    writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, 32, 0);
                 }
             }
         }
