@@ -161,7 +161,7 @@ public class BombView {
             if (dy == min_dy) break;
         }
     
-        double frameTime = 0.1; // Time between each frame of the explosion animation
+        double frameTime = 0.07; // Time between each frame of the explosion animation
         // Create and play the explosion animation
         Timeline explosionAnimation = new Timeline();
         for (int frameIndex = 0; frameIndex < 5; frameIndex++) { // For each frame of the explosion

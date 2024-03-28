@@ -27,7 +27,7 @@ public abstract class EntityModel extends XYModel{
     }
 
     public EntityModel(int x, int y, double velocity, StageModel stage) {
-        this(0, 0, 0.0, null, null, null);
+        this(x, y, velocity, new int[] {16, 16}, new int[] {16, 16}, 100, null);
     }
 
     /**
@@ -35,10 +35,11 @@ public abstract class EntityModel extends XYModel{
      * 
      * @param initialPosition The initial position of the entity on the game board.
      */
-    public EntityModel(int x, int y, double velocity, int[] boundingBox, int[] boundingOffset, StageModel stage) {
+    public EntityModel(int x, int y, double velocity, int[] boundingBox, int[] boundingOffset,  int life, StageModel stage) {
         super(x, y);
         this.stage = stage;
         this.velocity.set(velocity);
+        this.life.set(life);
         if (boundingBox!=null && boundingOffset.length == 2){
             this.boundingBox[0] = boundingBox[0];
             this.boundingBox[1] = boundingBox[1];
@@ -56,6 +57,10 @@ public abstract class EntityModel extends XYModel{
 
     public boolean isDead() {
         return getLife() <= 0;
+    }
+
+    public void setLife(int amount) {
+        this.life.set(amount);
     }
 
     public int getLife() {
@@ -146,7 +151,7 @@ public abstract class EntityModel extends XYModel{
     }
 
     // Check if the entity can move to a new position
-    private boolean canMoveTo(int dx, int dy) {
+    protected boolean canMoveTo(int dx, int dy) {
         int xSign = Integer.signum(dx);
         int ySign = Integer.signum(dy);
         int[] center = centerOfMass();

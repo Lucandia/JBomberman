@@ -11,18 +11,35 @@ public class EnemiesController {
     public EnemiesController(int numberOfEnemies, String enemyType, StageModel stageModel, Pane gameLayer) {
         List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
         Random random = new Random();
-        for (int i = 0; i < numberOfEnemies; i++) {
+        int i = 0;
+        while (i < numberOfEnemies) {
             int randomIndex = random.nextInt(freeTileIndex.size());
             int[] tileIndex = freeTileIndex.get(randomIndex);
-            EnemyModel enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, 0.8, new int[] {15, 15}, new int[] {8, 17}, stageModel, Integer.parseInt(enemyType) * 100);
+            if (((EmptyTile) stageModel.getTile(tileIndex[0], tileIndex[1])).getOccupant() != null) {
+                continue;
+            }
+            EnemyModel enemyModel;
+            if ((i % 2) == 0) {
+                enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10,  stageModel);
+            }
+            else {
+                enemyModel = new EnemyModel2(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, stageModel);
+            }
             if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) instanceof EmptyTile || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) instanceof EmptyTile) {
                 enemyModel.startMoving("UP");
             } else {
                 enemyModel.startMoving("RIGHT");
             }
-            EntityView enemyView = new EntityView(enemyModel, "enemy" + enemyType);
+            EntityView enemyView;
+            if ((i % 2) == 0) {
+                enemyView = new EntityView(enemyModel, "enemy1");
+            }
+            else {
+                enemyView = new EntityView(enemyModel, "enemy2", true, 6);
+            }
             gameLayer.getChildren().add(enemyView.getEntitySprite());
             addEnemy(enemyModel, enemyView);
+            i++;
         }
     }
 

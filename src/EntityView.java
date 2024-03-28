@@ -27,6 +27,11 @@ public class EntityView {
     {
         this(model, spriteName, false, 4, 0);
     }
+
+    public EntityView(EntityModel model, String spriteName, boolean autoReverse, int frames)
+    {
+        this(model, spriteName, autoReverse, frames, 0);
+    }
     
     public EntityView(EntityModel model, String spriteName, boolean autoReverse, int frames, int row) {
         this.model = model;

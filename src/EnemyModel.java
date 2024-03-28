@@ -1,37 +1,23 @@
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-
 /**
  * PlayerModel represents the state and behavior of a player in the game.
  */
 public class EnemyModel extends EntityModel {
-    private final IntegerProperty points = new SimpleIntegerProperty();
-
     /**
      * Constructs a new PlayerModel with the specified initial position.
      * 
      * @param initialPosition The starting position of the player in the game world.
      */
-    public EnemyModel(int initialX, int initialY, double velocity, int[] boundingBox, int[] boundingOffset, StageModel stage, int points) {
-        super(initialX, initialY, velocity, boundingBox, boundingOffset, stage);
-        this.points.set(3); // Example default lives
+    public EnemyModel(int initialX, int initialY, StageModel stage) {
+        super(initialX, initialY, 0.8, new int[] {15, 15}, new int[] {8, 17}, 100, stage);
     }
 
+    @Override
     public EntityModel checkCollision(int dx, int dy) {
         EntityModel occupant = super.checkCollision(dx, dy);
         if (occupant instanceof PlayerModel) {
             occupant.loseLife(1);
         }
         return occupant;
-    }
-
-    /**
-     * Gets the lives property of the player.
-     * 
-     * @return The lives property.
-     */
-    public IntegerProperty pointsProperty() {
-        return this.points;
     }
 
     @Override

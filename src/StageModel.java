@@ -137,7 +137,6 @@ public class StageModel {
 
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
-            System.out.println(tiles[x][y].getClass());
             // the tile is not destructible
             if (!tiles[x][y].isDestructible()) return true;
             // the tile is empty but occupied
@@ -221,6 +220,14 @@ public class StageModel {
 
     public int getHeight() {
         return height;
+    }
+
+    public int[] getRandomFreeTile() {
+        if (freeTileIndex.isEmpty()) {
+            return null; // No more free tiles available
+        }
+        int randomIndex = rand.nextInt(freeTileIndex.size());
+        return freeTileIndex.remove(randomIndex);
     }
 
     // Additional methods as needed for game logic
