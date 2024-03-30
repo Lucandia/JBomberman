@@ -55,7 +55,7 @@ public class PreGameSetup extends Application {
     }
 
     private void readPlayerData() {
-        List<PlayerData> playerDataList = new ArrayList<>();
+        // List<PlayerData> playerDataList = new ArrayList<>();
         try {
             // Get the path to the JAR file
             String jarPath = new File(PreGameSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();

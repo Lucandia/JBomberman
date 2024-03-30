@@ -8,7 +8,7 @@ public class EnemiesController {
     private List<EntityView> views = new ArrayList<EntityView>();
     private List<int[]> directions = new ArrayList<int []>();
 
-    public EnemiesController(int numberOfEnemies, String enemyType, StageModel stageModel, Pane gameLayer, int level) {
+    public EnemiesController(int numberOfEnemies, StageModel stageModel, Pane gameLayer, int level) {
         List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
         Random random = new Random();
         int i = 1;
@@ -52,6 +52,10 @@ public class EnemiesController {
             views.remove(index);
             directions.remove(index);
         }
+    }
+
+    public List<EnemyModel> getEnemies() {
+        return enemies;
     }
 
     public void update(double elapsed) {

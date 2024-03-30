@@ -47,4 +47,17 @@ public abstract class XYModel {
     public int getY() {
         return y.get();
     }   
+
+    public void setX(int x) {
+        this.x.set(x);
+    }
+
+    public void setY(int y) {
+        this.y.set(y);
+    }
+
+    public void setPosition(int x, int y) {
+        this.x.set(x);
+        this.y.set(y);
+    }
 }

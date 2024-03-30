@@ -8,6 +8,7 @@ public class PlayerData {
     private String score;
 
     public PlayerData(String nickname, String avatar, String lastLevel, String playedGames, String winGames, String lostGames, String score) {
+        if (nickname == "") nickname = "Default";
         this.nickname = nickname;
         this.avatar = avatar;
         this.lastLevel = lastLevel;
@@ -35,6 +36,10 @@ public class PlayerData {
 
     public String getLastLevel() {
         return lastLevel;
+    }
+
+    public int getLastLevelInt() {
+        return Integer.parseInt(lastLevel);
     }
 
     public void setLastLevel(String lastLevel) {

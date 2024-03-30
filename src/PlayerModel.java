@@ -86,6 +86,15 @@ public class PlayerModel extends EntityModel {
         this.score.set(this.score.get() + points);
     }
 
+    public boolean isOnNextLevelDoor() {
+        for (EmptyTile tile : occupiedTiles) {
+            if (tile instanceof SpecialTile && ((SpecialTile) tile).getType() == SpecialTileType.nextLevelDoor) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void update(double elapsedTime) {
         super.update(elapsedTime);

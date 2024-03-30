@@ -10,9 +10,9 @@ public class EnemyModel2 extends EnemyModel {
      */
     public EnemyModel2(int initialX, int initialY, StageModel stage) {
         super(initialX, initialY, stage);
-        this.life.set(400); // Initial life
+        this.life.set(200); // Initial life
         this.setBoundingBox(new int[] {15, 15});
-        this.setBoundingOffset(new int[] {8, 15});
+        this.setBoundingOffset(new int[] {8, 17});
     }
 
     @Override

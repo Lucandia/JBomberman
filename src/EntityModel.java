@@ -21,7 +21,7 @@ public abstract class EntityModel extends XYModel{
     protected boolean isMoving = false;
     protected int[] lastDirection = {0, 0};
     protected StageModel stage;
-    private ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
+    protected ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
         
 
 
@@ -141,6 +141,8 @@ public abstract class EntityModel extends XYModel{
         int yCenter = centerOfMass()[1];
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
+                // skip the cornern tiles {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
+                if (x != 0 && y !=0 && (x == y || x == -y)) continue;
                 int tileX = xCenter + x * boundingBox[0] / 2;
                 int tileY = yCenter + y * boundingBox[1] / 2;
                 EmptyTile tile = stage.getEmptyTileAtPosition(tileX, tileY);

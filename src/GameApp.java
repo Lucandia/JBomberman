@@ -13,10 +13,11 @@ import javafx.animation.AnimationTimer;
 public class GameApp extends Application {
     private int avatar;
     private PlayerData data;
-
-    // public static void main(String[] args) {
-    //     launch(args);
-    // }
+    private StageView stageView;
+    private PlayerController playerController;
+    private BombController bombController;
+    private PlayerModel playerModel;
+    private EnemiesController enemiesController;
 
     public Void initializeGame(PlayerData data) {
         this.avatar = Integer.parseInt(data.getAvatar()) - 1;
@@ -26,58 +27,25 @@ public class GameApp extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) {
-                // Use a StackPane as the root to allow layering of the map and the player
-        StackPane root = new StackPane();
-        Pane bombLayer = new Pane();
-        Pane gameLayer = new Pane();
-        int level = 1;
+    public void start(Stage primaryStage) {        
+        // Setup the game with the provided player data
+        setupGame(primaryStage, data.getLastLevelInt());
 
-        // Initialize the map and HUD
-        // MapModel mapModel = new MapModel(1, 300, 230); // Example dimensions
-        StageModel stageModel = new StageModel();
-        StageView stageView = new StageView(level, stageModel);
-        // HUDView hudView = new HUDView(playerModel);
-
-        // initialize playerModel, view, and controller
-        PlayerModel playerModel = new PlayerModel(32, 6, 1.3, stageModel);
-        stageModel.setPlayer(playerModel);
-        EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar); // Pass a new Pane as the gamePane for player
-        int numberOfEnemies = 7;
-        String enemyType = "1";
-        EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer, level);
-        // Layer the map and the player on the StackPane
-        root.getChildren().add(stageView.getPane()); // Map as the base layer
-        gameLayer.getChildren().add(playerView.getEntitySprite()); // Add Bomberman on top of the map
-        root.getChildren().add(bombLayer); // Add the bomb layer to the root
-        root.getChildren().add(gameLayer); // Add the game layer to the root
-
-        // For the HUD, use a BorderPane as the outer container
-        HUDView hudView = new HUDView(playerModel);
-        BorderPane borderPane = new BorderPane();
-        borderPane.setCenter(root); // Set the game (map + player) as the center
-        borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
-
-        Scene mainScene = new Scene(borderPane, 272, 232);
-        primaryStage.setTitle("JBomberman");
-        primaryStage.setScene(mainScene);
-        primaryStage.show();
-
-        // Setup the controller with the scene
-        PlayerController playerController = new PlayerController(playerModel, playerView);
-        BombController bombController = new BombController(playerModel, bombLayer);
-        InputController inputController = new InputController(playerController, bombController, mainScene);
-        
         // Create and start the game loop using AnimationTimer
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                // Update logic here
-                // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
+                // Check for player death
                 if (playerModel.isDead()) {
                     savePlayerData();
                     System.out.println("Game Over");
                     stop();
+                }
+                 // Check for level completion
+                 if (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor()) {
+                    savePlayerData(); // Save current game state
+                    setupGame(primaryStage, data.getLastLevelInt() + 1); // Setup game for next level
+                    data.setLastLevel(Integer.toString(data.getLastLevelInt() + 1));
                 }
                 enemiesController.update(1.0 / 60.0);
                 playerController.update(1.0 / 60.0);
@@ -86,6 +54,53 @@ public class GameApp extends Application {
             }
         };
         gameLoop.start();
+    }
+
+    private void setupGame(Stage primaryStage, int level) {
+        // Use a StackPane as the root to allow layering of the map and the player
+        StackPane root = new StackPane();
+        Pane bombLayer = new Pane();
+        Pane gameLayer = new Pane();
+        BorderPane borderPane = new BorderPane();
+
+        // Initialize the Stage
+        StageModel stageModel = new StageModel();
+        StageView stageView = new StageView(level, stageModel);
+        this.stageView = stageView;
+
+        Scene mainScene = new Scene(borderPane, 272, 232);
+        primaryStage.setTitle("JBomberman");
+        primaryStage.setScene(mainScene);
+        primaryStage.show();
+
+        // initialize playerModel, view, and controller
+        if (this.playerModel == null) {
+            stageModel.setPlayer(playerModel);
+            this.playerModel = new PlayerModel(32, 6, 1.3, stageModel);
+        }
+        else {
+            this.playerModel.setPosition(32, 6);
+            this.playerModel.setStage(stageModel);
+        }
+        EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar);
+        int numberOfEnemies = 1 + level * 2;
+        this.enemiesController = new EnemiesController(numberOfEnemies, stageModel, gameLayer, level);
+
+        // Layer the map and the player on the StackPane
+        root.getChildren().add(stageView.getPane()); // Map as the base layer
+        gameLayer.getChildren().add(playerView.getEntitySprite()); // Add Bomberman on top of the map
+        root.getChildren().add(bombLayer); // Add the bomb layer to the root
+        root.getChildren().add(gameLayer); // Add the game layer to the root
+
+        // For the HUD, use a BorderPane as the outer container
+        HUDView hudView = new HUDView(playerModel);
+        borderPane.setCenter(root); // Set the game (map + player) as the center
+        borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
+
+        // Setup the controller with the scene
+        this.playerController = new PlayerController(playerModel, playerView);
+        this.bombController = new BombController(playerModel, bombLayer);
+        new InputController(playerController, bombController, mainScene);
     }
 
 
