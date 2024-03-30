@@ -3,6 +3,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
@@ -11,17 +12,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PreGameSetup extends Application {
+public class MainMenu extends Application {
     private Map<String, PlayerData> playerDataMap = new HashMap<>();
     private ImageView avatarPreview = new ImageView();
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        Font.loadFont(getClass().getResourceAsStream("resources/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"), 14);
+
         readPlayerData();
 
         TextField nicknameField = new TextField();
@@ -49,7 +51,7 @@ public class PreGameSetup extends Application {
 
         VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, new Label("Choose Avatar:"), avatarComboBox, avatarPreview, startGameButton);
         Scene scene = new Scene(layout, 400, 400);
-
+        scene.getStylesheets().add(getClass().getResource("resources/styles/styles.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -58,7 +60,7 @@ public class PreGameSetup extends Application {
         // List<PlayerData> playerDataList = new ArrayList<>();
         try {
             // Get the path to the JAR file
-            String jarPath = new File(PreGameSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            String jarPath = new File(MainMenu.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
             // Get the directory of the JAR file
             String dirPath = new File(jarPath).getParent();
             // Construct the path to the players.txt file in the same directory
@@ -101,5 +103,14 @@ public class PreGameSetup extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    // This method sets up and shows the pre-game scene
+    public void show(Stage stage) throws Exception {
+        // Setup your pre-game scene
+        VBox layout = new VBox(10);
+        Scene scene = new Scene(layout, 400, 400);
+        stage.setScene(scene);
+        stage.show();
     }
 }

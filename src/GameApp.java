@@ -1,4 +1,5 @@
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
@@ -9,6 +10,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.animation.AnimationTimer;
+
+// import stuff to have a dialog box
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Alert.AlertType;
+import java.util.Optional;
+
 
 public class GameApp extends Application {
     private int avatar;
@@ -35,26 +43,60 @@ public class GameApp extends Application {
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                // Check for player death
-                if (playerModel.isDead()) {
-                    savePlayerData();
-                    System.out.println("Game Over");
-                    stop();
+                // Check for player death or level completion
+                if (playerModel.isDead() || (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor())) {
+                    // Stop the game loop first to prevent any updates while the dialog is shown
+                    this.stop();
+
+                    // Use Platform.runLater to show the dialog after the current animation frame is processed
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(AlertType.CONFIRMATION);
+                        alert.setTitle(playerModel.isDead() ? "Game Over!" : "Level Complete!");
+                        alert.setHeaderText(playerModel.isDead() ? "You died! Try again?" : "Proceed to the next level?");
+                        ButtonType buttonRestartOrContinue = new ButtonType(playerModel.isDead() ? "Restart Level" : "Continue");
+                        ButtonType buttonExit = new ButtonType("Exit to Main Menu");
+                        alert.getButtonTypes().setAll(buttonRestartOrContinue, buttonExit);
+
+                        Optional<ButtonType> result = alert.showAndWait();
+                        if (result.isPresent() && result.get() == buttonRestartOrContinue) {
+                            if (playerModel.isDead()) {
+                                // Restart current level if the player died
+                                playerModel = null;
+                                setupGame(primaryStage, data.getLastLevelInt());
+                            } else {
+                                // Setup game for next level if the current one was completed
+                                data.setLastLevel(Integer.toString(data.getLastLevelInt() + 1));
+                                savePlayerData();
+                                setupGame(primaryStage, data.getLastLevelInt());
+                            }
+                            // Restart the game loop
+                            this.start();
+                        } else if (result.isPresent() && result.get() == buttonExit) {
+                            // Instead of closing the primary stage, re-use it for the pre-game setup
+                            Platform.runLater(() -> {
+                                MainMenu mainMenu = new MainMenu();
+                                try {
+                                    // Assume you have this method in PreGameSetup
+                                    // This method should setup and show the pre-game scene
+                                    mainMenu.start(primaryStage);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Regular game update logic if no special conditions met
+                    enemiesController.update(1.0 / 60.0);
+                    playerController.update(1.0 / 60.0);
+                    bombController.update(1.0 / 60.0);
+                    stageView.updateView();
                 }
-                 // Check for level completion
-                 if (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor()) {
-                    savePlayerData(); // Save current game state
-                    setupGame(primaryStage, data.getLastLevelInt() + 1); // Setup game for next level
-                    data.setLastLevel(Integer.toString(data.getLastLevelInt() + 1));
-                }
-                enemiesController.update(1.0 / 60.0);
-                playerController.update(1.0 / 60.0);
-                bombController.update(1.0 / 60.0);
-                stageView.updateView();
             }
         };
         gameLoop.start();
     }
+    
 
     private void setupGame(Stage primaryStage, int level) {
         // Use a StackPane as the root to allow layering of the map and the player
@@ -69,6 +111,7 @@ public class GameApp extends Application {
         this.stageView = stageView;
 
         Scene mainScene = new Scene(borderPane, 272, 232);
+        mainScene.getStylesheets().add(getClass().getResource("resources/styles/styles.css").toExternalForm());
         primaryStage.setTitle("JBomberman");
         primaryStage.setScene(mainScene);
         primaryStage.show();
@@ -83,7 +126,7 @@ public class GameApp extends Application {
             this.playerModel.setStage(stageModel);
         }
         EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar);
-        int numberOfEnemies = 1 + level * 2;
+        int numberOfEnemies = level; // + level * 2;
         this.enemiesController = new EnemiesController(numberOfEnemies, stageModel, gameLayer, level);
 
         // Layer the map and the player on the StackPane
@@ -116,6 +159,7 @@ public class GameApp extends Application {
             String dataToSave = data.getDataString();
             // Check if data for the player already exists and needs to be updated, or append new data
             List<String> lines = file.exists() ? Files.readAllLines(file.toPath()) : new ArrayList<>();
+            lines.removeIf(String::isEmpty); // Remove any empty lines
             boolean dataExists = false;
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
@@ -126,7 +170,7 @@ public class GameApp extends Application {
                     break;
                 }
             }
-            if (!dataExists) {
+            if (!dataExists && !dataToSave.isEmpty()) {
                 lines.add(dataToSave); // Append new player data
             }
             // Write data to the file

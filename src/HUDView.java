@@ -12,6 +12,7 @@ public class HUDView {
 
     public HUDView(PlayerModel playerModel) {
         hudPane = new HBox(10);
+        // hudPane.getStylesheets().add(getClass().getResource("resources/styles/styles.css").toExternalForm());
         hudPane.setAlignment(Pos.TOP_CENTER);
         
         scoreLabel = new Label();
@@ -19,10 +20,10 @@ public class HUDView {
         bombCapacityLabel = new Label();
         bombRadiusLabel = new Label();
         
-        scoreLabel.setFont(new Font("Pixelify Sans Regular", 14));
-        livesLabel.setFont(new Font("Pixelify Sans Regular", 14));
-        bombCapacityLabel.setFont(new Font("Pixelify Sans Regular", 14));
-        bombRadiusLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        // scoreLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        // livesLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        // bombCapacityLabel.setFont(new Font("Pixelify Sans Regular", 14));
+        // bombRadiusLabel.setFont(new Font("Pixelify Sans Regular", 14));
 
         scoreLabel.textProperty().bind(playerModel.scoreProperty().asString("Score: %d"));
         livesLabel.textProperty().bind(playerModel.lifeProperty().asString("life: %d"));
