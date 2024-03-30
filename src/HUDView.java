@@ -1,7 +1,6 @@
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
 
 public class HUDView {
     private HBox hudPane;
@@ -19,11 +18,6 @@ public class HUDView {
         livesLabel = new Label();
         bombCapacityLabel = new Label();
         bombRadiusLabel = new Label();
-        
-        // scoreLabel.setFont(new Font("Pixelify Sans Regular", 14));
-        // livesLabel.setFont(new Font("Pixelify Sans Regular", 14));
-        // bombCapacityLabel.setFont(new Font("Pixelify Sans Regular", 14));
-        // bombRadiusLabel.setFont(new Font("Pixelify Sans Regular", 14));
 
         scoreLabel.textProperty().bind(playerModel.scoreProperty().asString("Score: %d"));
         livesLabel.textProperty().bind(playerModel.lifeProperty().asString("life: %d"));
