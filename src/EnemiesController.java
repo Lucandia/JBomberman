@@ -8,34 +8,30 @@ public class EnemiesController {
     private List<EntityView> views = new ArrayList<EntityView>();
     private List<int[]> directions = new ArrayList<int []>();
 
-    public EnemiesController(int numberOfEnemies, String enemyType, StageModel stageModel, Pane gameLayer) {
+    public EnemiesController(int numberOfEnemies, String enemyType, StageModel stageModel, Pane gameLayer, int level) {
         List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
         Random random = new Random();
-        int i = 0;
-        while (i < numberOfEnemies) {
+        int i = 1;
+        while (i <= numberOfEnemies) {
             int randomIndex = random.nextInt(freeTileIndex.size());
             int[] tileIndex = freeTileIndex.get(randomIndex);
             if (((EmptyTile) stageModel.getTile(tileIndex[0], tileIndex[1])).getOccupant() != null) {
                 continue;
             }
             EnemyModel enemyModel;
-            if ((i % 2) == 0) {
+            EntityView enemyView;
+            if ((i % (numberOfEnemies / level / 2)) != 0) { // alternate between enemy types
                 enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10,  stageModel);
+                enemyView = new EntityView(enemyModel, "enemy1");
             }
             else {
                 enemyModel = new EnemyModel2(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, stageModel);
+                enemyView = new EntityView(enemyModel, "enemy2", true, 6);
             }
             if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) instanceof EmptyTile || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) instanceof EmptyTile) {
                 enemyModel.startMoving("UP");
             } else {
                 enemyModel.startMoving("RIGHT");
-            }
-            EntityView enemyView;
-            if ((i % 2) == 0) {
-                enemyView = new EntityView(enemyModel, "enemy1");
-            }
-            else {
-                enemyView = new EntityView(enemyModel, "enemy2", true, 6);
             }
             gameLayer.getChildren().add(enemyView.getEntitySprite());
             addEnemy(enemyModel, enemyView);

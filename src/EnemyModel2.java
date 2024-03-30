@@ -20,6 +20,8 @@ public class EnemyModel2 extends EnemyModel {
         super.loseLife(amount);
         if (isDead()) return;
         boolean new_pos = false;
+        // Set the current tile's occupant to null
+        ((EmptyTile) getStage().getTileAtPosition((int) this.centerOfMass()[0], (int) this.centerOfMass()[1])).setOccupant(null);
         while (!new_pos) {
             int[] randomXY = getStage().getRandomFreeTile();
             if (getStage().getTile(randomXY[0], randomXY[1]) instanceof EmptyTile && ((EmptyTile) getStage().getTile(randomXY[0], randomXY[1])).getOccupant() == null) {
@@ -29,30 +31,6 @@ public class EnemyModel2 extends EnemyModel {
             }
         }
     }
-
-    // @Override
-    // protected boolean canMoveTo(int dx, int dy) {
-    //     int xSign = Integer.signum(dx);
-    //     int ySign = Integer.signum(dy);
-    //     int[] center = centerOfMass();
-    //     int tileX;
-    //     int tileY;
-    //     int directionOffset = 2;
-    //     Tile collisionTile;
-    //     if (dx != 0){
-    //         tileX = (int) center[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
-    //     }
-    //     else  tileX = center[0];
-    //     if (dy != 0){
-    //         tileY = (int) center[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
-    //     }
-    //     else tileY = center[1];
-    //     collisionTile = stage.getTileAtPosition(tileX, tileY);
-    //     if (collisionTile.isDestructible()) {
-    //         return true;
-    //     }
-    //     return false;
-    //    }
 
     @Override
     public void update(double elapsedTime) {

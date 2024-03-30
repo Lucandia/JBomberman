@@ -31,11 +31,12 @@ public class GameApp extends Application {
         StackPane root = new StackPane();
         Pane bombLayer = new Pane();
         Pane gameLayer = new Pane();
+        int level = 1;
 
         // Initialize the map and HUD
         // MapModel mapModel = new MapModel(1, 300, 230); // Example dimensions
         StageModel stageModel = new StageModel();
-        StageView stageView = new StageView(1, stageModel);
+        StageView stageView = new StageView(level, stageModel);
         // HUDView hudView = new HUDView(playerModel);
 
         // initialize playerModel, view, and controller
@@ -44,7 +45,7 @@ public class GameApp extends Application {
         EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar); // Pass a new Pane as the gamePane for player
         int numberOfEnemies = 7;
         String enemyType = "1";
-        EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer);
+        EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer, level);
         // Layer the map and the player on the StackPane
         root.getChildren().add(stageView.getPane()); // Map as the base layer
         gameLayer.getChildren().add(playerView.getEntitySprite()); // Add Bomberman on top of the map

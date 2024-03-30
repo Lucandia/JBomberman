@@ -140,18 +140,18 @@ public class StageModel {
             // the tile is not destructible
             if (!tiles[x][y].isDestructible()) return true;
             // the tile is empty but occupied
-            if ((tiles[x][y] instanceof EmptyTile || tiles[x][y] instanceof BombModel) && ((EmptyTile) tiles[x][y]).isOccupied()) {
+            if ((tiles[x][y] instanceof EmptyTile) && ((EmptyTile) tiles[x][y]).isOccupied()) {
                 EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
                 EntityModel occupant = occupiedTile.getOccupant();
                 occupant.loseLife(damage);
                 if (occupant.isDead()) {
                     occupant = null;
+                    occupiedTile.setOccupant(null);
                 }
-                // destroy the tile if it is not a next level door
-                if (!(occupiedTile instanceof SpecialTile) || ((SpecialTile) occupiedTile).getType() != SpecialTileType.nextLevelDoor) {
+                if (tiles[x][y] instanceof BombModel) {
                     setTile(x, y, new EmptyTile(x, y));
+                    ((EmptyTile) tiles[x][y]).setOccupant(occupant);
                 }
-                ((EmptyTile) tiles[x][y]).setOccupant(occupant);
                 if (player != null && !(occupant instanceof PlayerModel)) {
                     player.addScore(damage);
                 }
