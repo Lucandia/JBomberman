@@ -38,6 +38,7 @@ public class BombController {
         // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
         Tile tile = stage.getTile(x, y);
         if (tile == null) return true; // Tile is out of bounds
+        // the tile is destructible
         else if (!tile.isDestructible()) {
             return true;
         }
@@ -334,17 +335,20 @@ public class BombView {
             if (dy == min_dy) break;
         }
     
+        double frameTime = 0.07; // Time between each frame of the explosion animation
         // Create and play the explosion animation
         Timeline explosionAnimation = new Timeline();
         for (int frameIndex = 0; frameIndex < 5; frameIndex++) { // For each frame of the explosion
             final int index = frameIndex;
-            explosionAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(index * 0.1), e -> {
+            explosionAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(index * frameTime), e -> {
                 for (ImageView sprite : explosionSprites) {
                     Rectangle2D viewport = sprite.getViewport();
                     sprite.setViewport(new Rectangle2D(viewport.getMinX() + 16 * 5 * index, viewport.getMinY(), size, size));
                 }
             }));
         }
+        explosionAnimation.setCycleCount(2); // Play the animation 2 times
+        explosionAnimation.setAutoReverse(true); // Reverse the animation
         explosionAnimation.setOnFinished(e -> explosionSprites.forEach(sprite -> pane.getChildren().remove(sprite))); // Remove sprites after animation
         explosionAnimation.play();
     }
@@ -400,21 +404,34 @@ public class EnemiesController {
     private List<EntityView> views = new ArrayList<EntityView>();
     private List<int[]> directions = new ArrayList<int []>();
 
-    public EnemiesController(int numberOfEnemies, String enemyType, StageModel stageModel, Pane gameLayer) {
+    public EnemiesController(int numberOfEnemies, String enemyType, StageModel stageModel, Pane gameLayer, int level) {
         List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
         Random random = new Random();
-        for (int i = 0; i < numberOfEnemies; i++) {
+        int i = 1;
+        while (i <= numberOfEnemies) {
             int randomIndex = random.nextInt(freeTileIndex.size());
             int[] tileIndex = freeTileIndex.get(randomIndex);
-            EnemyModel enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, 0.8, new int[] {15, 15}, new int[] {8, 17}, stageModel, Integer.parseInt(enemyType) * 100);
+            if (((EmptyTile) stageModel.getTile(tileIndex[0], tileIndex[1])).getOccupant() != null) {
+                continue;
+            }
+            EnemyModel enemyModel;
+            EntityView enemyView;
+            if ((i % (numberOfEnemies / level )) != 0) { // alternate between enemy types
+                enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10,  stageModel);
+                enemyView = new EntityView(enemyModel, "enemy1");
+            }
+            else {
+                enemyModel = new EnemyModel2(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, stageModel);
+                enemyView = new EntityView(enemyModel, "enemy2", true, 6);
+            }
             if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) instanceof EmptyTile || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) instanceof EmptyTile) {
                 enemyModel.startMoving("UP");
             } else {
                 enemyModel.startMoving("RIGHT");
             }
-            EntityView enemyView = new EntityView(enemyModel, "enemy" + enemyType, 4);
             gameLayer.getChildren().add(enemyView.getEntitySprite());
             addEnemy(enemyModel, enemyView);
+            i++;
         }
     }
 
@@ -450,40 +467,26 @@ public class EnemiesController {
         }
     }
 }
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-
 /**
  * PlayerModel represents the state and behavior of a player in the game.
  */
 public class EnemyModel extends EntityModel {
-    private final IntegerProperty points = new SimpleIntegerProperty();
-
     /**
      * Constructs a new PlayerModel with the specified initial position.
      * 
      * @param initialPosition The starting position of the player in the game world.
      */
-    public EnemyModel(int initialX, int initialY, double velocity, int[] boundingBox, int[] boundingOffset, StageModel stage, int points) {
-        super(initialX, initialY, velocity, boundingBox, boundingOffset, stage);
-        this.points.set(3); // Example default lives
+    public EnemyModel(int initialX, int initialY, StageModel stage) {
+        super(initialX, initialY, 0.8, new int[] {15, 15}, new int[] {8, 17}, 100, stage);
     }
 
+    @Override
     public EntityModel checkCollision(int dx, int dy) {
         EntityModel occupant = super.checkCollision(dx, dy);
         if (occupant instanceof PlayerModel) {
             occupant.loseLife(1);
         }
         return occupant;
-    }
-
-    /**
-     * Gets the lives property of the player.
-     * 
-     * @return The lives property.
-     */
-    public IntegerProperty pointsProperty() {
-        return this.points;
     }
 
     @Override
@@ -495,10 +498,70 @@ public class EnemyModel extends EntityModel {
     }
 }
 
+/**
+ * PlayerModel represents the state and behavior of a player in the game.
+ */
+public class EnemyModel2 extends EnemyModel {
+
+    /**
+     * Constructs a new PlayerModel with the specified initial position.
+     * 
+     * @param initialPosition The starting position of the player in the game world.
+     */
+    public EnemyModel2(int initialX, int initialY, StageModel stage) {
+        super(initialX, initialY, stage);
+        this.life.set(400); // Initial life
+        this.setBoundingBox(new int[] {15, 15});
+        this.setBoundingOffset(new int[] {8, 15});
+    }
+
+    @Override
+    public void loseLife(int amount) {
+        super.loseLife(amount);
+        if (isDead()) return;
+        boolean new_pos = false;
+        // Set the current tile's occupant to null
+        ((EmptyTile) getStage().getTileAtPosition((int) this.centerOfMass()[0], (int) this.centerOfMass()[1])).setOccupant(null);
+        while (!new_pos) {
+            int[] randomXY = getStage().getRandomFreeTile();
+            if (getStage().getTile(randomXY[0], randomXY[1]) instanceof EmptyTile && ((EmptyTile) getStage().getTile(randomXY[0], randomXY[1])).getOccupant() == null) {
+                this.xProperty().set(randomXY[0] * getStage().getTileSize());
+                this.yProperty().set(randomXY[1] * getStage().getTileSize());
+                new_pos = true;
+            }
+        }
+    }
+
+    @Override
+    public void update(double elapsedTime) {
+        super.update(elapsedTime);
+        int lastX = lastDirection[0];
+        int lastY = lastDirection[1];
+        int randomDirection = (int) (Math.random() * 4); // Generate a random number between 0 and 3
+        if (randomDirection == 0 && canMoveTo(1, 0) && lastX != -1) {
+            lastDirection[0] = 1;
+            lastDirection[1] = 0;
+        }
+        else if (randomDirection == 1 && canMoveTo(-1, 0) && lastX != 1) {
+            lastDirection[0] = -1;
+            lastDirection[1] = 0;
+        }
+        else if (randomDirection == 2 && canMoveTo(0, -1) && lastY != 1) {
+            lastDirection[0] = 0;
+            lastDirection[1] = -1;
+        }
+        else if (randomDirection == 3 && canMoveTo(0, 1) && lastY != -1) {
+            lastDirection[0] = 0;
+            lastDirection[1] = 1;
+        }
+    }
+}
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import java.util.ArrayList;
 
 /**
  * This class represents the abstract model for any entity in the game.
@@ -517,6 +580,8 @@ public abstract class EntityModel extends XYModel{
     protected boolean isMoving = false;
     protected int[] lastDirection = {0, 0};
     protected StageModel stage;
+    private ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
+        
 
 
     public EntityModel() {
@@ -524,7 +589,7 @@ public abstract class EntityModel extends XYModel{
     }
 
     public EntityModel(int x, int y, double velocity, StageModel stage) {
-        this(0, 0, 0.0, null, null, null);
+        this(x, y, velocity, new int[] {16, 16}, new int[] {16, 16}, 100, null);
     }
 
     /**
@@ -532,10 +597,11 @@ public abstract class EntityModel extends XYModel{
      * 
      * @param initialPosition The initial position of the entity on the game board.
      */
-    public EntityModel(int x, int y, double velocity, int[] boundingBox, int[] boundingOffset, StageModel stage) {
+    public EntityModel(int x, int y, double velocity, int[] boundingBox, int[] boundingOffset,  int life, StageModel stage) {
         super(x, y);
         this.stage = stage;
         this.velocity.set(velocity);
+        this.life.set(life);
         if (boundingBox!=null && boundingOffset.length == 2){
             this.boundingBox[0] = boundingBox[0];
             this.boundingBox[1] = boundingBox[1];
@@ -544,15 +610,22 @@ public abstract class EntityModel extends XYModel{
             this.boundingOffset[0] = boundingOffset[0];
             this.boundingOffset[1] = boundingOffset[1];
         }
-        stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
+        setOccupiedTiles();
     }
 
     public void loseLife(int amount) {
         this.life.set(getLife() - amount);
+        if (isDead()) {
+            clearOccupiedTiles();
+        }
     }
 
     public boolean isDead() {
         return getLife() <= 0;
+    }
+
+    public void setLife(int amount) {
+        this.life.set(amount);
     }
 
     public int getLife() {
@@ -614,21 +687,41 @@ public abstract class EntityModel extends XYModel{
         return new int[] {getX() + boundingOffset[0], getY() + boundingOffset[1]};
     }
 
+    public void clearOccupiedTiles() {
+        for (EmptyTile tile : occupiedTiles) {
+            tile.setOccupant(null);
+        }
+        occupiedTiles.clear();
+    }
+
+    public void setOccupiedTiles() {
+        clearOccupiedTiles();     
+        int xCenter = centerOfMass()[0];
+        int yCenter = centerOfMass()[1];
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                int tileX = xCenter + x * boundingBox[0] / 2;
+                int tileY = yCenter + y * boundingBox[1] / 2;
+                EmptyTile tile = stage.getEmptyTileAtPosition(tileX, tileY);
+                tile.setOccupant(this);
+                occupiedTiles.add(tile);
+            }
+        }
+    }
+
     /**
      * Sets the position of the entity using an ObservablePoint2D object.
      * 
      * @param position The new position of the entity.
      */
     public void move(int dx, int dy) {
-        EmptyTile oldTile = stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]);
         int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
         int y_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dy)); // explicit cast to int
         if (canMoveTo(dx, dy) && (checkCollision(dx, dy) == null || checkCollision(dx, dy) == this)) {
             xProperty().set(getX() + x_move);
             yProperty().set(getY() + y_move);
             // Update tiles occupancy
-            oldTile.setOccupant(null);
-            stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
+            setOccupiedTiles();
         }
         else isMoving = false;
     }
@@ -643,7 +736,7 @@ public abstract class EntityModel extends XYModel{
     }
 
     // Check if the entity can move to a new position
-    private boolean canMoveTo(int dx, int dy) {
+    protected boolean canMoveTo(int dx, int dy) {
         int xSign = Integer.signum(dx);
         int ySign = Integer.signum(dy);
         int[] center = centerOfMass();
@@ -736,7 +829,6 @@ public abstract class EntityModel extends XYModel{
      */
     public void update(double elapsedTime){
         if (isDead()) {
-            stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(null);
             return;
         }
         timeSinceLastMove += elapsedTime;
@@ -768,26 +860,40 @@ public class EntityView {
     // Create a fixed HashMap with keys and values
     private Map<String, Integer> directionSprite = new HashMap<>();
     private Timeline walkAnimation = null;
-    private String spriteName;
-    private int frames = 0;
+    private boolean autoReverse = false;
+    // private String spriteName;
+    private int frames = 4;
+    int row = 0;
+
+    public EntityView(EntityModel model, String spriteName)
+    {
+        this(model, spriteName, false, 4, 0);
+    }
+
+    public EntityView(EntityModel model, String spriteName, boolean autoReverse, int frames)
+    {
+        this(model, spriteName, autoReverse, frames, 0);
+    }
     
-    public EntityView(EntityModel model, String spriteName, int frames) {
+    public EntityView(EntityModel model, String spriteName, boolean autoReverse, int frames, int row) {
         this.model = model;
+        this.autoReverse = autoReverse;
         this.frames = frames;
-        this.spriteName = spriteName;
+        this.row = row;
+        // this.spriteName = spriteName;
         this.directionSprite = Map.of(
-            "DOWN", 16 * frames * 1 + 1,
-            "LEFT", 16 * frames * 2 + 1,
-            "RIGHT", 16 * frames * 3 + 1,
-            "UP", 16 * frames * 4 + 1
+            "DOWN",  16 + 16 * frames * 0,
+            "LEFT",  16 + 16 * frames * 1,
+            "RIGHT", 16 + 16 * frames * 2,
+            "UP",    16 + 16 * frames * 3
         );
         
         // Load the sprite image
         Image image = new Image(getClass().getResourceAsStream("resources/sprites/" + spriteName + ".png"));
         this.EntitySprite = new ImageView(image);
         
-        // Set the viewport to show only the part of the image you need
-        EntitySprite.setViewport(new Rectangle2D(64, 0, 16, 24)); // Adjust x, y, width, and height accordingly
+        // Set the default sprite for the entity
+        EntitySprite.setViewport(new Rectangle2D(directionSprite.get("DOWN") + 16, 24 * row, 16, 24)); 
 
         // Bind the ImageView's position to the model's position
         EntitySprite.layoutXProperty().bind(model.xProperty());
@@ -801,37 +907,25 @@ public class EntityView {
     public void startWalking(String direction) {
         if (lastDirection != direction) {
             lastDirection = direction;
-            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 15, 24)); // Iniziliazza la direzione del bomberman
+            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 24 * row, 16, 24)); // Iniziliazza la direzione della view
             // Stop the current animation if it's running
             if (walkAnimation != null && walkAnimation.getStatus() == Animation.Status.RUNNING) {
                 walkAnimation.stop();
             }
             double animationFrameTime = 0.2 / model.velocityProperty().get();
-            // walkAnimation = new Timeline(
-            //     new KeyFrame(Duration.seconds(animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16, 0, 16, 24))),
-            //     new KeyFrame(Duration.seconds(2 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24))),
-            //     new KeyFrame(Duration.seconds(3 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 0, 16, 24))),
-            //     new KeyFrame(Duration.seconds(4 * animationFrameTime), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction), 0, 16, 24)))
-            // );
             walkAnimation = new Timeline();
-            IntStream.range(0, frames).forEach(i -> {
+            IntStream.range( 0, frames).forEach(i -> {
                 walkAnimation.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(animationFrameTime * (i + 1)), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16 * i, 0, 15, 24)))
+                    new KeyFrame(Duration.seconds(animationFrameTime * i), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16 * i, 24 * row, 16, 24)))
                 );
             });
-
-            // reverse the animation for the bomberman
-            if (spriteName == "bomberman"){
-                IntStream.range(-frames+2, 0).forEach(i -> {
-                    walkAnimation.getKeyFrames().add(
-                        new KeyFrame(Duration.seconds(animationFrameTime * (frames * 2 + i - 1)), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) - 16 * i, 0, 15, 24)))
-                    );
-                });
-            }
+            walkAnimation.setAutoReverse(autoReverse);
             walkAnimation.setCycleCount(Animation.INDEFINITE);
             walkAnimation.play();
         }
-        walkAnimation.play();
+        if (walkAnimation.getStatus() !=  Animation.Status.RUNNING){
+            walkAnimation.play();
+        }
     }
 
     public void stopWalking() {
@@ -839,8 +933,12 @@ public class EntityView {
             walkAnimation.stop();
         }
         if (lastDirection != null) {
-            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection) + 16, 0, 15, 24));
+            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection) + 16, 24 * row, 16, 24));
         }
+    }
+
+    public void setFrames(int frames) {
+        this.frames = frames;
     }
 
     public void update(double elapsed) {
@@ -860,13 +958,28 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.animation.AnimationTimer;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.BorderPane;
 
 public class GameApp extends Application {
+    private int avatar;
+    private PlayerData data;
 
-    private PlayerModel playerModel;
+    // public static void main(String[] args) {
+    //     launch(args);
+    // }
+
+    public Void initializeGame(PlayerData data) {
+        this.avatar = Integer.parseInt(data.getAvatar()) - 1;
+        this.data = data;
+        System.out.println("Game initialized with player data: " + data.getDataString());
+        return null;
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -874,20 +987,21 @@ public class GameApp extends Application {
         StackPane root = new StackPane();
         Pane bombLayer = new Pane();
         Pane gameLayer = new Pane();
+        int level = 1;
 
         // Initialize the map and HUD
         // MapModel mapModel = new MapModel(1, 300, 230); // Example dimensions
         StageModel stageModel = new StageModel();
-        StageView stageView = new StageView(2, stageModel);
+        StageView stageView = new StageView(level, stageModel);
         // HUDView hudView = new HUDView(playerModel);
 
         // initialize playerModel, view, and controller
-        playerModel = new PlayerModel(32, 6, 1.3, stageModel);
+        PlayerModel playerModel = new PlayerModel(32, 6, 1.3, stageModel);
         stageModel.setPlayer(playerModel);
-        EntityView playerView = new EntityView(playerModel, "bomberman", 3); // Pass a new Pane as the gamePane for player
+        EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar); // Pass a new Pane as the gamePane for player
         int numberOfEnemies = 7;
         String enemyType = "1";
-        EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer);
+        EnemiesController enemiesController = new EnemiesController(numberOfEnemies, enemyType, stageModel, gameLayer, level);
         // Layer the map and the player on the StackPane
         root.getChildren().add(stageView.getPane()); // Map as the base layer
         gameLayer.getChildren().add(playerView.getEntitySprite()); // Add Bomberman on top of the map
@@ -900,7 +1014,7 @@ public class GameApp extends Application {
         borderPane.setCenter(root); // Set the game (map + player) as the center
         borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
 
-        Scene mainScene = new Scene(borderPane, 272, 208);
+        Scene mainScene = new Scene(borderPane, 272, 232);
         primaryStage.setTitle("JBomberman");
         primaryStage.setScene(mainScene);
         primaryStage.show();
@@ -917,6 +1031,7 @@ public class GameApp extends Application {
                 // Update logic here
                 // playerController.update(1.0 / 30.0); // Assuming 60 FPS for calculation
                 if (playerModel.isDead()) {
+                    savePlayerData();
                     System.out.println("Game Over");
                     stop();
                 }
@@ -929,9 +1044,44 @@ public class GameApp extends Application {
         gameLoop.start();
     }
 
-    public static void main(String[] args) {
-        launch(args);
+
+    public void savePlayerData() {
+        try {
+            // Get the path to the JAR file
+            String jarPath = new File(GameApp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            // Get the directory of the JAR file
+            String dirPath = new File(jarPath).getParent();
+            // Construct the path to the players.txt file in the same directory
+            File file = new File(dirPath, "savedGames.txt");
+            // Prepare data to save
+            String dataToSave = data.getDataString();
+            // Check if data for the player already exists and needs to be updated, or append new data
+            List<String> lines = file.exists() ? Files.readAllLines(file.toPath()) : new ArrayList<>();
+            boolean dataExists = false;
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                String nickname = line.split(",")[0];
+                if (nickname.equals(data.getNickname())) {
+                    lines.set(i, dataToSave); // Update existing data
+                    dataExists = true;
+                    break;
+                }
+            }
+            if (!dataExists) {
+                lines.add(dataToSave); // Append new player data
+            }
+            // Write data to the file
+            Files.write(file.toPath(), lines);
+        } catch (URISyntaxException e) {
+            System.err.println("Error parsing URI: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO error occurred: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+        }
     }
+
+
 }
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -1062,6 +1212,87 @@ public class PlayerController {
     }
 
 }
+public class PlayerData {
+    private String nickname;
+    private String avatar;
+    private String lastLevel;
+    private String playedGames;
+    private String winGames;
+    private String lostGames;
+    private String score;
+
+    public PlayerData(String nickname, String avatar, String lastLevel, String playedGames, String winGames, String lostGames, String score) {
+        this.nickname = nickname;
+        this.avatar = avatar;
+        this.lastLevel = lastLevel;
+        this.playedGames = playedGames;
+        this.winGames = winGames;
+        this.lostGames = lostGames;
+        this.score = score;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getLastLevel() {
+        return lastLevel;
+    }
+
+    public void setLastLevel(String lastLevel) {
+        this.lastLevel = lastLevel;
+    }
+
+    public String getPlayedGames() {
+        return playedGames;
+    }
+
+    public void setPlayedGames(String playedGames) {
+        this.playedGames = playedGames;
+    }
+
+    public String getWinGames() {
+        return winGames;
+    }
+
+    public void setWinGames(String winGames) {
+        this.winGames = winGames;
+    }
+
+    public String getLostGames() {
+        return lostGames;
+    }
+
+    public void setLostGames(String lostGames) {
+        this.lostGames = lostGames;
+    }
+
+    public String getScore() {
+        return score;
+    }
+
+    public void setScore(String score) {
+        this.score = score;
+    }
+
+    public String getDataString() {
+        return nickname + "," + avatar + "," + lastLevel + "," + playedGames + "," + winGames + "," + lostGames + "," + score + "\n";
+    }
+
+
+}
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -1072,6 +1303,8 @@ public class PlayerModel extends EntityModel {
     private final IntegerProperty score = new SimpleIntegerProperty(0);
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
     private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
+    private int recoveryTime = 10;
+    private boolean recovering = false;
 
     /**
      * Constructs a new PlayerModel with the specified initial position.
@@ -1079,10 +1312,9 @@ public class PlayerModel extends EntityModel {
      * @param initialPosition The starting position of the player in the game world.
      */
     public PlayerModel(int initialX, int initialY, double velocity, StageModel stage) {
-        super(initialX, initialY, velocity,  new int[] {13, 13}, new int[] {7, 17}, stage);
+        super(initialX, initialY, velocity,  new int[] {13, 13}, new int[] {7, 17}, 3, stage);
         // Set default values for lives and score or any additional setup.
         this.score.set(0); // Initial score
-        this.life.set(3); // Initial lives
     }
 
     /**
@@ -1096,7 +1328,9 @@ public class PlayerModel extends EntityModel {
 
     @Override
     public void loseLife(int amount) {
+        if (this.recovering) return;
         this.life.set(life.get() - 1);
+        this.recovering = true;
     }
 
     @Override
@@ -1150,12 +1384,15 @@ public class PlayerModel extends EntityModel {
     @Override
     public void update(double elapsedTime) {
         super.update(elapsedTime);
-        // Example: Update the player's position based on velocity and elapsed time.
-        
-        // Example movement update could be applied here, handling user input, etc.
+        if (this.recovering) {
+            this.recoveryTime--;
+            if (this.recoveryTime == 0) {
+                this.recovering = false;
+                this.recoveryTime = 10;
+            }
+        }
     }
     
-    // Additional player-specific methods can be added below
 }
 
 public class PowerUp extends SpecialTile{
@@ -1184,6 +1421,11 @@ public class PowerUp extends SpecialTile{
         }
         setDisplayable(false);
         applied = true;
+    }
+
+    @Override
+    public boolean isDetonable() {
+        return true;
     }
 
     public void applyPowerUp(PlayerModel playerModel) {
@@ -1215,7 +1457,112 @@ public class PowerUpSpeed implements PowerUpBehaviour{
     }
 
 }
-public abstract class SpecialTile extends EmptyTile{
+import javafx.application.Application;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class PreGameSetup extends Application {
+    private Map<String, PlayerData> playerDataMap = new HashMap<>();
+    private ImageView avatarPreview = new ImageView();
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        readPlayerData();
+
+        TextField nicknameField = new TextField();
+        ComboBox<String> avatarComboBox = new ComboBox<>();
+        avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
+        avatarComboBox.setValue("1"); // Default to the first avatar
+        updateAvatarPreview("1"); // Update the avatar preview based on the default value (1)
+        avatarComboBox.setOnAction(e -> updateAvatarPreview(avatarComboBox.getValue()));
+
+        Button startGameButton = new Button("Start Game");
+        startGameButton.setOnAction(e -> {
+            String nickname = nicknameField.getText();
+            String avatar = avatarComboBox.getValue();
+            // Make sure to handle the case where the nickname or avatar is not selected properly
+            PlayerData data = playerDataMap.getOrDefault(nickname, new PlayerData(nickname, avatar, "1", "0", "0", "0", "0")); 
+            try {
+                GameApp gameApp = new GameApp();
+                gameApp.initializeGame(data); // Adjust GameApp to accept these parameters
+                gameApp.start(new Stage()); // This may need adjustment based on your GameApp class
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            primaryStage.close(); // Close the setup window
+        });
+
+        VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, new Label("Choose Avatar:"), avatarComboBox, avatarPreview, startGameButton);
+        Scene scene = new Scene(layout, 400, 400);
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void readPlayerData() {
+        List<PlayerData> playerDataList = new ArrayList<>();
+        try {
+            // Get the path to the JAR file
+            String jarPath = new File(PreGameSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            // Get the directory of the JAR file
+            String dirPath = new File(jarPath).getParent();
+            // Construct the path to the players.txt file in the same directory
+            File file = new File(dirPath, "savedGames.txt");
+
+            if (file.exists()) {
+                // Read all lines from the players.txt file
+                List<String> lines = Files.readAllLines(file.toPath());
+                // Parse each line into PlayerData objects
+                for (String line : lines) {
+                    String[] parts = line.split(",");
+                    if (parts.length == 6) {
+                        String nickname = parts[0];
+                        String avatarNumber = parts[1];
+                        String lastLevel = parts[2];
+                        String playedGames = parts[3];
+                        String winGames = parts[4];
+                        String lostGames = parts[5];
+                        String score = parts[6];
+                        PlayerData playerData = new PlayerData(nickname, avatarNumber, lastLevel, playedGames, winGames, lostGames, score);
+                        playerDataMap.put(nickname, playerData);
+                    }
+                }
+            }
+        } catch (URISyntaxException e) {
+            System.err.println("Error parsing URI: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO error occurred: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    private void updateAvatarPreview(String avatarNumber) {
+        Image avatarImage = new Image(getClass().getResourceAsStream("resources/sprites/bomberman.png"));
+        int avatarIndex = Integer.parseInt(avatarNumber) - 1; // Assuming avatarNumber starts at 1
+        avatarPreview.setImage(avatarImage); // avatarPreview should be an ImageView
+        avatarPreview.setViewport(new Rectangle2D(0, 24 * avatarIndex, 47, 24)); // Update this to match your sprite sheet
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
+public class SpecialTile extends EmptyTile{
     protected SpecialTileType type;
 
     public SpecialTile(int x, int y, SpecialTileType type) {
@@ -1232,6 +1579,7 @@ public abstract class SpecialTile extends EmptyTile{
         this.type = type;
     }
 }
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -1242,13 +1590,15 @@ enum SpecialTileType {
   pupSpeed,
   nextLevelDoor;
 
-  public static SpecialTileType getRandomPowerUpType()  {
-    List<SpecialTileType> values = Arrays.asList(values());
-    values.remove(SpecialTileType.nextLevelDoor);
-    int size = values.size();
-    Random random = new Random();
-    return values.get(random.nextInt(size));
+  public static SpecialTileType getRandomPowerUpType() {
+      // Convert array to a modifiable list
+      List<SpecialTileType> values = new ArrayList<>(Arrays.asList(values()));
+      values.remove(SpecialTileType.nextLevelDoor); // Now this operation is supported
+      int size = values.size();
+      Random random = new Random();
+      return values.get(random.nextInt(size));
   }
+
 }import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -1256,13 +1606,17 @@ import java.util.Random;
 public class StageModel {
     private final int width = 17;
     private final int height = 13;
-    private double powerUpProbability = 0.2; // 10% chance of adding a PowerUp tile
+    private double powerUpProbability = 0.8; // 10% chance of adding a PowerUp tile
     private final int tileSize = 16; // Assuming each tile is 16x16 pixels
+    final int freeSlots = 110; // Number of free slots in the stage
+    private final int destructibleTilesStart;
+    private int destructedTiles = 0;
     private final List<int[]> freeTileIndex = new ArrayList<>();
     private Tile[][] tiles = new Tile[width][height];
     private Random rand = new Random();
     private PlayerModel player;
     private int damage = 100;
+    private SpecialTile nextLevelDoor;
     
 
     public StageModel() {
@@ -1270,9 +1624,9 @@ public class StageModel {
     }
 
     public StageModel(double destructiblePercentage, double nonDestructiblePercentage) {
-        final int freeSlots = 110; // Number of free slots in the stage
         // Calculate the total number of free positions
         int destructibleTilesCount = (int) (freeSlots * destructiblePercentage);
+        destructibleTilesStart = destructibleTilesCount;
         int nonDestructibleTilesCount = (int) ((freeSlots-destructibleTilesCount) * nonDestructiblePercentage);
 
         // Fill the stage with non-walkable borders and predefined tiles
@@ -1328,7 +1682,7 @@ public class StageModel {
             if (tiles[x][y] instanceof EmptyTile)
             return (EmptyTile) tiles[x][y];
         }
-        return new EmptyTile(x, y); // Out of bounds
+        return new EmptyTile(x, y); // return a dummy empty tile
     }
 
     public Tile getTileAtPosition(int x, int y) {
@@ -1345,6 +1699,10 @@ public class StageModel {
 
     public List<int[]> getFreeTileIndex() {
         return freeTileIndex;
+    }
+
+    public SpecialTile getNextLevelDoor() {
+        return nextLevelDoor;
     }
 
     public void setTile(int x, int y, Tile tile) {
@@ -1380,15 +1738,14 @@ public class StageModel {
 
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
+            // the tile is not destructible
             if (!tiles[x][y].isDestructible()) return true;
-            if ((tiles[x][y] instanceof EmptyTile || tiles[x][y] instanceof BombModel) && ((EmptyTile) tiles[x][y]).isOccupied()) {
+            // the tile is empty but occupied
+            if ((tiles[x][y] instanceof EmptyTile) && ((EmptyTile) tiles[x][y]).isOccupied()) {
                 EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
                 EntityModel occupant = occupiedTile.getOccupant();
                 occupant.loseLife(damage);
-                if (occupant.isDead()) {
-                    setTile(x, y, new EmptyTile(x, y));
-                }
-                else{
+                if (tiles[x][y] instanceof BombModel) {
                     setTile(x, y, new EmptyTile(x, y));
                     ((EmptyTile) tiles[x][y]).setOccupant(occupant);
                 }
@@ -1396,19 +1753,32 @@ public class StageModel {
                     player.addScore(damage);
                 }
             }
-            // Randomly add a PowerUp tile
-            // ...
-
+            // the tile is a special tile (but not a next level door)
+            else if (tiles[x][y] instanceof PowerUp) {
+                setTile(x, y, new EmptyTile(x, y));
+            }
+            // the tiles is destructible tile, in case add powerup or next level door
             else if (!(tiles[x][y] instanceof EmptyTile)){
-                if (rand.nextDouble() < powerUpProbability) {
+                double nextLevelDoorProbability = (double) destructedTiles / destructibleTilesStart;
+                if (this.nextLevelDoor == null && rand.nextDouble() < nextLevelDoorProbability) {
+                        setTile(x, y, new SpecialTile(x, y, SpecialTileType.nextLevelDoor)); // Create a new instance of NextLevelDoor
+                        this.nextLevelDoor = (SpecialTile) tiles[x][y];
+                } 
+                else if (rand.nextDouble() < powerUpProbability) {
                     setTile(x, y, new PowerUp(x, y, SpecialTileType.getRandomPowerUpType())); // Create a new instance of PowerUp
                 }
                 else setTile(x, y, new EmptyTile(x, y));
+                destructedTiles++;
             }
-            else setTile(x, y, new EmptyTile(x, y));
+            // the tile was simply empty
+            else {
+                setTile(x, y, new EmptyTile(x, y));
+            }
             freeTileIndex.add(new int[] {x, y});
+            // tile destroyed
             return true;
         }
+        // tile out of bounds
         return false;
     }
 
@@ -1426,7 +1796,8 @@ public class StageModel {
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
-        if (!(tiles[tileX][tileY] instanceof EmptyTile) || tiles[tileX][tileY] instanceof BombModel) {
+        Tile tile = tiles[tileX][tileY];
+        if (!(tile instanceof EmptyTile) || tile instanceof BombModel || tile == this.nextLevelDoor) {
             return false;
         }
         EntityModel previousOccupant = ((EmptyTile) tiles[tileX][tileY]).getOccupant();
@@ -1446,6 +1817,14 @@ public class StageModel {
 
     public int getHeight() {
         return height;
+    }
+
+    public int[] getRandomFreeTile() {
+        if (freeTileIndex.isEmpty()) {
+            return null; // No more free tiles available
+        }
+        int randomIndex = rand.nextInt(freeTileIndex.size());
+        return freeTileIndex.remove(randomIndex);
     }
 
     // Additional methods as needed for game logic
@@ -1492,13 +1871,17 @@ public class StageView {
                 Tile tile = stage.getTile(x, y);
                 if (tile.isDisplayable()) {
                     if (tile instanceof SpecialTile) {
-                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("resources/sprites/pup_" + ((SpecialTile) tile).getType().toString() + ".png")).getPixelReader();
+                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("resources/sprites/" + ((SpecialTile) tile).getType().toString() + ".png")).getPixelReader();
                         writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, powerUpReader, 0, 0);
                     }
                     else {
-                        int srcX = tile.isDestructible() ? 17 : 0;
+                        int srcX = tile.isDestructible() ? 16 : 0;
                         writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, srcX, 0);
                     }
+                }
+                else if (tile instanceof EmptyTile && !stage.getTile(x, y - 1).isDestructible()){
+                    // if the tile is not displayable, but the tile above it is not destructible, display the shadow tile
+                    writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, 32, 0);
                 }
             }
         }

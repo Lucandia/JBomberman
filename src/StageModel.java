@@ -81,7 +81,7 @@ public class StageModel {
             if (tiles[x][y] instanceof EmptyTile)
             return (EmptyTile) tiles[x][y];
         }
-        return new EmptyTile(x, y); // Out of bounds
+        return new EmptyTile(x, y); // return a dummy empty tile
     }
 
     public Tile getTileAtPosition(int x, int y) {
@@ -144,10 +144,6 @@ public class StageModel {
                 EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
                 EntityModel occupant = occupiedTile.getOccupant();
                 occupant.loseLife(damage);
-                if (occupant.isDead()) {
-                    occupant = null;
-                    occupiedTile.setOccupant(null);
-                }
                 if (tiles[x][y] instanceof BombModel) {
                     setTile(x, y, new EmptyTile(x, y));
                     ((EmptyTile) tiles[x][y]).setOccupant(occupant);

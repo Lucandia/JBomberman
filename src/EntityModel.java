@@ -2,6 +2,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import java.util.ArrayList;
 
 /**
  * This class represents the abstract model for any entity in the game.
@@ -20,6 +21,8 @@ public abstract class EntityModel extends XYModel{
     protected boolean isMoving = false;
     protected int[] lastDirection = {0, 0};
     protected StageModel stage;
+    private ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
+        
 
 
     public EntityModel() {
@@ -48,11 +51,14 @@ public abstract class EntityModel extends XYModel{
             this.boundingOffset[0] = boundingOffset[0];
             this.boundingOffset[1] = boundingOffset[1];
         }
-        stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
+        setOccupiedTiles();
     }
 
     public void loseLife(int amount) {
         this.life.set(getLife() - amount);
+        if (isDead()) {
+            clearOccupiedTiles();
+        }
     }
 
     public boolean isDead() {
@@ -122,21 +128,41 @@ public abstract class EntityModel extends XYModel{
         return new int[] {getX() + boundingOffset[0], getY() + boundingOffset[1]};
     }
 
+    public void clearOccupiedTiles() {
+        for (EmptyTile tile : occupiedTiles) {
+            tile.setOccupant(null);
+        }
+        occupiedTiles.clear();
+    }
+
+    public void setOccupiedTiles() {
+        clearOccupiedTiles();     
+        int xCenter = centerOfMass()[0];
+        int yCenter = centerOfMass()[1];
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                int tileX = xCenter + x * boundingBox[0] / 2;
+                int tileY = yCenter + y * boundingBox[1] / 2;
+                EmptyTile tile = stage.getEmptyTileAtPosition(tileX, tileY);
+                tile.setOccupant(this);
+                occupiedTiles.add(tile);
+            }
+        }
+    }
+
     /**
      * Sets the position of the entity using an ObservablePoint2D object.
      * 
      * @param position The new position of the entity.
      */
     public void move(int dx, int dy) {
-        EmptyTile oldTile = stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]);
         int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
         int y_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dy)); // explicit cast to int
         if (canMoveTo(dx, dy) && (checkCollision(dx, dy) == null || checkCollision(dx, dy) == this)) {
             xProperty().set(getX() + x_move);
             yProperty().set(getY() + y_move);
             // Update tiles occupancy
-            oldTile.setOccupant(null);
-            stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(this);
+            setOccupiedTiles();
         }
         else isMoving = false;
     }
@@ -244,7 +270,6 @@ public abstract class EntityModel extends XYModel{
      */
     public void update(double elapsedTime){
         if (isDead()) {
-            stage.getEmptyTileAtPosition(centerOfMass()[0], centerOfMass()[1]).setOccupant(null);
             return;
         }
         timeSinceLastMove += elapsedTime;
