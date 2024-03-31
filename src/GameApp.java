@@ -65,6 +65,7 @@ public class GameApp extends Application {
                                 setupGame(primaryStage, data.getLastLevelInt());
                             } else {
                                 // Setup game for next level if the current one was completed
+                                playerModel.stopMoving();
                                 data.setLastLevel(Integer.toString(data.getLastLevelInt() + 1));
                                 savePlayerData();
                                 setupGame(primaryStage, data.getLastLevelInt());
@@ -110,7 +111,7 @@ public class GameApp extends Application {
         StageView stageView = new StageView(level, stageModel);
         this.stageView = stageView;
 
-        Scene mainScene = new Scene(borderPane, 272, 232);
+        Scene mainScene = new Scene(borderPane, 272, 224);
         mainScene.getStylesheets().add(getClass().getResource("resources/styles/styles.css").toExternalForm());
         primaryStage.setTitle("JBomberman");
         primaryStage.setScene(mainScene);
@@ -125,6 +126,7 @@ public class GameApp extends Application {
             this.playerModel.setPosition(32, 6);
             this.playerModel.setStage(stageModel);
         }
+        stageModel.setPlayer(playerModel);
         EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar);
         int numberOfEnemies = level; // + level * 2;
         this.enemiesController = new EnemiesController(numberOfEnemies, stageModel, gameLayer, level);
