@@ -19,13 +19,12 @@ import java.util.Map;
 public class MainMenu extends Application {
     private Map<String, PlayerData> playerDataMap = new HashMap<>();
     private ImageView avatarPreview = new ImageView();
+    private Label statsLabel = new Label(); // Label to display player stats
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         Font.loadFont(getClass().getResourceAsStream("resources/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"), 14);
-
-        readPlayerData();
-
+        readPlayerData(); // Read player data from file
         TextField nicknameField = new TextField();
         ComboBox<String> avatarComboBox = new ComboBox<>();
         avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
@@ -33,24 +32,35 @@ public class MainMenu extends Application {
         updateAvatarPreview("1"); // Update the avatar preview based on the default value (1)
         avatarComboBox.setOnAction(e -> updateAvatarPreview(avatarComboBox.getValue()));
 
+        // Listen for changes in the nickname field and update stats
+        nicknameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            PlayerData data = playerDataMap.get(newValue);
+            if (data != null) {
+                // Update stats label with player data
+                statsLabel.setText(String.format("Played: %s, Won: %s, Lost: %s, Last Level: %s, Score: %s",
+                        data.getPlayedGames(), data.getWinGames(), data.getLostGames(), data.getLastLevel(), data.getScore()));
+            } else {
+                statsLabel.setText("New player!");
+            }
+        });
+
         Button startGameButton = new Button("Start Game");
         startGameButton.setOnAction(e -> {
             String nickname = nicknameField.getText();
             String avatar = avatarComboBox.getValue();
-            // Make sure to handle the case where the nickname or avatar is not selected properly
             PlayerData data = playerDataMap.getOrDefault(nickname, new PlayerData(nickname, avatar, "1", "0", "0", "0", "0")); 
             try {
                 GameApp gameApp = new GameApp();
-                gameApp.initializeGame(data); // Adjust GameApp to accept these parameters
-                gameApp.start(new Stage()); // This may need adjustment based on your GameApp class
+                gameApp.initializeGame(data);
+                gameApp.start(new Stage());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
             primaryStage.close(); // Close the setup window
         });
 
-        VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, new Label("Choose Avatar:"), avatarComboBox, avatarPreview, startGameButton);
-        Scene scene = new Scene(layout, 400, 400);
+        VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, new Label("Choose Avatar:"), avatarComboBox, avatarPreview, statsLabel, startGameButton);
+        Scene scene = new Scene(layout, 272, 300);
         scene.getStylesheets().add(getClass().getResource("resources/styles/styles.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();

@@ -2,4 +2,29 @@
     -fx-font-family: 'Pixelify Sans Regular';
     -fx-font-size: 14;
     -fx-background-color: #dddddd;
+    -fx-text-alignment: center; 
+    -fx-alignment: center;
 }
+
+.dialog-pane > .content {
+    -fx-font-size: 14;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+}
+
+.dialog-pane .button-bar {
+    -fx-alignment: center;
+}
+
+.dialog-pane:header {
+    -fx-alignment: center;
+}
+
+.button {
+    -fx-background-color: #424242; /* Example to set button background */
+    -fx-text-fill: white; /* Example to set button text color */
+}
+

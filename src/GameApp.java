@@ -14,6 +14,7 @@ import javafx.animation.AnimationTimer;
 // import stuff to have a dialog box
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Alert.AlertType;
 import java.util.Optional;
 
@@ -48,10 +49,25 @@ public class GameApp extends Application {
                     // Stop the game loop first to prevent any updates while the dialog is shown
                     this.stop();
 
+                    // save the data
+                    if (playerModel.isDead()) {
+                        data.setLostGames(data.getLostGamesInt() + 1);
+                    } else {
+                        data.setWinGames(data.getWinGamesInt() + 1);
+                        data.setLastLevel(data.getLastLevelInt() + 1);
+                    }
+                    data.setPlayedGames(data.getPlayedGamesInt() + 1);
+                    savePlayerData();
+
                     // Use Platform.runLater to show the dialog after the current animation frame is processed
                     Platform.runLater(() -> {
                         Alert alert = new Alert(AlertType.CONFIRMATION);
+                        // Applying the CSS file to the DialogPane
+                        DialogPane dialogPane = alert.getDialogPane();
+                        dialogPane.getStylesheets().add(getClass().getResource("resources/styles/styles.css").toExternalForm());
+                        // Add buttons to the dialog
                         alert.setTitle(playerModel.isDead() ? "Game Over!" : "Level Complete!");
+                        alert.getDialogPane().setGraphic(null);
                         alert.setHeaderText(playerModel.isDead() ? "You died! Try again?" : "Proceed to the next level?");
                         ButtonType buttonRestartOrContinue = new ButtonType(playerModel.isDead() ? "Restart Level" : "Continue");
                         ButtonType buttonExit = new ButtonType("Exit to Main Menu");
@@ -65,9 +81,7 @@ public class GameApp extends Application {
                                 setupGame(primaryStage, data.getLastLevelInt());
                             } else {
                                 // Setup game for next level if the current one was completed
-                                playerModel.stopMoving();
-                                data.setLastLevel(Integer.toString(data.getLastLevelInt() + 1));
-                                savePlayerData();
+                                playerModel.stopMoving(); 
                                 setupGame(primaryStage, data.getLastLevelInt());
                             }
                             // Restart the game loop

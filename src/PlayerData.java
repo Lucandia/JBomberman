@@ -42,16 +42,28 @@ public class PlayerData {
         return Integer.parseInt(lastLevel);
     }
 
-    public void setLastLevel(String lastLevel) {
-        this.lastLevel = lastLevel;
+    public void setLastLevel(int lastLevel) {
+        this.lastLevel = Integer.toString(lastLevel);
     }
 
     public String getPlayedGames() {
         return playedGames;
     }
 
-    public void setPlayedGames(String playedGames) {
-        this.playedGames = playedGames;
+    public int getPlayedGamesInt() {
+        return Integer.parseInt(playedGames);
+    }
+
+    public void setPlayedGames(int playedGames) {
+        this.playedGames = Integer.toString(playedGames);
+    }
+
+    public void setWinGames(int winGames) {
+        this.winGames = Integer.toString(winGames);
+    }
+
+    public int getWinGamesInt() {
+        return Integer.parseInt(winGames);
     }
 
     public String getWinGames() {
@@ -64,10 +76,14 @@ public class PlayerData {
 
     public String getLostGames() {
         return lostGames;
+    } 
+
+    public int getLostGamesInt() {
+        return Integer.parseInt(lostGames);
     }
 
-    public void setLostGames(String lostGames) {
-        this.lostGames = lostGames;
+    public void setLostGames(int lostGames) {
+        this.lostGames = Integer.toString(lostGames);
     }
 
     public String getScore() {
