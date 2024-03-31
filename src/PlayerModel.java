@@ -56,6 +56,10 @@ public class PlayerModel extends EntityModel {
         return this.score;
     }
 
+    public int getScore() {
+        return this.score.get();
+    }
+
     public IntegerProperty bombCapacityProperty() {
         return this.bombCapacity;
     }

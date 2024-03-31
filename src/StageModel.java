@@ -19,7 +19,7 @@ public class StageModel {
     
 
     public StageModel() {
-        this(0.3, 0.05); // Default destructible and non-destructible percentages
+        this(0.2, 0.04); // Default destructible and non-destructible percentages
     }
 
     public StageModel(double destructiblePercentage, double nonDestructiblePercentage) {

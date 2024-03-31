@@ -10,14 +10,12 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.animation.AnimationTimer;
-
 // import stuff to have a dialog box
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Alert.AlertType;
 import java.util.Optional;
-
 
 public class GameApp extends Application {
     private int avatar;
@@ -27,10 +25,12 @@ public class GameApp extends Application {
     private BombController bombController;
     private PlayerModel playerModel;
     private EnemiesController enemiesController;
+    private int numberOfEnemies;
 
-    public Void initializeGame(PlayerData data) {
+    public Void initializeGame(PlayerData data, int numberOfEnemies) {
         this.avatar = Integer.parseInt(data.getAvatar()) - 1;
         this.data = data;
+        this.numberOfEnemies = numberOfEnemies;
         System.out.println("Game initialized with player data: " + data.getDataString());
         return null;
     }
@@ -54,8 +54,15 @@ public class GameApp extends Application {
                         data.setLostGames(data.getLostGamesInt() + 1);
                     } else {
                         data.setWinGames(data.getWinGamesInt() + 1);
-                        data.setLastLevel(data.getLastLevelInt() + 1);
+                        // Don't go to higher levels than 3
+                        if (data.getLastLevelInt() < 3) {
+                            data.setLastLevel(data.getLastLevelInt() + 1);
+                        }
+                        else {
+                            numberOfEnemies ++ ;
+                        }
                     }
+                    data.setScore(playerModel.getScore());
                     data.setPlayedGames(data.getPlayedGamesInt() + 1);
                     savePlayerData();
 
@@ -68,8 +75,17 @@ public class GameApp extends Application {
                         // Add buttons to the dialog
                         alert.setTitle(playerModel.isDead() ? "Game Over!" : "Level Complete!");
                         alert.getDialogPane().setGraphic(null);
-                        alert.setHeaderText(playerModel.isDead() ? "You died! Try again?" : "Proceed to the next level?");
-                        ButtonType buttonRestartOrContinue = new ButtonType(playerModel.isDead() ? "Restart Level" : "Continue");
+                        alert.setHeaderText(playerModel.isDead() ? "Game over!" : "Level Complete!");
+                        if (!playerModel.isDead()) {
+                            if (data.getLastLevelInt() == 3) {
+                                alert.setContentText("Congratulations! You have completed all levels! Let's try more enemies?");
+                            } else {
+                                alert.setContentText("Well done! Proceed to the next level?");
+                            }
+                        } else {
+                            alert.setContentText("You can do it! Try again!");
+                        }
+                        ButtonType buttonRestartOrContinue = new ButtonType(playerModel.isDead() ? "Try again" : "Continue");
                         ButtonType buttonExit = new ButtonType("Exit to Main Menu");
                         alert.getButtonTypes().setAll(buttonRestartOrContinue, buttonExit);
 
@@ -142,7 +158,6 @@ public class GameApp extends Application {
         }
         stageModel.setPlayer(playerModel);
         EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar);
-        int numberOfEnemies = level; // + level * 2;
         this.enemiesController = new EnemiesController(numberOfEnemies, stageModel, gameLayer, level);
 
         // Layer the map and the player on the StackPane

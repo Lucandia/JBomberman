@@ -19,13 +19,22 @@ import java.util.Map;
 public class MainMenu extends Application {
     private Map<String, PlayerData> playerDataMap = new HashMap<>();
     private ImageView avatarPreview = new ImageView();
-    private Label statsLabel = new Label(); // Label to display player stats
+    private Label statsLabel1 = new Label(); // Label to display player stats
+    private Label statsLabel2 = new Label(); // Label to display player stats
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         Font.loadFont(getClass().getResourceAsStream("resources/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"), 14);
         readPlayerData(); // Read player data from file
         TextField nicknameField = new TextField();
+        nicknameField.setPrefWidth(10);
+
+        // Number of enemies
+        // Spinner for selecting the number of enemies
+        Spinner<Integer> enemySpinner = new Spinner<>(1, 30, 1);
+        enemySpinner.setEditable(true);
+
+        // Select Avatar
         ComboBox<String> avatarComboBox = new ComboBox<>();
         avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
         avatarComboBox.setValue("1"); // Default to the first avatar
@@ -37,10 +46,11 @@ public class MainMenu extends Application {
             PlayerData data = playerDataMap.get(newValue);
             if (data != null) {
                 // Update stats label with player data
-                statsLabel.setText(String.format("Played: %s, Won: %s, Lost: %s, Last Level: %s, Score: %s",
-                        data.getPlayedGames(), data.getWinGames(), data.getLostGames(), data.getLastLevel(), data.getScore()));
+                statsLabel1.setText(String.format("Played Games: %s; Won: %s; Lost: %s;", data.getPlayedGames(), data.getWinGames(), data.getLostGames()));
+                statsLabel2.setText(String.format("Last Level: %s; Highest Score: %s", data.getLastLevel(), data.getScore()));
             } else {
-                statsLabel.setText("New player!");
+                statsLabel1.setText("New player!");
+                statsLabel2.setText("");
             }
         });
 
@@ -51,7 +61,7 @@ public class MainMenu extends Application {
             PlayerData data = playerDataMap.getOrDefault(nickname, new PlayerData(nickname, avatar, "1", "0", "0", "0", "0")); 
             try {
                 GameApp gameApp = new GameApp();
-                gameApp.initializeGame(data);
+                gameApp.initializeGame(data, enemySpinner.getValue());
                 gameApp.start(new Stage());
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -59,8 +69,12 @@ public class MainMenu extends Application {
             primaryStage.close(); // Close the setup window
         });
 
-        VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, new Label("Choose Avatar:"), avatarComboBox, avatarPreview, statsLabel, startGameButton);
-        Scene scene = new Scene(layout, 272, 300);
+        VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, 
+                                new Label("Number of Enemies:"), enemySpinner, 
+                                new Label("Choose Avatar:"), avatarComboBox, avatarPreview, 
+                                statsLabel1, statsLabel2, 
+                                startGameButton);
+        Scene scene = new Scene(layout, 272, 310);
         scene.getStylesheets().add(getClass().getResource("resources/styles/styles.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -82,7 +96,7 @@ public class MainMenu extends Application {
                 // Parse each line into PlayerData objects
                 for (String line : lines) {
                     String[] parts = line.split(",");
-                    if (parts.length == 6) {
+                    if (parts.length == 7) {
                         String nickname = parts[0];
                         String avatarNumber = parts[1];
                         String lastLevel = parts[2];

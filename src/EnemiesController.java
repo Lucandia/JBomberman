@@ -20,14 +20,14 @@ public class EnemiesController {
             }
             EnemyModel enemyModel;
             EntityView enemyView;
-            if ((i % (numberOfEnemies / level )) != 0) { // alternate between enemy types
+            // if ((i % (numberOfEnemies / level )) != 0) { // alternate between enemy types
                 enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10,  stageModel);
                 enemyView = new EntityView(enemyModel, "enemy1");
-            }
-            else {
-                enemyModel = new EnemyModel2(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, stageModel);
-                enemyView = new EntityView(enemyModel, "enemy2", true, 6);
-            }
+            // }
+            // else {
+            //     enemyModel = new EnemyModel2(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, stageModel);
+            //     enemyView = new EntityView(enemyModel, "enemy2", true, 6);
+            // }
             if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) instanceof EmptyTile || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) instanceof EmptyTile) {
                 enemyModel.startMoving("UP");
             } else {

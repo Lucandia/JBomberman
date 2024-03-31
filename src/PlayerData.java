@@ -8,7 +8,6 @@ public class PlayerData {
     private String score;
 
     public PlayerData(String nickname, String avatar, String lastLevel, String playedGames, String winGames, String lostGames, String score) {
-        if (nickname == "") nickname = "Default";
         this.nickname = nickname;
         this.avatar = avatar;
         this.lastLevel = lastLevel;
@@ -90,12 +89,15 @@ public class PlayerData {
         return score;
     }
 
-    public void setScore(String score) {
-        this.score = score;
+    public void setScore(int newScore) {
+        int currentScore = Integer.parseInt(getScore());
+        if (currentScore < newScore) {
+            this.score = Integer.toString(newScore);
+        }
     }
 
     public String getDataString() {
-        return nickname + "," + avatar + "," + lastLevel + "," + playedGames + "," + winGames + "," + lostGames + "," + score + "\n";
+        return nickname + "," + avatar + "," + lastLevel + "," + playedGames + "," + winGames + "," + lostGames + "," + score;
     }
 
 
