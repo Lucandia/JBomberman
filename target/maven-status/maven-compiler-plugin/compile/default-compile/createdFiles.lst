@@ -21,7 +21,6 @@ com/lucandia/PowerUpBlast.class
 com/lucandia/EnemyModel.class
 com/lucandia/EntityView.class
 com/lucandia/PowerUp.class
-module-info.class
 com/lucandia/SpecialTileType.class
 com/lucandia/BombView.class
 com/lucandia/XYModel.class
