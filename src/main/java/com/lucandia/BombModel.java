@@ -9,8 +9,8 @@ public class BombModel extends EmptyTile{
     private int blastRadius = 1; // Default blast radius
     private BooleanProperty active = new SimpleBooleanProperty(true);
     private final double totalTime = 2.5; // Bomb timer in seconds
-    private double timer = 4; // Bomb timer in seconds
-    private double walkableTime = 1.0; // time on which you can walk on the bomb
+    private double timer = totalTime; // Bomb timer in seconds
+    private double walkableTime = totalTime / 5; // time on which you can walk on the bomb
 
     public BombModel(int x, int y, int radius) {
         super(x, y);
