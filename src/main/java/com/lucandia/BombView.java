@@ -35,13 +35,14 @@ public class BombView {
         bombSprite.layoutYProperty().set(bombModel.getY());
 
         // Animation timer to cycle through the sprites
+        double frameTime = bombModel.getTotalTime() / 10; // Time to cycle through all sprites
         bombAnimation = new Timeline(
-            new KeyFrame(Duration.seconds(0.3), e -> bombSprite.setViewport(new Rectangle2D(0, 0, 16, 16))),
-            new KeyFrame(Duration.seconds(0.6), e -> bombSprite.setViewport(new Rectangle2D(17, 0, 16, 16))),
-            new KeyFrame(Duration.seconds(0.9), e -> bombSprite.setViewport(new Rectangle2D(34, 0, 16, 16))),
-            new KeyFrame(Duration.seconds(1.2), e -> bombSprite.setViewport(new Rectangle2D(17, 0, 16, 16))) 
+            new KeyFrame(Duration.seconds(0), e -> bombSprite.setViewport(new Rectangle2D(0, 0, 16, 16))),
+            new KeyFrame(Duration.seconds(frameTime * 2), e -> bombSprite.setViewport(new Rectangle2D(17, 0, 16, 16))),
+            new KeyFrame(Duration.seconds(frameTime * 3), e -> bombSprite.setViewport(new Rectangle2D(34, 0, 16, 16)))
         );
         bombAnimation.setCycleCount(Animation.INDEFINITE);
+        bombAnimation.setAutoReverse(true);
         bombAnimation.play();
         addToPane();
     }
@@ -162,7 +163,7 @@ public class BombView {
             if (dy == min_dy) break;
         }
     
-        double frameTime = 0.07; // Time between each frame of the explosion animation
+        double frameTime = model.getTotalTime() / 25; // Time between each frame of the explosion animation
         // Create and play the explosion animation
         Timeline explosionAnimation = new Timeline();
         for (int frameIndex = 0; frameIndex < 5; frameIndex++) { // For each frame of the explosion

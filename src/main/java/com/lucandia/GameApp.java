@@ -150,7 +150,7 @@ public class GameApp extends Application {
         // initialize playerModel, view, and controller
         if (this.playerModel == null) {
             stageModel.setPlayer(playerModel);
-            this.playerModel = new PlayerModel(32, 6, 1.3, stageModel);
+            this.playerModel = new PlayerModel(32, 6, stageModel);
         }
         else {
             this.playerModel.setPosition(32, 6);

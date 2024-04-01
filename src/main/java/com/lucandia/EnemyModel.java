@@ -9,7 +9,7 @@ public class EnemyModel extends EntityModel {
      * @param initialPosition The starting position of the player in the game world.
      */
     public EnemyModel(int initialX, int initialY, StageModel stage) {
-        super(initialX, initialY, 0.8, new int[] {15, 15}, new int[] {8, 17}, 100, stage);
+        super(initialX, initialY, new int[] {15, 15}, new int[] {8, 17}, 100, stage);
     }
 
     @Override

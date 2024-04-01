@@ -14,7 +14,7 @@ public abstract class EntityModel extends XYModel{
 
     // Properties
     protected final IntegerProperty life = new SimpleIntegerProperty(100);
-    protected final DoubleProperty velocity = new SimpleDoubleProperty();
+    protected final DoubleProperty velocity = new SimpleDoubleProperty(1);
     protected double timeSinceLastMove = 0.0;
     protected double delayMove = 0.05; // Time in seconds between moves
     protected final int[] boundingBox = {0, 0};
@@ -23,15 +23,9 @@ public abstract class EntityModel extends XYModel{
     protected int[] lastDirection = {0, 0};
     protected StageModel stage;
     protected ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
-        
 
-
-    public EntityModel() {
-        this(0, 0, 0.0, null);
-    }
-
-    public EntityModel(int x, int y, double velocity, StageModel stage) {
-        this(x, y, velocity, new int[] {16, 16}, new int[] {16, 16}, 100, null);
+    public EntityModel(int x, int y, StageModel stage) {
+        this(x, y, new int[] {16, 16}, new int[] {16, 16}, 100, null);
     }
 
     /**
@@ -39,10 +33,9 @@ public abstract class EntityModel extends XYModel{
      * 
      * @param initialPosition The initial position of the entity on the game board.
      */
-    public EntityModel(int x, int y, double velocity, int[] boundingBox, int[] boundingOffset,  int life, StageModel stage) {
+    public EntityModel(int x, int y, int[] boundingBox, int[] boundingOffset,  int life, StageModel stage) {
         super(x, y);
         this.stage = stage;
-        this.velocity.set(velocity);
         this.life.set(life);
         if (boundingBox!=null && boundingOffset.length == 2){
             this.boundingBox[0] = boundingBox[0];
@@ -81,6 +74,14 @@ public abstract class EntityModel extends XYModel{
      */
     public DoubleProperty velocityProperty() {
         return velocity;
+    }
+
+    public double getVelocity() {
+        return velocity.get();
+    }
+
+    public void setVelocity(double velocity) {
+        this.velocity.set(velocity);
     }
 
     public StageModel getStage() {
