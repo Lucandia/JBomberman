@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "MainMenu",
+            "request": "launch",
+            "mainClass": "com.lucandia/com.lucandia.MainMenu",
+            "projectName": "jbomberman"
+        },
+        {
+            "type": "java",
             "name": "App",
             "request": "launch",
             "mainClass": "com.lucandia/com.lucandia.App",

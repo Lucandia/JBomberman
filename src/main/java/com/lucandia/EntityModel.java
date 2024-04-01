@@ -14,7 +14,7 @@ public abstract class EntityModel extends XYModel{
 
     // Properties
     protected final IntegerProperty life = new SimpleIntegerProperty(100);
-    protected final DoubleProperty velocity = new SimpleDoubleProperty(1.5);
+    protected final DoubleProperty velocity = new SimpleDoubleProperty(1);
     protected double timeSinceLastMove = 0.0;
     protected double delayMove = 0.05; // Time in seconds between moves
     protected final int[] boundingBox = {0, 0};

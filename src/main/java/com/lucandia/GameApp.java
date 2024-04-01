@@ -47,8 +47,8 @@ public class GameApp extends Application {
                 // Check for player death or level completion
                 if (playerModel.isDead() || (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor())) {
                     // Stop the game loop first to prevent any updates while the dialog is shown
+                    playerModel.stopMoving(); 
                     this.stop();
-
                     // save the data
                     if (playerModel.isDead()) {
                         data.setLostGames(data.getLostGamesInt() + 1);
@@ -87,7 +87,9 @@ public class GameApp extends Application {
                         }
                         ButtonType buttonRestartOrContinue = new ButtonType(playerModel.isDead() ? "Try again" : "Continue");
                         ButtonType buttonExit = new ButtonType("Exit to Main Menu");
-                        alert.getButtonTypes().setAll(buttonRestartOrContinue, buttonExit);
+                        ButtonType buttonQuit = new ButtonType("Quit");
+                        
+                        alert.getButtonTypes().setAll(buttonRestartOrContinue, buttonExit, buttonQuit);
 
                         Optional<ButtonType> result = alert.showAndWait();
                         if (result.isPresent() && result.get() == buttonRestartOrContinue) {
@@ -97,7 +99,6 @@ public class GameApp extends Application {
                                 setupGame(primaryStage, data.getLastLevelInt());
                             } else {
                                 // Setup game for next level if the current one was completed
-                                playerModel.stopMoving(); 
                                 setupGame(primaryStage, data.getLastLevelInt());
                             }
                             // Restart the game loop
@@ -114,6 +115,10 @@ public class GameApp extends Application {
                                     e.printStackTrace();
                                 }
                             });
+                        }
+                        else if (result.isPresent() && result.get() == buttonQuit) {
+                            // Quit the application
+                            Platform.exit();
                         }
                     });
                 } else {

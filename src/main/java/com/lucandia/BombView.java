@@ -143,7 +143,7 @@ public class BombView {
         int min_dy = -radius;
         for (int dy = -1; dy >= -radius; dy--) {
             // Check the explosion to display
-            if (stage.canExplodeAtPosition(bombX, bombY + dy * size)) {
+            if (model.containsDetonatePosition(tileX, tileY + dy)) {
                 if (!model.containsDetonatePosition(tileX, tileY + dy - 1)){
                     min_dy = dy;
                 }
