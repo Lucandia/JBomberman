@@ -49,6 +49,7 @@ public abstract class EntityModel extends XYModel{
     }
 
     public void loseLife(int amount) {
+        AudioUtils.playSoundEffect("LoseLife.mp3");
         this.life.set(getLife() - amount);
         if (isDead()) {
             clearOccupiedTiles();

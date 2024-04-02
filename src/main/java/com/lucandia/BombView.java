@@ -175,8 +175,6 @@ public class BombView {
                 }
             }));
         }
-        explosionAnimation.setCycleCount(2); // Play the animation 2 times
-        explosionAnimation.setAutoReverse(true); // Reverse the animation
         explosionAnimation.setOnFinished(e -> explosionSprites.forEach(sprite -> pane.getChildren().remove(sprite))); // Remove sprites after animation
         explosionAnimation.play();
     }

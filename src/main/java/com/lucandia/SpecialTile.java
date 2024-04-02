@@ -1,4 +1,5 @@
 package com.lucandia;
+
 public class SpecialTile extends EmptyTile{
     protected SpecialTileType type;
 

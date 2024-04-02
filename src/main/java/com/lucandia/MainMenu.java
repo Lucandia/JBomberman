@@ -25,6 +25,8 @@ public class MainMenu extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        BackgroundMusic backgroundMusic = new BackgroundMusic();
+        backgroundMusic.playMusic("MainMenu.mp3");
         Font.loadFont(getClass().getResourceAsStream("/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"), 14);
         readPlayerData(); // Read player data from file
         TextField nicknameField = new TextField();
@@ -62,6 +64,7 @@ public class MainMenu extends Application {
             PlayerData data = playerDataMap.getOrDefault(nickname, new PlayerData(nickname, avatar, "1", "0", "0", "0", "0")); 
             try {
                 GameApp gameApp = new GameApp();
+                backgroundMusic.stopMusic();
                 gameApp.initializeGame(data, enemySpinner.getValue());
                 gameApp.start(new Stage());
             } catch (Exception ex) {
@@ -127,6 +130,7 @@ public class MainMenu extends Application {
     }
 
     public static void main(String[] args) {
+        AudioUtils.preloadAll(); // Preload all sound effects
         launch(args);
     }
 

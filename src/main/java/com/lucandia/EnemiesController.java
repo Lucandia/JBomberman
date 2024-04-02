@@ -1,7 +1,10 @@
 package com.lucandia;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javafx.scene.layout.Pane;
 
 public class EnemiesController {
@@ -60,19 +63,20 @@ public class EnemiesController {
     }
 
     public void update(double elapsed) {
-        for (int i = enemies.size()-1; i >= 0; i--) {
-            EnemyModel enemy = enemies.get(i);
-            if (enemy.isDead()) {
-                views.get(i).update(elapsed);
-                removeEnemy(enemy);
-                continue;
-            }
-            enemy.update(elapsed);
-            int[] lastDirection = enemies.get(i).getLastDirection();
-            if (enemy.getLastDirection()[0] != lastDirection[0] || enemy.getLastDirection()[1] != lastDirection[1]) {
-                directions.set(i, lastDirection);
-            }
-            views.get(i).update(elapsed);
-        }
+        // update enemy and views
+        enemies.forEach(enemy -> enemy.update(elapsed));
+        views.forEach(view -> view.update(elapsed));
+
+        // Remove dead enemies
+        IntStream.range(0, enemies.size()) //iterate over indices
+            .filter(i -> enemies.get(i).isDead()) // filter, keep only dead enemies
+            .boxed() // convert to Integer
+            .collect(Collectors.toCollection(LinkedList::new)) // collect to LinkedList
+            .descendingIterator() // iterate in reverse order to avoid index shift
+            .forEachRemaining(i -> { // remove dead enemies and views
+                enemies.remove((int)i);
+                views.remove((int)i);
+            });
     }
+
 }

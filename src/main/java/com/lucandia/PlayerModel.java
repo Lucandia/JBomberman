@@ -35,7 +35,7 @@ public class PlayerModel extends EntityModel {
     @Override
     public void loseLife(int amount) {
         if (this.recovering) return;
-        this.life.set(life.get() - 1);
+        super.loseLife(1);
         this.recovering = true;
     }
 

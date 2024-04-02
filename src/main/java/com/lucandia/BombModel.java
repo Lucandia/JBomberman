@@ -8,7 +8,7 @@ public class BombModel extends EmptyTile{
     private List<String> detonatePositions = new ArrayList<>();
     private int blastRadius = 1; // Default blast radius
     private BooleanProperty active = new SimpleBooleanProperty(true);
-    private final double totalTime = 2.5; // Bomb timer in seconds
+    private final double totalTime = 3; // Bomb timer in seconds
     private double timer = totalTime; // Bomb timer in seconds
     private double walkableTime = totalTime / 5; // time on which you can walk on the bomb
 
@@ -56,7 +56,18 @@ public class BombModel extends EmptyTile{
         return totalTime;
     }
 
-    // Method to decrement the timer, call this method every second
+    public List<String> getDetonatePositions() {
+        return detonatePositions;
+    }
+
+    public void addDetonatePosition(int x, int y) {
+        detonatePositions.add(x + "," + y);
+    }
+
+    public boolean containsDetonatePosition(int x, int y) {
+        return detonatePositions.contains(x + "," + y);
+    }
+    
     public void update(double elapsed) {
         if (isActive()) {
             timer -= elapsed;
@@ -69,17 +80,5 @@ public class BombModel extends EmptyTile{
                 explode();
             }
         }
-    }
-
-    public List<String> getDetonatePositions() {
-        return detonatePositions;
-    }
-
-    public void addDetonatePosition(int x, int y) {
-        detonatePositions.add(x + "," + y);
-    }
-
-    public boolean containsDetonatePosition(int x, int y) {
-        return detonatePositions.contains(x + "," + y);
     }
 }

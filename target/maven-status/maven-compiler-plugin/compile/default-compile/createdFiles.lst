@@ -2,6 +2,7 @@ com/lucandia/EnemiesController.class
 com/lucandia/EntityView$1.class
 com/lucandia/EnemyModel2.class
 com/lucandia/GameApp$1.class
+com/lucandia/AudioUtils.class
 com/lucandia/StageView.class
 com/lucandia/InputController.class
 com/lucandia/GameApp.class

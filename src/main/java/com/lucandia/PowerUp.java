@@ -22,6 +22,7 @@ public class PowerUp extends SpecialTile{
         if (applied) return;
         if (occupant instanceof PlayerModel) {
             applyPowerUp((PlayerModel) occupant);
+            AudioUtils.playSoundEffect("ItemGet.mp3");
         }
         setDisplayable(false);
         applied = true;

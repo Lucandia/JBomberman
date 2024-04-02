@@ -27,6 +27,7 @@ public class GameApp extends Application {
     private PlayerModel playerModel;
     private EnemiesController enemiesController;
     private int numberOfEnemies;
+    private BackgroundMusic backgroundMusic = new BackgroundMusic();
 
     public Void initializeGame(PlayerData data, int numberOfEnemies) {
         this.avatar = Integer.parseInt(data.getAvatar()) - 1;
@@ -39,7 +40,6 @@ public class GameApp extends Application {
     public void start(Stage primaryStage) {        
         // Setup the game with the provided player data
         setupGame(primaryStage, data.getLastLevelInt());
-
         // Create and start the game loop using AnimationTimer
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
@@ -48,12 +48,16 @@ public class GameApp extends Application {
                 if (playerModel.isDead() || (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor())) {
                     // Stop the game loop first to prevent any updates while the dialog is shown
                     playerModel.stopMoving(); 
+                    backgroundMusic.stopMusic();
                     this.stop();
                     // save the data
                     if (playerModel.isDead()) {
                         data.setLostGames(data.getLostGamesInt() + 1);
+                        // AudioUtils.playSoundEffect("BombermanDies.mp3");
+                        AudioUtils.playSoundEffect("GameOver.mp3");
                     } else {
                         data.setWinGames(data.getWinGamesInt() + 1);
+                        AudioUtils.playSoundEffect("StageClear.mp3");
                         // Don't go to higher levels than 3
                         if (data.getLastLevelInt() < 3) {
                             data.setLastLevel(data.getLastLevelInt() + 1);
@@ -135,6 +139,7 @@ public class GameApp extends Application {
     
 
     private void setupGame(Stage primaryStage, int level) {
+        AudioUtils.playSoundEffect("StageStart.mp3");
         // Use a StackPane as the root to allow layering of the map and the player
         StackPane root = new StackPane();
         Pane bombLayer = new Pane();
@@ -180,8 +185,8 @@ public class GameApp extends Application {
         this.playerController = new PlayerController(playerModel, playerView);
         this.bombController = new BombController(playerModel, bombLayer);
         new InputController(playerController, bombController, mainScene);
+        backgroundMusic.playMusic("Background.mp3");
     }
-
 
     public void savePlayerData() {
         try {

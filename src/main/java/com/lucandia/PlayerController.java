@@ -2,6 +2,8 @@ package com.lucandia;
 public class PlayerController {
     private PlayerModel model;
     private EntityView view;
+    private int audoDelay = 40;
+
 
     public PlayerController(PlayerModel model, EntityView view) {
         this.model = model;
@@ -24,6 +26,13 @@ public class PlayerController {
     public void update(double elapsed) {
         model.update(elapsed);
         view.update(elapsed);
+        if (model.isMoving()) {
+            audoDelay -= elapsed;
+            if (audoDelay <= 0) {
+                AudioUtils.playSoundEffect("Walking.mp3");
+                audoDelay = 40;
+            }
+        }
     }
 
 }

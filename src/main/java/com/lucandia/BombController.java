@@ -1,7 +1,5 @@
 package com.lucandia;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import javafx.scene.layout.Pane;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -30,6 +28,7 @@ public class BombController {
         if (bombMap.size() < maxBombs.get()) {
             int[] startPosition = stage.getTileStartCoordinates(currentX.get() + bombPlayerYOffset[0], currentY.get() + bombPlayerYOffset[1]);
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
+                AudioUtils.playSoundEffect("PlaceBomb.mp3");
                 bombMap.put(stage.getBombAtPosition(startPosition[0], startPosition[1]), new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage));
             }
         }
@@ -60,6 +59,7 @@ public class BombController {
     }
 
     public void DetonateBomb(BombModel bomb) {
+        AudioUtils.playSoundEffect("BombExplodes.mp3");
         int blast = bomb.getBlastRadius();
         bomb.explode();
         int tileX = (int) bomb.getX() / stage.getTileSize();
@@ -80,17 +80,28 @@ public class BombController {
         bombMap.get(bomb).update();
     }
 
+    // public void update(double elapsed) {
+    //     List<BombModel> toRemove = new ArrayList<>();
+    //     for (BombModel bomb : bombMap.keySet()) {
+    //         bomb.update(elapsed);
+    //         if (!bomb.isActive()) {
+    //             DetonateBomb(bomb);
+    //             toRemove.add(bomb); // Mark this bomb for removal
+    //         }
+    //     }
+    //     for (BombModel bomb : toRemove) {
+    //         bombMap.remove(bomb);
+    //     }
+    // }
+
     public void update(double elapsed) {
-        List<BombModel> toRemove = new ArrayList<>();
-        for (BombModel bomb : bombMap.keySet()) {
-            bomb.update(elapsed);
-            if (!bomb.isActive()) {
-                DetonateBomb(bomb);
-                toRemove.add(bomb); // Mark this bomb for removal
-            }
-        }
-        for (BombModel bomb : toRemove) {
-            bombMap.remove(bomb);
-        }
+        // Update all bombs
+        bombMap.keySet().forEach(bomb -> bomb.update(elapsed));
+        // Detonate bombs that not active anymore
+        bombMap.entrySet().stream()
+            .filter(entry -> !entry.getKey().isActive())
+            .forEach(entry -> DetonateBomb(entry.getKey()));
+        // Remove inactive bombs
+        bombMap.entrySet().removeIf(entry -> !entry.getKey().isActive());
     }
 }
