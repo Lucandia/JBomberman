@@ -7,11 +7,23 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javafx.scene.layout.Pane;
 
+/**
+ * Questa classe rappresenta il controller degli avversari nel gioco.
+ * Gestisce la creazione, l'aggiunta, la rimozione e l'aggiornamento degli avversari.
+ */
 public class EnemiesController {
     private List<EnemyModel> enemies = new ArrayList<EnemyModel>();
     private List<EntityView> views = new ArrayList<EntityView>();
     private List<int[]> directions = new ArrayList<int []>();
 
+    /**
+     * Costruttore della classe EnemiesController.
+     * 
+     * @param numberOfEnemies il numero di nemici da creare
+     * @param stageModel il modello dello stage di gioco
+     * @param gameLayer il layer di gioco in cui posizionare i nemici
+     * @param level il livello di gioco corrente
+     */
     public EnemiesController(int numberOfEnemies, StageModel stageModel, Pane gameLayer, int level) {
         List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
         Random random = new Random();
@@ -43,12 +55,23 @@ public class EnemiesController {
         }
     }
 
+    /**
+    * Aggiunge un nemico al controller dei nemici.
+    * 
+    * @param enemy il modello del nemico da aggiungere
+    * @param enemyView la view del nemico da aggiungere
+    */
     public void addEnemy(EnemyModel enemy, EntityView enemyView) {
         enemies.add(enemy);
         views.add(enemyView);
         directions.add(enemy.getLastDirection());
     }
 
+    /**
+     * Rimuove un nemico (e la sua view) dal controller dei nemici.
+     * 
+     * @param enemy il modello del nemico da rimuovere
+     */
     public void removeEnemy(EnemyModel enemy) {
         int index = enemies.indexOf(enemy);
         if (index != -1) {
@@ -58,10 +81,22 @@ public class EnemiesController {
         }
     }
 
+    /**
+     * Ottiene la lista dei nemici.
+     * 
+     * @return la lista dei nemici
+     */
     public List<EnemyModel> getEnemies() {
         return enemies;
     }
 
+
+    /**
+     * Aggiorna gli avversari e le relative viste.
+     * Rimuove gli avversari morti.
+     *
+     * @param elapsed il tempo trascorso dall'ultimo aggiornamento
+     */
     public void update(double elapsed) {
         // update enemy and views
         enemies.forEach(enemy -> enemy.update(elapsed));

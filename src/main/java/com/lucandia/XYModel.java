@@ -10,8 +10,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 public abstract class XYModel {
 
     // Properties
-    private final IntegerProperty x = new SimpleIntegerProperty();
-    private final IntegerProperty y = new SimpleIntegerProperty();
+    protected final IntegerProperty x = new SimpleIntegerProperty();
+    protected final IntegerProperty y = new SimpleIntegerProperty();
 
     public XYModel() {
         this(0, 0);

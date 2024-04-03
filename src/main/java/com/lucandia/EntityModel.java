@@ -15,6 +15,8 @@ public abstract class EntityModel extends XYModel{
     // Properties
     protected final IntegerProperty life = new SimpleIntegerProperty(100);
     protected final DoubleProperty velocity = new SimpleDoubleProperty(1);
+    protected IntegerProperty centerX = new SimpleIntegerProperty();
+    protected IntegerProperty centerY = new SimpleIntegerProperty();
     protected double timeSinceLastMove = 0.0;
     protected double delayMove = 0.05; // Time in seconds between moves
     protected final int[] boundingBox = {0, 0};
@@ -45,6 +47,8 @@ public abstract class EntityModel extends XYModel{
             this.boundingOffset[0] = boundingOffset[0];
             this.boundingOffset[1] = boundingOffset[1];
         }
+        centerX.bind(this.x.add(this.boundingOffset[0]));
+        centerY.bind(this.y.add(this.boundingOffset[1]));
         setOccupiedTiles();
     }
 
@@ -127,8 +131,24 @@ public abstract class EntityModel extends XYModel{
         this.stage = stage;
     }
 
+    public SimpleIntegerProperty centerXProperty() {
+        return (SimpleIntegerProperty) centerX;
+    }
+
+    public SimpleIntegerProperty centerYProperty() {
+        return (SimpleIntegerProperty) centerY;
+    }
+
+    public int getCenterX() {
+        return centerX.get();
+    }
+
+    public int getCenterY() {
+        return centerY.get();
+    }
+
     public int[] centerOfMass() {
-        return new int[] {getX() + boundingOffset[0], getY() + boundingOffset[1]};
+        return new int[] {centerX.get(), centerY.get()};
     }
 
     public void clearOccupiedTiles() {
@@ -140,14 +160,12 @@ public abstract class EntityModel extends XYModel{
 
     public void setOccupiedTiles() {
         clearOccupiedTiles();     
-        int xCenter = centerOfMass()[0];
-        int yCenter = centerOfMass()[1];
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
                 // skip the cornern tiles {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
                 if (x != 0 && y !=0 && (x == y || x == -y)) continue;
-                int tileX = xCenter + x * boundingBox[0] / 2;
-                int tileY = yCenter + y * boundingBox[1] / 2;
+                int tileX = centerX.get() + x * boundingBox[0] / 2;
+                int tileY = centerY.get() + y * boundingBox[1] / 2;
                 EmptyTile tile = stage.getEmptyTileAtPosition(tileX, tileY);
                 tile.setOccupant(this);
                 occupiedTiles.add(tile);
@@ -176,8 +194,8 @@ public abstract class EntityModel extends XYModel{
         int xSign = Integer.signum(dx);
         int ySign = Integer.signum(dy);
         int directionOffset = 3;
-        int tileXCollision = (int) centerOfMass()[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
-        int tileYCollision = (int) centerOfMass()[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
+        int tileXCollision = (int) centerX.get() + xSign * boundingBox[0] / 2 + xSign * directionOffset;
+        int tileYCollision = (int) centerY.get()  + ySign * boundingBox[1] / 2 + ySign * directionOffset;
         return stage.getEmptyTileAtPosition(tileXCollision, tileYCollision).getOccupant();
     }
 
@@ -185,33 +203,32 @@ public abstract class EntityModel extends XYModel{
     protected boolean canMoveTo(int dx, int dy) {
         int xSign = Integer.signum(dx);
         int ySign = Integer.signum(dy);
-        int[] center = centerOfMass();
-        int tileX = center[0];
-        int tileY = center[1];
+        int tileX = centerX.get();
+        int tileY = centerY.get() ;
         int directionOffset = 2;
         Tile collisionTile;
         if (dx != 0){
-            int tileXCollision = (int) center[0] + xSign * boundingBox[0] / 2 + xSign * directionOffset;
+            int tileXCollision = (int) centerX.get() + xSign * boundingBox[0] / 2 + xSign * directionOffset;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileY);
             // controlla la tile direttamente sull'asse x della bounding box
             if (!collisionTile.isWalkable()) return false;
             // scontro col bordo di una tile mentre sopra non c'e' nulla --> e' uno spigolo e bisogna fermarsi
-            int tileYCollision = (int) center[1] - boundingBox[1] / 2;
+            int tileYCollision = (int) centerY.get()  - boundingBox[1] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
             if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
-            tileYCollision = (int) center[1] + boundingBox[1] / 2;
+            tileYCollision = (int) centerY.get()  + boundingBox[1] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
             if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
         }
         // stessa cosa se lo spostamento e' sull'asse y
         else if (dy != 0){
-            int tileYCollision = (int) center[1] + ySign * boundingBox[1] / 2 + ySign * directionOffset;
+            int tileYCollision = (int) centerY.get() + ySign * boundingBox[1] / 2 + ySign * directionOffset;
             collisionTile = stage.getTileAtPosition(tileX, tileYCollision);
             if (!collisionTile.isWalkable()) return false;
-            int tileXCollision = (int) center[0] - boundingBox[0] / 2;
+            int tileXCollision = (int) centerX.get() - boundingBox[0] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
             if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
-            tileXCollision = (int) center[0] + boundingBox[0] / 2;
+            tileXCollision = (int) centerX.get() + boundingBox[0] / 2;
             collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
             if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
         }

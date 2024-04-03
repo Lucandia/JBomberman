@@ -12,6 +12,10 @@ import javafx.geometry.Rectangle2D;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.BooleanProperty;
 
+/**
+ * Questa classe rappresenta la vista di una bomba nel gioco Bomberman.
+ * La classe gestisce l'animazione della bomba e l'esplosione quando la bomba diventa inattiva.
+ */
 public class BombView {
     private ImageView bombSprite;
     private Timeline bombAnimation = null;
@@ -20,6 +24,13 @@ public class BombView {
     private Pane pane;
     private BombModel model;
 
+    /**
+     * Crea una nuova istanza di BombView.
+     * 
+     * @param bombModel il modello della bomba
+     * @param pane il pannello in cui visualizzare la bomba
+     * @param stage il modello dello stage di gioco
+     */
     public BombView(BombModel bombModel, Pane pane, StageModel stage) {
         this.pane = pane;
         this.model = bombModel;
@@ -47,9 +58,13 @@ public class BombView {
         addToPane();
     }
 
-    public void playExplosionAnimation() { // Ensure to pass the correct pane where the game is rendered
+
+    /*
+     * Crea e riproduce un'animazione dell'esplosione della bomba.
+     */
+    public void playExplosionAnimation() { 
         int radius = model.getBlastRadius();
-        final int size = stage.getTileSize(); // Adjust according to your sprite size
+        final int size = stage.getTileSize(); 
         Image explosionImage = new Image(getClass().getResourceAsStream("/sprites/explosion.png"));
         // List to hold all explosion sprites
         List<ImageView> explosionSprites = new ArrayList<>();
@@ -179,14 +194,26 @@ public class BombView {
         explosionAnimation.play();
     }
     
+    /**
+     * Restituisce l'ImageView della bomba.
+     *
+     * @return l'ImageView della bomba
+     */
     public ImageView getbombSprite() {
         return bombSprite;
     }
 
+    /**
+     * Aggiunge l'ImageView della bomba al pannello.
+     */
     public void addToPane() {
         pane.getChildren().add(getbombSprite());
     }
 
+    /**
+     * Aggiorna la View della bomba. Se la bomba non è attiva, riproduce l'animazione dell'esplosione
+     * e rimuove l'ImageView della bomba dal pannello.
+     */
     public void update() {
         if (!active.get()) {
             playExplosionAnimation();
