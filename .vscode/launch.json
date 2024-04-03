@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "SimpleMediaTest",
+            "request": "launch",
+            "mainClass": "com.lucandia/com.lucandia.SimpleMediaTest",
+            "projectName": "jbomberman"
+        },
+        {
+            "type": "java",
             "name": "MainMenu",
             "request": "launch",
             "mainClass": "com.lucandia/com.lucandia.MainMenu",

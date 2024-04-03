@@ -61,7 +61,7 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.lucandia.App</mainClass>
+                            <mainClass>com.lucandia.SimpleMediaTest</mainClass>
                         </configuration>
                     </execution>
                 </executions>

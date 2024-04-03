@@ -2,6 +2,7 @@ com/lucandia/EnemiesController.class
 com/lucandia/EntityView$1.class
 com/lucandia/EnemyModel2.class
 com/lucandia/GameApp$1.class
+com/lucandia/BackgroundMusic.class
 com/lucandia/AudioUtils.class
 com/lucandia/StageView.class
 com/lucandia/InputController.class
@@ -27,6 +28,7 @@ module-info.class
 com/lucandia/SpecialTileType.class
 com/lucandia/BombView.class
 com/lucandia/XYModel.class
+com/lucandia/BackgroundMusic$1.class
 com/lucandia/EmptyTile.class
 com/lucandia/PlayerData.class
 com/lucandia/BombModel.class

@@ -1,4 +1,5 @@
 package com.lucandia;
+import javafx.application.Platform;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import java.net.URL;
@@ -13,15 +14,18 @@ public class BackgroundMusic {
             URL musicFileUrl = getClass().getResource("/audio/" + audioFileName);
             if (musicFileUrl != null) {
                 Media media = new Media(musicFileUrl.toExternalForm());
-                MediaPlayer mediaPlayer = new MediaPlayer(media);
+                mediaPlayer = new MediaPlayer(media);
                 mediaPlayer.setOnEndOfMedia(new Runnable() {
                     @Override
                     public void run() {
                         mediaPlayer.seek(javafx.util.Duration.ZERO); // Loop back to the start
                     }
                 });
-                mediaPlayer.play();
-                mediaPlayer.setVolume(0.7);
+                Platform.runLater(() -> {
+                    mediaPlayer.play();
+                });
+                // mediaPlayer.play();
+                // mediaPlayer.setVolume(0.7);
             } else {
                 System.err.println("Could not find the audio file: " + audioFileName);
             }
