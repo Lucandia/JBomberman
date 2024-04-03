@@ -30,7 +30,8 @@ public class PowerUp extends SpecialTile{
 
     @Override
     public boolean isDetonable() {
-        return true;
+        if (!applied) return true; // PowerUp can be detonated if it has not been applied
+        return super.isDetonable(); // the PowerUp has been applied, so it behaves like a normal EmptyTile
     }
 
     public void applyPowerUp(PlayerModel playerModel) {

@@ -1,7 +1,5 @@
 package com.lucandia;
-/**
- * PlayerModel represents the state and behavior of a player in the game.
- */
+
 public class EnemyModel2 extends EnemyModel {
 
     /**
@@ -14,7 +12,7 @@ public class EnemyModel2 extends EnemyModel {
         this.life.set(200); // Initial life
         this.setBoundingBox(new int[] {15, 15});
         this.setBoundingOffset(new int[] {8, 17});
-        this.setVelocity(this.getVelocity() * 3 / 4); // Half the speed of the original enemy
+        this.setVelocity(this.getVelocity() / 2); // Half the speed of the original enemy
     }
 
     @Override

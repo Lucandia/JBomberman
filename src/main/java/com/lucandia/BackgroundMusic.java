@@ -21,11 +21,8 @@ public class BackgroundMusic {
                         mediaPlayer.seek(javafx.util.Duration.ZERO); // Loop back to the start
                     }
                 });
-                Platform.runLater(() -> {
-                    mediaPlayer.play();
-                });
-                // mediaPlayer.play();
-                // mediaPlayer.setVolume(0.7);
+                mediaPlayer.play();
+                mediaPlayer.setVolume(0.7);
             } else {
                 System.err.println("Could not find the audio file: " + audioFileName);
             }
