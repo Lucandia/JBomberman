@@ -5,14 +5,14 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import java.util.ArrayList;
 
+
 /**
- * This class represents the abstract model for any entity in the game.
- * It includes common properties like position, which can be observed
- * for changes using JavaFX's property system.
+ * Classe astratta che rappresenta il modello di un'entità nel gioco.
+ * Estende la classe XYModel.
  */
 public abstract class EntityModel extends XYModel{
 
-    // Properties
+    // Campi dati
     protected final IntegerProperty life = new SimpleIntegerProperty(100);
     protected final DoubleProperty velocity = new SimpleDoubleProperty(1);
     protected IntegerProperty centerX = new SimpleIntegerProperty();
@@ -26,14 +26,24 @@ public abstract class EntityModel extends XYModel{
     protected StageModel stage;
     protected ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
 
+    /**
+     * Costruisce un nuovo oggetto EntityModel con la posizione (x, y) specificata e lo stage di appartenenza.
+     * 
+     * @param x la coordinata x dell'entità
+     * @param y la coordinata y dell'entità
+     * @param stage lo stage di appartenenza dell'entità
+     */
     public EntityModel(int x, int y, StageModel stage) {
         this(x, y, new int[] {16, 16}, new int[] {16, 16}, 100, null);
     }
 
     /**
-     * Constructor for EntityModel with initial position.
+     * Costruisce un nuovo oggetto EntityModel con la posizione (x, y) specificata, lo stage di appartenenza e la vita iniziale.
      * 
-     * @param initialPosition The initial position of the entity on the game board.
+     * @param x la coordinata x dell'entità
+     * @param y la coordinata y dell'entità
+     * @param life la vita iniziale dell'entità
+     * @param stage lo stage di appartenenza dell'entità
      */
     public EntityModel(int x, int y, int[] boundingBox, int[] boundingOffset,  int life, StageModel stage) {
         super(x, y);
@@ -52,6 +62,11 @@ public abstract class EntityModel extends XYModel{
         setOccupiedTiles();
     }
 
+    /**
+     * Toglie vita all'entità.
+     * 
+     * @param amount la quantità di vita da rimuovere
+     */
     public void loseLife(int amount) {
         AudioUtils.playSoundEffect("LoseLife.mp3");
         this.life.set(getLife() - amount);
@@ -60,51 +75,104 @@ public abstract class EntityModel extends XYModel{
         }
     }
 
+    /**
+     * Controlla se l'entità è morta.
+     * 
+     * @return true se l'entità è morta, false altrimenti
+     */
     public boolean isDead() {
         return getLife() <= 0;
     }
 
+    /**
+     * Imposta la vita dell'entità.
+     * 
+     * @param amount la quantità di vita da impostare
+     */
     public void setLife(int amount) {
         this.life.set(amount);
     }
 
+    /**
+     * Ritorna la proprietà della vita dell'entità.
+     * (il IntegerProperty è un tipo di ObservableValue che contiene un valore di tipo int)
+     * 
+     * @return l' IntegerProperty della vita 
+     */
     public int getLife() {
         return life.get();
     }
 
+
     /**
-     * Gets the velocity property of the entity.
+     * Ritorna la proprietà della velocita' dell'entità.
+     * (il DoubleProperty è un tipo di ObservableValue che contiene un valore di tipo double)
      * 
-     * @return The velocity property of the entity.
+     * @return il DoubleProperty della velocità 
      */
     public DoubleProperty velocityProperty() {
         return velocity;
     }
 
+    /**
+     * Ritorna la velocità dell'entità.
+     * 
+     * @return la velocità dell'entità
+     */
     public double getVelocity() {
         return velocity.get();
     }
 
+    /**
+     * Imposta la velocità dell'entità.
+     * 
+     * @param velocity la velocità da impostare
+     */
     public void setVelocity(double velocity) {
         this.velocity.set(velocity);
     }
 
+    /**
+     * Restituisce il modello dello stage.
+     *
+     * @return il modello dello stage
+     */
     public StageModel getStage() {
         return stage;
     }
 
+    /**
+     * Restituisce la bounding box dell'entità.
+     *
+     * @return l'array {x,y} che rappresenta la bounding box dell'entità
+     */
     public int[] getBoundingBox() {
         return boundingBox;
     }
 
+    /**
+     * Restituisce l'offset della bounding box.
+     *
+     * @return l'array {x,y} che rappresenta l'offset della bounding box
+     */
     public int[] getBoundingOffset() {
         return boundingOffset;
     }
 
+    /**
+     * Restituisce l'ultima direzione dell'entità.
+     *
+     * @return l'array {x,y} che rappresenta l'ultima direzione dell'entità
+     */
     public int[] getLastDirection() {
         return lastDirection;
     }
 
+    /**
+     * Restituisce una stringa che rappresenta l'ultima direzione dell'entità.
+     *
+     * @return la stringa che rappresenta l'ultima direzione dell'entità
+     */
     public String getLastDirectionString() {
         if (lastDirection[0] == 0 && lastDirection[1] == -1) return "UP";
         else if (lastDirection[0] == 0 && lastDirection[1] == 1) return "DOWN";
@@ -113,44 +181,92 @@ public abstract class EntityModel extends XYModel{
         else return "";
     }
 
+    /**
+     * Restituisce true se l'entità si sta muovendo, altrimenti restituisce false.
+     *
+     * @return true se l'entità si sta muovendo, altrimenti false.
+     */
     public boolean isMoving() {
         return isMoving;
     }
 
+    /**
+     * Imposta il bounding box dell'entità.
+     *
+     * @param boundingBox un array di interi contenente le coordinate del bounding box
+     */
     public void setBoundingBox(int[] boundingBox) {
         this.boundingBox[0] = boundingBox[0];
         this.boundingBox[1] = boundingBox[1];
     }
 
+    /**
+     * Imposta l'offset di delimitazione dell'entità.
+     *
+     * @param boundingOffset l'array contenente l'offset di delimitazione dell'entità, con il primo elemento rappresentante l'offset sull'asse x e il secondo elemento rappresentante l'offset sull'asse y
+     */
     public void setBoundingOffset(int[] boundingOffset) {
         this.boundingOffset[0] = boundingOffset[0];
         this.boundingOffset[1] = boundingOffset[1];
     }
 
+    /**
+     * Imposta la mappa do gioco (stage) per l'entità.
+     *
+     * @param stage il modello dello stage
+     */
     public void setStage(StageModel stage) {
         this.stage = stage;
     }
 
+    /**
+     * Restituisce la proprietà SimpleIntegerProperty della coordinata X del centro dell'entità.
+     *
+     * @return la proprietà centerX come SimpleIntegerProperty
+     */
     public SimpleIntegerProperty centerXProperty() {
         return (SimpleIntegerProperty) centerX;
     }
 
+    /**
+     * Restituisce la proprietà SimpleIntegerProperty della coordinata Y del centro dell'entità.
+     *
+     * @return la proprietà centerY come SimpleIntegerProperty
+     */
     public SimpleIntegerProperty centerYProperty() {
         return (SimpleIntegerProperty) centerY;
     }
 
+    /**
+     * Restituisce la coordinata X del centro dell'entità.
+     *
+     * @return la coordinata X del centro dell'entità
+     */
     public int getCenterX() {
         return centerX.get();
     }
 
+    /**
+     * Restituisce la coordinata Y del centro dell'entità.
+     *
+     * @return la coordinata Y del centro dell'entità
+     */
     public int getCenterY() {
         return centerY.get();
     }
 
+    /**
+     * Calcola il centro di massa dell'entità.
+     *
+     * @return un array di interi contenente le coordinate x e y del centro di massa dell'entità
+     */
     public int[] centerOfMass() {
         return new int[] {centerX.get(), centerY.get()};
     }
 
+    /**
+     * Cancella tutte le caselle occupate.
+     */
     public void clearOccupiedTiles() {
         for (EmptyTile tile : occupiedTiles) {
             tile.setOccupant(null);
@@ -158,6 +274,9 @@ public abstract class EntityModel extends XYModel{
         occupiedTiles.clear();
     }
 
+    /**
+     * Occupa le caselle su cui si trova l'entità.
+     */
     public void setOccupiedTiles() {
         clearOccupiedTiles();     
         for (int x = -1; x <= 1; x++) {
@@ -173,10 +292,12 @@ public abstract class EntityModel extends XYModel{
         }
     }
 
+
     /**
-     * Sets the position of the entity using an ObservablePoint2D object.
-     * 
-     * @param position The new position of the entity.
+     * Sposta l'entità di una determinata quantità nelle direzioni specificate.
+     *
+     * @param dx La quantità di spostamento sull'asse x.
+     * @param dy La quantità di spostamento sull'asse y.
      */
     public void move(int dx, int dy) {
         int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
@@ -190,6 +311,14 @@ public abstract class EntityModel extends XYModel{
         else isMoving = false;
     }
 
+    /**
+     * Controlla se la casella in cui l'entita' si vuole muovere e' gia' occupata da un'altra entita'.
+     * 
+     * @param dx la quantita' di spostamento sull'asse x
+     * @param dy la quantita' di spostamento sull'asse y
+     * 
+     * @return l'entita' che occupa la casella in cui l'entita' si vuole muovere
+     */
     public EntityModel checkCollision(int dx, int dy) {
         int xSign = Integer.signum(dx);
         int ySign = Integer.signum(dy);
@@ -199,7 +328,13 @@ public abstract class EntityModel extends XYModel{
         return stage.getEmptyTileAtPosition(tileXCollision, tileYCollision).getOccupant();
     }
 
-    // Check if the entity can move to a new position
+    /**
+     * Verifica se l'entità può spostarsi in una determinata direzione.
+     * 
+     * @param dx lo spostamento sull'asse x
+     * @param dy lo spostamento sull'asse y
+     * @return true se l'entità può spostarsi, false altrimenti
+     */
     protected boolean canMoveTo(int dx, int dy) {
         int xSign = Integer.signum(dx);
         int ySign = Integer.signum(dy);
@@ -235,10 +370,13 @@ public abstract class EntityModel extends XYModel{
         return true; // in tutte le direzioni della bouinding box non c'e' collisione
     }
 
+
     /**
-     * Starts the walking animation for the entity in the specified direction.
-     * 
-     * @param direction The direction in which the entity should start walking.
+     * Avvia il movimento dell'entità nella direzione specificata.
+     *
+     * @param direction un array di interi che rappresenta la direzione del movimento.
+     *                  L'elemento in posizione 0 rappresenta la direzione sull'asse x,
+     *                  mentre l'elemento in posizione 1 rappresenta la direzione sull'asse y.
      */
     public void startMoving(int[] direction) {
             lastDirection[0] = direction[0];
@@ -249,6 +387,11 @@ public abstract class EntityModel extends XYModel{
             }
     }
 
+    /**
+     * Avvia il movimento dell'entità nella direzione specificata.
+     *
+     * @param direction la direzione del movimento (UP, DOWN, LEFT, RIGHT)
+     */
     public void startMoving(String direction) {
         switch (direction) {
             case "UP":
@@ -277,18 +420,18 @@ public abstract class EntityModel extends XYModel{
         }
     }
 
+
     /**
-     * Stops the walking animation for the entity.
-     */
+    * Ferma il movimento dell'entità.
+    */
     public void stopMoving() {
         isMoving = false;
     }
 
     /**
-     * Method to update the entity's state. This should be called
-     * on every frame or update interval.
+     * Aggiorna il modello dell'entità.
      * 
-     * @param elapsedTime The time elapsed since the last update.
+     * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
      */
     public void update(double elapsedTime){
         if (isDead()) {

@@ -1,26 +1,39 @@
 package com.lucandia;
 
+/**
+ * Questa classe rappresenta il secondo tipo di nemico nel gioco.
+ * Estende la classe EnemyModel e cambia il comportamento del nemico.
+ */
 public class EnemyModel2 extends EnemyModel {
 
     /**
-     * Constructs a new PlayerModel with the specified initial position.
+     * Costruttore per la classe EnemyModel2.
      * 
-     * @param initialPosition The starting position of the player in the game world.
+     * @param initialX la coordinata x iniziale del nemico
+     * @param initialY la coordinata y iniziale del nemico
+     * @param stage il modello dello stage in cui si trova il nemico
      */
     public EnemyModel2(int initialX, int initialY, StageModel stage) {
         super(initialX, initialY, stage);
-        this.life.set(200); // Initial life
+        this.life.set(200); // Vita iniziale
         this.setBoundingBox(new int[] {15, 15});
         this.setBoundingOffset(new int[] {8, 17});
-        this.setVelocity(this.getVelocity() * 0.7); // Half the speed of the original enemy
+        // Metà della velocità del nemico originale, altrimenti e' troppo difficile da battere
+        this.setVelocity(this.getVelocity() * 0.7);
     }
 
+    /**
+     * Metodo per togliere vita al nemico. Quando il nemico perde vita, 
+     * si teletrasporta in una casella casuale libera.
+     *
+     * @param amount la quantità di vita da rimuovere
+     */
     @Override
     public void loseLife(int amount) {
         super.loseLife(amount);
         if (isDead()) return;
         boolean new_pos = false;
-        // Set the current tile's occupant to null
+        // Imposta l'occupante della tile corrente a null
         ((EmptyTile) getStage().getTileAtPosition((int) this.centerOfMass()[0], (int) this.centerOfMass()[1])).setOccupant(null);
         while (!new_pos) {
             int[] randomXY = getStage().getRandomFreeTile();
@@ -32,12 +45,18 @@ public class EnemyModel2 extends EnemyModel {
         }
     }
 
+    /**
+     * Metodo per aggiornare lo stato del nemico.
+     * 
+     * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
+     */
     @Override
     public void update(double elapsedTime) {
         super.update(elapsedTime);
         int lastX = lastDirection[0];
         int lastY = lastDirection[1];
-        int randomDirection = (int) (Math.random() * 4); // Generate a random number between 0 and 3
+        int randomDirection = (int) (Math.random() * 4); // Genera un numero casuale tra 0 e 3
+        // Muove il nemico in una direzione casuale
         if (randomDirection == 0 && canMoveTo(1, 0) && lastX != -1) {
             lastDirection[0] = 1;
             lastDirection[1] = 0;
