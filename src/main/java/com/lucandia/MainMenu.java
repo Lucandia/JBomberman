@@ -1,6 +1,5 @@
 package com.lucandia;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -9,7 +8,6 @@ import javafx.scene.text.Font;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -18,17 +16,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * La classe MainMenu rappresenta il menu principale del gioco JBomberman.
+ * Questa classe estende la classe Application di JavaFX e gestisce la visualizzazione
+ * e l'interazione con gli elementi del menu principale.
+ */
 public class MainMenu extends Application {
     private Map<String, PlayerData> playerDataMap = new HashMap<>();
     private ImageView avatarPreview = new ImageView();
     private Label statsLabel1 = new Label(); // Label to display player stats
     private Label statsLabel2 = new Label(); // Label to display player stats
 
+    /**
+     * Avvia l'applicazione del menu principale.
+     *
+     * @param primaryStage lo stage principale dell'applicazione
+     * @throws Exception se si verifica un'eccezione durante l'avvio dell'applicazione
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // fai partire la musica
         BackgroundMusic backgroundMusic = new BackgroundMusic();
         backgroundMusic.playMusic("MainMenu.mp3");
+
+        // Inizializza lo stage
         Font.loadFont(getClass().getResourceAsStream("/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"), 14);
+        primaryStage.setTitle("JBomberman");
         readPlayerData(); // Read player data from file
         TextField nicknameField = new TextField();
         nicknameField.setPrefWidth(10);
@@ -37,13 +50,6 @@ public class MainMenu extends Application {
         // Spinner for selecting the number of enemies
         Spinner<Integer> enemySpinner = new Spinner<>(1, 30, 4);
         enemySpinner.setEditable(true);
-
-        // Select Avatar
-        ComboBox<String> avatarComboBox = new ComboBox<>();
-        avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
-        avatarComboBox.setValue("1"); // Default to the first avatar
-        updateAvatarPreview("1"); // Update the avatar preview based on the default value (1)
-        avatarComboBox.setOnAction(e -> updateAvatarPreview(avatarComboBox.getValue()));
 
         // Listen for changes in the nickname field and update stats
         nicknameField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -58,6 +64,19 @@ public class MainMenu extends Application {
             }
         });
 
+        // Select Avatar
+        ComboBox<String> avatarComboBox = new ComboBox<>();
+        avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
+        String defaultAvatar = "1"; // Default avatar
+        // prova a caricare l'ultimo avatar usato
+        if (playerDataMap.containsKey(nicknameField.getText())) {
+            defaultAvatar = playerDataMap.get(nicknameField.getText()).getAvatar();
+        }
+        avatarComboBox.setValue(defaultAvatar);
+        updateAvatarPreview(defaultAvatar); // Update the avatar preview based on the default value (1)
+        avatarComboBox.setOnAction(e -> updateAvatarPreview(avatarComboBox.getValue()));
+
+        // Start Game Button
         Button startGameButton = new Button("Start Game");
         startGameButton.setOnAction(e -> {
             String nickname = nicknameField.getText();
@@ -74,6 +93,7 @@ public class MainMenu extends Application {
             primaryStage.close(); // Close the setup window
         });
 
+        // Setup the layout
         VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, 
                                 new Label("Number of Enemies:"), enemySpinner, 
                                 new Label("Choose Avatar:"), avatarComboBox, avatarPreview, 
@@ -85,6 +105,9 @@ public class MainMenu extends Application {
         primaryStage.show();
     }
 
+    /**
+     * Legge i dati dei giocatori dal file savedGames.txt e li memorizza in una mappa.
+     */
     private void readPlayerData() {
         // List<PlayerData> playerDataList = new ArrayList<>();
         try {
@@ -123,6 +146,11 @@ public class MainMenu extends Application {
         }
     }
 
+    /**
+     * Aggiorna l'anteprima dell'avatar con l'immagine corrispondente al numero dell'avatar specificato.
+     *
+     * @param avatarNumber il numero dell'avatar da visualizzare
+     */
     private void updateAvatarPreview(String avatarNumber) {
         Image avatarImage = new Image(getClass().getResourceAsStream("/sprites/bomberman.png"));
         int avatarIndex = Integer.parseInt(avatarNumber) - 1; // Assuming avatarNumber starts at 1
@@ -130,12 +158,23 @@ public class MainMenu extends Application {
         avatarPreview.setViewport(new Rectangle2D(0, 24 * avatarIndex, 47, 24)); // Update this to match your sprite sheet
     }
 
+    /**
+     * Questo metodo è il punto di ingresso principale dell'applicazione.
+     * Pre-carica tutti gli effetti sonori e avvia l'applicazione.
+     *
+     * @param args gli argomenti della riga di comando
+     */
     public static void main(String[] args) {
         AudioUtils.preloadAll(); // Preload all sound effects
         launch(args);
     }
 
-    // This method sets up and shows the pre-game scene
+    /**
+     * Mostra la scena del menu principale.
+     *
+     * @param stage lo stage su cui mostrare la scena
+     * @throws Exception se si verifica un'eccezione durante la visualizzazione della scena
+     */
     public void show(Stage stage) throws Exception {
         // Setup your pre-game scene
         VBox layout = new VBox(10);

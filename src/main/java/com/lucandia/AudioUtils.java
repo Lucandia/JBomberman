@@ -48,7 +48,6 @@ public class AudioUtils {
      */
     public static void preloadAll() {
         preloadSoundEffect("BombExplodes.mp3");
-        preloadSoundEffect("BombermanDies.mp3");
         preloadSoundEffect("GameOver.mp3");
         preloadSoundEffect("ItemGet.mp3");
         preloadSoundEffect("LoseLife.mp3");

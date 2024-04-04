@@ -18,6 +18,11 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.control.Alert.AlertType;
 import java.util.Optional;
 
+/**
+ * La classe GameApp rappresenta l'applicazione principale del gioco JBomberman.
+ * Estende la classe Application e gestisce l'inizializzazione del gioco, la creazione della scena di gioco,
+ * l'aggiornamento del gioco e la gestione degli eventi.
+ */
 public class GameApp extends Application {
     private int avatar;
     private PlayerData data;
@@ -29,6 +34,13 @@ public class GameApp extends Application {
     private int numberOfEnemies;
     private BackgroundMusic backgroundMusic = new BackgroundMusic();
 
+    /**
+        * Inizializza il gioco con i dati del giocatore e il numero di nemici.
+        * 
+        * @param data I dati del giocatore
+        * @param numberOfEnemies Il numero di nemici
+        * @return null
+        */
     public Void initializeGame(PlayerData data, int numberOfEnemies) {
         this.avatar = Integer.parseInt(data.getAvatar()) - 1;
         this.data = data;
@@ -36,6 +48,14 @@ public class GameApp extends Application {
         return null;
     }
 
+    /**
+     * Avvia il gioco. Questo metodo viene chiamato quando il gioco e' inizializzato.
+     * Viene avviato il loop del gioco e vengono gestiti gli eventi di morte del giocatore e completamento del livello.
+     * Una volta che il giocatore muore o completa il livello, viene visualizzata una finestra di dialogo
+     * che chiede al giocatore se vuole riprovare, tornare al menu principale o uscire dal gioco.
+     * 
+     * @param primaryStage lo stage principale dell'applicazione
+     */
     @Override
     public void start(Stage primaryStage) {        
         // Setup the game with the provided player data
@@ -50,10 +70,10 @@ public class GameApp extends Application {
                     playerModel.stopMoving(); 
                     backgroundMusic.stopMusic();
                     this.stop();
+                    int current_level = data.getLastLevelInt();
                     // save the data
                     if (playerModel.isDead()) {
                         data.setLostGames(data.getLostGamesInt() + 1);
-                        // AudioUtils.playSoundEffect("BombermanDies.mp3");
                         AudioUtils.playSoundEffect("GameOver.mp3");
                     } else {
                         data.setWinGames(data.getWinGamesInt() + 1);
@@ -81,7 +101,7 @@ public class GameApp extends Application {
                         alert.getDialogPane().setGraphic(null);
                         alert.setHeaderText(playerModel.isDead() ? "Game over!" : "Level Complete!");
                         if (!playerModel.isDead()) {
-                            if (data.getLastLevelInt() == 3) {
+                            if (current_level == 3) {
                                 alert.setContentText("Congratulations! You have completed all levels! Let's try more enemies?");
                             } else {
                                 alert.setContentText("Well done! Proceed to the next level?");
@@ -112,8 +132,6 @@ public class GameApp extends Application {
                             Platform.runLater(() -> {
                                 MainMenu mainMenu = new MainMenu();
                                 try {
-                                    // Assume you have this method in PreGameSetup
-                                    // This method should setup and show the pre-game scene
                                     mainMenu.start(primaryStage);
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -138,6 +156,12 @@ public class GameApp extends Application {
     }
     
 
+    /**
+     * Imposta il gioco con la scena principale e i componenti necessari.
+     * 
+     * @param primaryStage lo stage principale del gioco
+     * @param level il livello del gioco
+     */
     private void setupGame(Stage primaryStage, int level) {
         AudioUtils.playSoundEffect("StageStart.mp3");
         // Use a StackPane as the root to allow layering of the map and the player
@@ -153,7 +177,7 @@ public class GameApp extends Application {
 
         Scene mainScene = new Scene(borderPane, 272, 224);
         mainScene.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
-        primaryStage.setTitle("JBomberman");
+        primaryStage.setTitle("Jbomberan level " + level);
         primaryStage.setScene(mainScene);
         primaryStage.show();
 
@@ -176,8 +200,13 @@ public class GameApp extends Application {
         root.getChildren().add(bombLayer); // Add the bomb layer to the root
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
-        // For the HUD, use a BorderPane as the outer container
-        HUDView hudView = new HUDView(playerModel);
+        // usa un BorderPane per posizionare l'HUD sopra il gioco
+        HUDView hudView = new HUDView();
+        PlayerSound playerSound = new PlayerSound(); // inizializza il playerSound
+        // aggiungi HUD come osservatore del playerModel
+        playerModel.addObserver(hudView);
+        playerModel.addObserver(playerSound); // aggiungi playerSound come osservatore del playerModel
+        hudView.update(playerModel); // initializza l'HUD con i valori iniziali
         borderPane.setCenter(root); // Set the game (map + player) as the center
         borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
 
@@ -188,6 +217,9 @@ public class GameApp extends Application {
         backgroundMusic.playMusic("Background.mp3");
     }
 
+    /**
+        * Salva i dati del giocatore nel file savedGames.txt.
+        */
     public void savePlayerData() {
         try {
             // Get the path to the JAR file
@@ -224,6 +256,5 @@ public class GameApp extends Application {
             System.err.println("An unexpected error occurred: " + e.getMessage());
         }
     }
-
 
 }

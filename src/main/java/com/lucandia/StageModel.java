@@ -2,9 +2,11 @@ package com.lucandia;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
+/**
+ * Questa classe rappresenta il modello dello stage di gioco.
+ * Contiene le informazioni sulle dimensioni dello stage e sui vari tipi di caselle.
+ */
 public class StageModel {
     private final int width = 17;
     private final int height = 13;
@@ -21,10 +23,19 @@ public class StageModel {
     private SpecialTile nextLevelDoor;
     
 
+    /**
+     * Costruisce un nuovo oggetto StageModel con parametri predefiniti.
+     */
     public StageModel() {
         this(0.2, 0.04); // Default destructible and non-destructible percentages
     }
 
+    /**
+     * Costruisce un nuovo oggetto StageModel con la percentuale specificata di caselle distruttibili e non distruttibili.
+     *
+     * @param destructiblePercentage   La percentuale di caselle distruttibili.
+     * @param nonDestructiblePercentage La percentuale di caselle non distruttibili.
+     */
     public StageModel(double destructiblePercentage, double nonDestructiblePercentage) {
         // Calculate the total number of free positions
         int destructibleTilesCount = (int) (freeSlots * destructiblePercentage);
@@ -68,10 +79,23 @@ public class StageModel {
         }
     }
 
+    /**
+     * Imposta il giocatore principale nello stage.
+     *
+     * @param player il giocatore da impostare
+     */
     public void setPlayer(PlayerModel player) {
         this.player = player;
     }
 
+    /**
+     * Restituisce la Tile corrispondente alle coordinate specificate.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     *
+     * @param x la coordinata x della Tile
+     * @param y la coordinata y della Tile
+     * @return la Tile corrispondente alle coordinate specificate, o null se le coordinate sono fuori dai limiti
+     */
     public Tile getTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             return tiles[x][y];
@@ -79,6 +103,14 @@ public class StageModel {
         return null; // Out of bounds
     }
 
+    /**
+     * Restituisce una casella vuota nella posizione specificata.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     *
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @return la casella vuota nella posizione specificata, o una casella vuota fittizia se la posizione è fuori dai limiti
+     */
     public EmptyTile getEmptyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             if (tiles[x][y] instanceof EmptyTile)
@@ -87,38 +119,88 @@ public class StageModel {
         return new EmptyTile(x, y); // return a dummy empty tile
     }
 
+    /**
+     * Restituisce la tessera alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la tessera alla posizione specificata
+     */
     public Tile getTileAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
         return getTile(tileX, tileY);
     }
 
+    /**
+     * Restituisce la casella vuota alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la casella vuota alla posizione specificata
+     */
     public EmptyTile getEmptyTileAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
         return getEmptyTile(tileX, tileY);
     }
 
+    /**
+     * Restituisce l'elenco degli indici delle caselle libere.
+     *
+     * @return l'elenco degli indici delle caselle libere
+     */
     public List<int[]> getFreeTileIndex() {
         return freeTileIndex;
     }
 
+    /**
+     * Restituisce la casella con la porta al livello successivo.
+     *
+     * @return la casella al livello successivo
+     */
     public SpecialTile getNextLevelDoor() {
         return nextLevelDoor;
     }
 
+    /**
+     * Imposta una casella nella posizione specificata.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     *
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @param tile la casella da impostare
+     */
     public void setTile(int x, int y, Tile tile) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             tiles[x][y] = tile;
         }
     }
 
+    /**
+     * Imposta la casella alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @param tile la casella da impostare
+     */
     public void setTileAtPosition(int x, int y, Tile tile) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
         setTile(tileX, tileY, tile);
     }
 
+    /**
+     * Restituisce la bomba alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la bomba alla posizione specificata
+     */
     public BombModel getBombAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
@@ -128,16 +210,40 @@ public class StageModel {
         return null;
     }
 
+    /**
+     * Restituisce la casella vuota alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la casella vuota alla posizione specificata
+     */
     public int[] getTileStartCoordinates(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
         return new int[] {tileX * tileSize, tileY * tileSize};
     }
 
+    /**
+     * Verifica se la posizione specificata è un bordo.
+     * Le coordinate x e y sono in termini di caselle.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return true se la posizione specificata è un bordo, false altrimenti
+     */
     public boolean isBorder(int x, int y) {
         return x < 2 * tileSize || x >= (width - 3) * tileSize || y < tileSize || y >= (height - 2) * tileSize;
     }
 
+    /**
+     * Distrugge una tessera nella posizione specificata.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     * 
+     * @param x la coordinata x della tessera da distruggere
+     * @param y la coordinata y della tessera da distruggere
+     * @return true se la tessera è stata distrutta con successo, false se la tessera è fuori dai limiti
+     */
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
             // the tile is not destructible
@@ -184,17 +290,41 @@ public class StageModel {
         return false;
     }
 
+    /**
+    * Distrugge la casella alla posizione specificata.
+    *
+    * @param x la coordinata x della posizione
+    * @param y la coordinata y della posizione
+    * @return true se la casella è stata distrutta con successo, false altrimenti
+    */
     public boolean destroyTileAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
         return destroyTile(tileX, tileY);
     }
 
+    /**
+     * Verifica se la posizione specificata può esplodere.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return true se la posizione specificata può esplodere, false altrimenti
+     */
     public boolean canExplodeAtPosition(int x, int y) {
         Tile tile = getTileAtPosition(x, y);
         return tile == null || tile.isDestructible();
     }
 
+    /**
+     * Aggiunge una bomba alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @param bombRadius il raggio della bomba
+     * @return true se la bomba è stata aggiunta con successo, false altrimenti
+     */
     public boolean addBombAtPosition(int x, int y, int bombRadius) {
         int tileX = (int) (x / tileSize);
         int tileY = (int) (y / tileSize);
@@ -208,19 +338,39 @@ public class StageModel {
         return true;
     }
 
+    
+    /**
+     * Restituisce la dimensione di un singolo tile.
+     *
+     * @return la dimensione del tile
+     */
     public int getTileSize() {
         return tileSize;
     }
 
-    // Getters for width and height if needed
+    /**
+     * Restituisce la larghezza del modello dello stage.
+     *
+     * @return la larghezza del modello dello stage
+     */
     public int getWidth() {
         return width;
     }
 
+    /**
+     * Restituisce l'altezza del modello dello stage.
+     *
+     * @return l'altezza del modello dello stage
+     */
     public int getHeight() {
         return height;
     }
 
+    /**
+     * Restituisce un array di interi che rappresenta una posizione casuale di una casella libera nel modello dello stage.
+     * 
+     * @return un array di interi che rappresenta una posizione casuale di una casella libera, o null se non ci sono più caselle libere disponibili
+     */
     public int[] getRandomFreeTile() {
         if (freeTileIndex.isEmpty()) {
             return null; // No more free tiles available
@@ -229,5 +379,4 @@ public class StageModel {
         return freeTileIndex.remove(randomIndex);
     }
 
-    // Additional methods as needed for game logic
 }

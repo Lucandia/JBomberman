@@ -4,12 +4,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Rappresenta i tipi di tessere speciali disponibili nel gioco.
+ */
 enum SpecialTileType {
   pupBlast,
   pupBomb,
   pupSpeed,
   nextLevelDoor;
 
+  /**
+   * Restituisce un tipo di power-up casuale, escludendo il tipo nextLevelDoor.
+   *
+   * @return un tipo di tessera speciale casuale
+   */
   public static SpecialTileType getRandomPowerUpType() {
       // Convert array to a modifiable list
       List<SpecialTileType> values = new ArrayList<>(Arrays.asList(values()));
