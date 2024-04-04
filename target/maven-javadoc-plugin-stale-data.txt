@@ -1,0 +1,84 @@
+/Users/lmonari/anaconda3/envs/maven/lib/jvm/bin/javadoc
+@options
+@packages
+-classpath
+'/Users/lmonari/.m2/repository/org/openjfx/javafx-controls/21/javafx-controls-21.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-controls/21/javafx-controls-21-mac.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-graphics/21/javafx-graphics-21.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-graphics/21/javafx-graphics-21-mac.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-fxml/21/javafx-fxml-21.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-fxml/21/javafx-fxml-21-mac.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-base/21/javafx-base-21.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-base/21/javafx-base-21-mac.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-media/21/javafx-media-21.jar:/Users/lmonari/.m2/repository/org/openjfx/javafx-media/21/javafx-media-21-mac.jar'
+-encoding
+'UTF-8'
+-protected
+-sourcepath
+'/Users/lmonari/Documents/software/jbomberman/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2024. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/Users/lmonari/Documents/software/jbomberman/target/site/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'jbomberman 1.0-SNAPSHOT API'
+-use
+-version
+-windowtitle
+'jbomberman 1.0-SNAPSHOT API'
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+com.esame
+/Users/lmonari/.m2/repository/org/openjfx/javafx-controls/21/javafx-controls-21.jar = 1695031945000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-controls/21/javafx-controls-21-mac.jar = 1695031949000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-graphics/21/javafx-graphics-21.jar = 1695032008000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-graphics/21/javafx-graphics-21-mac.jar = 1695032065000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-fxml/21/javafx-fxml-21.jar = 1695031980000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-fxml/21/javafx-fxml-21-mac.jar = 1695031993000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-base/21/javafx-base-21.jar = 1695031918000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-base/21/javafx-base-21-mac.jar = 1695031932000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-media/21/javafx-media-21.jar = 1695032074000
+/Users/lmonari/.m2/repository/org/openjfx/javafx-media/21/javafx-media-21-mac.jar = 1695032081000
+/Users/lmonari/Documents/software/jbomberman/src/main/java = 1712274154853
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/tag-search-index.js = 1712274834059
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/overview-tree.html = 1712274833992
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/module-search-index.js = 1712274834054
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/index.html = 1712274834102
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/package-search-index.js = 1712274834055
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/jquery-ui.overrides.css = 1712274834115
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/index-all.html = 1712274834100
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/allpackages-index.html = 1712274834052
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/member-search-index.js = 1712274834058
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/script.js = 1712274834110
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/stylesheet.css = 1712274834109
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/help-doc.html = 1712274834105
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/element-list = 1712274833744
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/allclasses-index.html = 1712274834050
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/type-search-index.js = 1712274834055
+/Users/lmonari/Documents/software/jbomberman/target/site/apidocs/search.js = 1712274834111

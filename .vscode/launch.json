@@ -8,28 +8,28 @@
             "type": "java",
             "name": "Main",
             "request": "launch",
-            "mainClass": "com.lucandia/com.lucandia.Main",
+            "mainClass": "com.esame/com.esame.Main",
             "projectName": "jbomberman"
         },
         {
             "type": "java",
             "name": "SimpleMediaTest",
             "request": "launch",
-            "mainClass": "com.lucandia/com.lucandia.SimpleMediaTest",
+            "mainClass": "com.esame/com.esame.SimpleMediaTest",
             "projectName": "jbomberman"
         },
         {
             "type": "java",
             "name": "MainMenu",
             "request": "launch",
-            "mainClass": "com.lucandia/com.lucandia.MainMenu",
+            "mainClass": "com.esame/com.esame.MainMenu",
             "projectName": "jbomberman"
         },
         {
             "type": "java",
             "name": "App",
             "request": "launch",
-            "mainClass": "com.lucandia/com.lucandia.App",
+            "mainClass": "com.esame/com.esame.App",
             "projectName": "jbomberman"
         },
         {

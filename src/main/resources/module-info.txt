@@ -1,0 +1,13 @@
+// /**
+//  * Questo modulo contiene le classi principali dell'applicazione com.esame.
+//  * Fornisce funzionalità per il gioco Bomberman.
+//  */
+// module com.esame {
+//     requires javafx.controls;
+//     requires javafx.fxml;
+//     requires javafx.media;
+//     requires transitive javafx.graphics;
+
+//     opens com.esame to javafx.fxml;
+//     exports com.esame;
+// }
