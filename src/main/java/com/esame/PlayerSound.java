@@ -5,6 +5,9 @@ package com.esame;
  */
 public class PlayerSound implements PlayerStateObserver {
 
+    /**
+     * Il ritardo tra i suoni del movimento del giocatore.
+     */
     private int audioDelay = 40;
 
     /**

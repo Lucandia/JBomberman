@@ -9,13 +9,33 @@ import javafx.scene.layout.Pane;
 /**
  * La classe StageView rappresenta la vista dello stage di gioco.
  * Contiene un pannello con un'immagine di sfondo del palco e
- * un'immagine contenente le sprite delle tessere.
+ * un'immagine contenente le sprite delle caselle.
  */
 public class StageView {
-    private Pane pane = new Pane(); // Pannello per contenere il palco e le tessere
+
+    /**
+     * Il pannello per contenere il palco e le caselle.
+     */
+    private Pane pane = new Pane(); // Pannello per contenere il palco e le caselle
+
+    /**
+     * L'immagine di sfondo del palco.
+     */
     private Image stageImage; // Immagine di sfondo del palco
-    private Image tilesImage; // Immagine contenente le sprite delle tessere
+
+    /**
+     * L'immagine contenente le sprite delle caselle.
+     */ 
+    private Image tilesImage; // Immagine contenente le sprite delle caselle
+
+    /**
+     * Il modello dello stage.
+     */
     private StageModel stage;
+
+    /**
+     * L'immagine combinata che contiene lo sfondo del palco e le caselle.
+     */
     private ImageView combinedView;
 
     /**
@@ -29,7 +49,7 @@ public class StageView {
      */
     public StageView(int levelNumber, StageModel stage) {
         this.stage = stage;
-        // Carica le immagini del palco e delle tessere in base al numero di livello
+        // Carica le immagini del palco e delle caselle in base al numero di livello
         stageImage = new Image(getClass().getResourceAsStream("/sprites/level" + levelNumber + "_stage.png"));
         tilesImage = new Image(getClass().getResourceAsStream("/sprites/level" + levelNumber + "_tiles.png"));
         combinedView = new ImageView();
@@ -39,7 +59,7 @@ public class StageView {
 
     /**
      * Aggiorna la vista del palco.
-     * Crea un'immagine combinata che contiene lo sfondo del palco e le tessere.
+     * Crea un'immagine combinata che contiene lo sfondo del palco e le caselle.
      */
     public void updateView() {
         int tileSize = stage.getTileSize();
@@ -52,7 +72,7 @@ public class StageView {
         PixelReader stageReader = stageImage.getPixelReader();
         writer.setPixels(0, 0, width, height, stageReader, 0, 0);
 
-        // Itera sulle tessere e le aggiunge all'immagine combinata
+        // Itera sulle caselle e le aggiunge all'immagine combinata
         PixelReader tilesReader = tilesImage.getPixelReader();
         for (int x = 0; x < stage.getWidth(); x++) {
             for (int y = 0; y < stage.getHeight(); y++) {
@@ -68,7 +88,7 @@ public class StageView {
                     }
                 }
                 else if (tile instanceof EmptyTile && !stage.getTile(x, y - 1).isDestructible()){
-                    // Se la tessera non è visualizzabile, ma la tessera sopra di essa non è distruttibile, visualizza la tessera ombra
+                    // Se la casella non è visualizzabile, ma la casella sopra di essa non è distruttibile, visualizza la casella ombra
                     writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, 32, 0);
                 }
             }

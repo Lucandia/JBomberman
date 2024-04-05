@@ -4,12 +4,40 @@ package com.esame;
  * Questa classe rappresenta i dati di un giocatore.
  */
 public class PlayerData {
+
+    /**
+     * Il nickname del giocatore.
+     */
     private String nickname;
+
+    /**
+     * L'avatar del bomberman.
+     */
     private String avatar;
+
+    /**
+     * L'ultimo livello completato dal giocatore.
+     */
     private String lastLevel;
+
+    /**
+     * Il numero di partite giocate dal giocatore.
+     */
     private String playedGames;
+
+    /**
+     * Il numero di partite vinte dal giocatore.
+     */
     private String winGames;
+
+    /**
+     * Il numero di partite perse dal giocatore.
+     */
     private String lostGames;
+
+    /**
+     * Il punteggio del giocatore.
+     */
     private String score;
 
     /**

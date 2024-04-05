@@ -12,18 +12,64 @@ import java.util.ArrayList;
  */
 public abstract class EntityModel extends XYModel{
 
-    // Campi dati
+    /**
+     * La vita dell'entità.
+     */
     protected final IntegerProperty life = new SimpleIntegerProperty(100);
+
+    /**
+     * La velocità dell'entità.
+     */
     protected final DoubleProperty velocity = new SimpleDoubleProperty(1);
+
+    /**
+     * La coordinata X del centro dell'entità.
+     */
     protected IntegerProperty centerX = new SimpleIntegerProperty();
+
+    /**
+     * La coordinata Y del centro dell'entità.
+     */
     protected IntegerProperty centerY = new SimpleIntegerProperty();
+
+    /**
+     * Il tempo trascorso dall'ultimo movimento.
+     */
     protected double timeSinceLastMove = 0.0;
+
+    /**
+     * Il tempo di ritardo tra i movimenti.
+     */
     protected double delayMove = 0.05; // Time in seconds between moves
+
+    /**
+     * La bounding box dell'entità.
+     */
     protected final int[] boundingBox = {0, 0};
+
+    /**
+     * L'offset della bounding box.
+     */
     protected final int[] boundingOffset = {0, 0};
+
+    /**
+     * Indica se l'entità si sta muovendo.
+     */
     protected boolean isMoving = false;
+
+    /**
+     * L'ultima direzione dell'entità.
+     */
     protected int[] lastDirection = {0, 0};
+
+    /**
+     * Lo stage di appartenenza dell'entità.
+     */
     protected StageModel stage;
+
+    /**
+     * Le caselle occupate dall'entità.
+     */
     protected ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
 
     /**
@@ -42,6 +88,8 @@ public abstract class EntityModel extends XYModel{
      * 
      * @param x la coordinata x dell'entità
      * @param y la coordinata y dell'entità
+     * @param boundingBox l'array {x, y} che rappresenta la bounding box dell'entità
+     * @param boundingOffset l'array {x, y} che rappresenta l'offset della bounding box
      * @param life la vita iniziale dell'entità
      * @param stage lo stage di appartenenza dell'entità
      */

@@ -8,18 +8,70 @@ import java.util.Random;
  * Contiene le informazioni sulle dimensioni dello stage e sui vari tipi di caselle.
  */
 public class StageModel {
+
+    /**
+     * La larghezza dello stage.
+     */
     private final int width = 17;
+
+    /**
+     * L'altezza dello stage.
+     */
     private final int height = 13;
-    private double powerUpProbability = 0.8; // 10% chance of adding a PowerUp tile
+
+    /**
+     * La probabilità di aggiungere una casella PowerUp.
+     */
+    private double powerUpProbability = 0.8; // 80% chance of adding a PowerUp tile
+
+    /**
+     * La dimensione di un singolo tile.
+     */
     private final int tileSize = 16; // Assuming each tile is 16x16 pixels
+
+    /**
+     * Il numero di caselle libere nello stage.
+     */
     final int freeSlots = 110; // Number of free slots in the stage
+
+    /**
+     * Il numero di caselle distruttibili nello stage.
+     */
     private final int destructibleTilesStart;
+
+    /**
+     * Il numero di caselle distruttibili distrutte.
+     */
     private int destructedTiles = 0;
+
+    /**
+     * L'elenco degli indici delle caselle libere.
+     */
     private final List<int[]> freeTileIndex = new ArrayList<>();
+
+    /**
+     * La matrice delle caselle dello stage.
+     */
     private Tile[][] tiles = new Tile[width][height];
+
+    /**
+     * L'oggetto Random per la generazione di numeri casuali.
+     */
     private Random rand = new Random();
+
+    /**
+     * Il modello del giocatore.
+     */
     private PlayerModel player;
+
+    /**
+     * Il danno inflitto da una bomba.
+     */
     private int damage = 100;
+
+    /**
+     * La casella con la porta al livello successivo.
+     */
     private SpecialTile nextLevelDoor;
     
 
@@ -120,12 +172,12 @@ public class StageModel {
     }
 
     /**
-     * Restituisce la tessera alla posizione specificata.
+     * Restituisce la casella alla posizione specificata.
      * Le coordinate x e y sono in termini di pixel.
      *
      * @param x la coordinata x della posizione
      * @param y la coordinata y della posizione
-     * @return la tessera alla posizione specificata
+     * @return la casella alla posizione specificata
      */
     public Tile getTileAtPosition(int x, int y) {
         int tileX = (int) (x / tileSize);
@@ -237,12 +289,12 @@ public class StageModel {
     }
 
     /**
-     * Distrugge una tessera nella posizione specificata.
+     * Distrugge una casella nella posizione specificata.
      * Le coordinate x e y sono in termini di caselle, non di pixel.
      * 
-     * @param x la coordinata x della tessera da distruggere
-     * @param y la coordinata y della tessera da distruggere
-     * @return true se la tessera è stata distrutta con successo, false se la tessera è fuori dai limiti
+     * @param x la coordinata x della casella da distruggere
+     * @param y la coordinata y della casella da distruggere
+     * @return true se la casella è stata distrutta con successo, false se la casella è fuori dai limiti
      */
     public boolean destroyTile(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {

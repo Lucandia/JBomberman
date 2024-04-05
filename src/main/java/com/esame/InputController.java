@@ -8,9 +8,25 @@ import javafx.scene.input.KeyCode;
  * Questa classe gestisce l'input da tastiera per muovere il player e piazzare le bombe.
  */
 public class InputController {
+
+    /**
+     * L'insieme dei tasti premuti.
+     */
     private final Set<KeyCode> keysPressed = ConcurrentHashMap.newKeySet(); // per far muovere il player appena si preme un tasto
+
+    /**
+     * La scena in cui si verificano gli eventi di input.
+     */
     private Scene scene;
+
+    /**
+     * Il controller del player.
+     */
     private PlayerController player;
+
+    /**
+     * Il controller delle bombe.
+     */
     private BombController bomb;
 
 

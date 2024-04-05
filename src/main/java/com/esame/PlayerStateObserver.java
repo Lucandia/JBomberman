@@ -6,6 +6,7 @@ package com.esame;
  * notifiche quando lo stato del giocatore viene aggiornato.
  */
 public interface PlayerStateObserver {
+    
     /**
      * Metodo chiamato quando lo stato del giocatore viene aggiornato.
      * 

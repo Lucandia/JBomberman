@@ -16,15 +16,45 @@ import java.util.stream.IntStream;
  * Questa classe gestisce l'immagine sprite dell'entità e fornisce metodi per animare l'entità in diverse direzioni.
  */
 public class EntityView {
+
+    /**
+     * L'immagine sprite dell'entità.
+     */
     private final ImageView EntitySprite;
+
+    /**
+     * Il modello dell'entità.
+     */
     private EntityModel model;
+
+    /**
+     * L'ultima direzione di movimento dell'entità.
+     */
     private String lastDirection;
-    // Create a fixed HashMap with keys and values
+
+    /**
+     * La mappa delle posizioni degli sprite per le diverse direzioni.
+     */  
     private Map<String, Integer> directionSprite = new HashMap<>();
+
+    /**
+     * L'animazione della camminata dell'entità.
+     */
     private Timeline walkAnimation = null;
+
+    /**
+     * Indica se l'animazione dello sprite deve essere riprodotta in modo inverso automaticamente.
+     */
     private boolean autoReverse = false;
-    // private String spriteName;
+
+    /**
+     * Il numero di frame dell'animazione dello sprite.
+     */
     private int frames = 4;
+
+    /**
+     * La riga dello sprite dell'entità.
+     */
     int row = 0;
 
     /**

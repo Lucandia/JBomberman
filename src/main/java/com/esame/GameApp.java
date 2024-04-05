@@ -24,14 +24,45 @@ import java.util.Optional;
  * l'aggiornamento del gioco e la gestione degli eventi.
  */
 public class GameApp extends Application {
-    private int avatar;
+    
+    /**
+     * I dati del giocatore.
+     */
     private PlayerData data;
+
+    /**
+     * La vista dello stage.
+     */
     private StageView stageView;
+
+    /**
+     * Il controller del giocatore.
+     */
     private PlayerController playerController;
+
+    /**
+     * Il controller delle bombe.
+     */
     private BombController bombController;
+
+    /**
+     * Il modello del giocatore.
+     */
     private PlayerModel playerModel;
+
+    /**
+     * Il controller degli avversari.
+     */
     private EnemiesController enemiesController;
+
+    /**
+     * Il numero di nemici.
+     */
     private int numberOfEnemies;
+
+    /**
+     * La musica di sottofondo.
+     */
     private BackgroundMusic backgroundMusic = new BackgroundMusic();
 
     /**
@@ -42,7 +73,6 @@ public class GameApp extends Application {
         * @return null
         */
     public Void initializeGame(PlayerData data, int numberOfEnemies) {
-        this.avatar = Integer.parseInt(data.getAvatar()) - 1;
         this.data = data;
         this.numberOfEnemies = numberOfEnemies;
         return null;
@@ -193,7 +223,7 @@ public class GameApp extends Application {
             this.playerModel.setStage(stageModel);
         }
         stageModel.setPlayer(playerModel);
-        EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, avatar);
+        EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, Integer.parseInt(data.getAvatar()) - 1);
         this.enemiesController = new EnemiesController(numberOfEnemies, stageModel, gameLayer, level);
 
         // Layer the map and the player on the StackPane

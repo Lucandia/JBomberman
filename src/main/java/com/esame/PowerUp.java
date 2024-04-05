@@ -6,7 +6,15 @@ package com.esame;
  * Ogni power-up ha un comportamento specifico che viene applicato al giocatore quando ci passa sopra.
  */
 public class PowerUp extends SpecialTile{
+
+    /*
+     * Se il power-up è stato applicato.
+     */
     private boolean applied = false;
+
+    /*
+     * Il comportamento del power-up.
+     */
     private PowerUpBehaviour behaviour;
 
     /**
@@ -51,14 +59,14 @@ public class PowerUp extends SpecialTile{
     /**
      * Verifica se il power-up può essere detonato.
      * Un power-up può essere detonato se non è stato ancora applicato.
-     * Se il power-up è stato applicato, si comporta come una tessera vuota normale.
+     * Se il power-up è stato applicato, si comporta come una casella vuota normale.
      * 
      * @return true se il power-up può essere detonato, false altrimenti
      */
     @Override
     public boolean isDetonable() {
         if (!applied) return true; // Il power-up può essere detonato se non è stato applicato
-        return super.isDetonable(); // Il power-up è stato applicato, quindi si comporta come una tessera vuota normale
+        return super.isDetonable(); // Il power-up è stato applicato, quindi si comporta come una casella vuota normale
     }
 
     /**

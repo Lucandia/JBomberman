@@ -4,7 +4,15 @@ package com.esame;
  * Gestisce l'input del giocatore e aggiorna il modello e la vista corrispondenti.
  */
 public class PlayerController {
+
+    /**
+     * Il modello del giocatore.
+     */
     private PlayerModel model;
+
+    /**
+     * La vista del giocatore.
+     */
     private EntityView view;
 
     /**

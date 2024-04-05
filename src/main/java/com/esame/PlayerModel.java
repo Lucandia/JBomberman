@@ -11,15 +11,44 @@ import javafx.beans.property.SimpleIntegerProperty;
  */
 public class PlayerModel extends EntityModel {
 
-    // Observer pattern
+    /**
+     * La lista degli osservatori dello stato del giocatore.
+     */
     private List<PlayerStateObserver> observers = new ArrayList<>();
 
+    /**
+     * Il punteggio del giocatore.
+     */
     private final IntegerProperty score = new SimpleIntegerProperty(0);
+
+    /**
+     * Il numero di bombe che il giocatore può piazzare.
+     */
     private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
+
+    /**
+     * Il raggio delle bombe del giocatore.
+     */
     private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
+
+    /**
+     * Se il giocatore ha appena perso una vita.
+     */
     private boolean justLostLife = false;
+
+    /**
+     * Se il giocatore ha appena ottenuto un power-up.
+     */
     private boolean justGainedPowerUp = false;
+
+    /**
+     * Il tempo di recupero del giocatore dopo aver perso una vita.
+     */
     private int recoveryTime = 20;
+
+    /**
+     * Se il giocatore è in fase di recupero.
+     */
     private boolean recovering = false;
 
     /**

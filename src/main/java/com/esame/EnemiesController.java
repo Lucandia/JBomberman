@@ -12,9 +12,16 @@ import javafx.scene.layout.Pane;
  * Gestisce la creazione, l'aggiunta, la rimozione e l'aggiornamento degli avversari.
  */
 public class EnemiesController {
+
+    /**
+     * La lista degli avversari.
+     */
     private List<EnemyModel> enemies = new ArrayList<EnemyModel>();
+
+    /**
+     * La lista delle viste degli avversari.
+     */
     private List<EntityView> views = new ArrayList<EntityView>();
-    private List<int[]> directions = new ArrayList<int []>();
 
     /**
      * Costruttore della classe EnemiesController.
@@ -64,7 +71,6 @@ public class EnemiesController {
     public void addEnemy(EnemyModel enemy, EntityView enemyView) {
         enemies.add(enemy);
         views.add(enemyView);
-        directions.add(enemy.getLastDirection());
     }
 
     /**
@@ -77,7 +83,6 @@ public class EnemiesController {
         if (index != -1) {
             enemies.remove(index);
             views.remove(index);
-            directions.remove(index);
         }
     }
 

@@ -9,12 +9,42 @@ import javafx.beans.property.SimpleIntegerProperty;
  * Mantiene una mappa delle bombe attive e delle loro Views e fornisce metodi per piazzare, detonare e aggiornare le bombe.
  */
 public class BombController {
+    
+    /**
+     * La mappa delle bombe attive e delle loro Views.
+     */
     private LinkedHashMap<BombModel, BombView> bombMap = new LinkedHashMap<>();
+
+    /**
+     * Pannello in cui vengono visualizzate le bombe.
+     */
     private Pane pane;
+
+    /**
+     * Il modello dello stage.
+     */
     private StageModel stage;
+
+    /**
+     * La coordinata x corrente del giocatore.
+     */
     private IntegerProperty currentX = new SimpleIntegerProperty();
+
+    /**
+     * La coordinata y corrente del giocatore.
+     */
     private IntegerProperty currentY = new SimpleIntegerProperty();
+
+
+    /**
+     * Il numero massimo di bombe che il giocatore può piazzare.
+     */
     private IntegerProperty maxBombs = new SimpleIntegerProperty();
+
+
+    /**
+     * Il raggio di esplosione delle bombe.
+     */
     private IntegerProperty bombRadius = new SimpleIntegerProperty();
 
 

@@ -8,15 +8,31 @@ import java.util.Random;
  * Rappresenta i tipi di tessere speciali disponibili nel gioco.
  */
 enum SpecialTileType {
+
+  /**
+   * Casella che aumenta il raggio di esplosione delle bombe del giocatore.
+   */
   pupBlast,
+
+  /**
+   * Casella che aumenta il numero di bombe che il giocatore può piazzare.
+   */
   pupBomb,
+
+  /**
+   * Casella che aumenta la velocità di movimento del giocatore.
+   */
   pupSpeed,
+
+  /**
+   * Casella che fa accedere il giocatore al livello successivo.
+   */
   nextLevelDoor;
 
   /**
    * Restituisce un tipo di power-up casuale, escludendo il tipo nextLevelDoor.
    *
-   * @return un tipo di tessera speciale casuale
+   * @return un tipo di casella speciale casuale
    */
   public static SpecialTileType getRandomPowerUpType() {
       // Convert array to a modifiable list

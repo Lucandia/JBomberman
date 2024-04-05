@@ -5,8 +5,20 @@ package com.esame;
  * Estende la classe XYModel e contiene informazioni sulla sua posizione e proprietà.
  */
 public class Tile extends XYModel{
+
+    /**
+     * Indica se la casella è distruttibile.
+     */
     protected boolean isDestructible;
+
+    /**
+     * Indica se la casella è visualizzabile.
+     */
     protected boolean isDisplayable = true;
+
+    /**
+     * Indica se la casella è attraversabile.
+     */
     protected boolean isWalkable = false;
 
     /**

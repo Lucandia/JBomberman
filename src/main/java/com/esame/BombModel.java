@@ -10,11 +10,35 @@ import java.util.List;
  * stato di attivazione, timer e altre proprietà della bomba.
  */
 public class BombModel extends EmptyTile{
+
+    /**
+     * La lista delle posizioni detonate dalla bomba.
+     */
     private List<String> detonatePositions = new ArrayList<>();
+
+    /**
+     * Il raggio di esplosione della bomba.
+     */
     private int blastRadius = 1; // Default blast radius
-    private BooleanProperty active = new SimpleBooleanProperty(true);
+
+    /**
+     * La proprietà booleana di JavaFX che rappresenta lo stato di attivazione della bomba.
+     */
+    private BooleanProperty active = new SimpleBooleanProperty(true); // Bomb is active by default  
+
+    /**
+     * Il timer della bomba.
+     */
     private final double totalTime = 3; // Bomb timer in seconds
+
+    /**
+     * Il timer della bomba.
+     */
     private double timer = totalTime; // Bomb timer in seconds
+
+    /**
+     * Il tempo in cui la bomba è camminabile.
+     */
     private double walkableTime = totalTime / 5; // time on which you can walk on the bomb
 
     /**

@@ -22,10 +22,26 @@ import java.util.Map;
  * e l'interazione con gli elementi del menu principale.
  */
 public class MainMenu extends Application {
+
+    /**
+     * Mappa dei dati dei giocatori.
+     */
     private Map<String, PlayerData> playerDataMap = new HashMap<>();
+
+    /**
+     * L'anteprima dell'avatar selezionato.
+     */
     private ImageView avatarPreview = new ImageView();
-    private Label statsLabel1 = new Label(); // Label to display player stats
-    private Label statsLabel2 = new Label(); // Label to display player stats
+
+    /**
+     * Etichetta per visualizzare le statistiche del giocatore.
+     */
+    private Label statsLabel1 = new Label(); 
+
+    /**
+     * Etichetta per visualizzare le statistiche del giocatore.
+     */
+    private Label statsLabel2 = new Label(); 
 
     /**
      * Avvia l'applicazione del menu principale.

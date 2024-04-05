@@ -10,10 +10,30 @@ import javafx.scene.paint.Color;
  * Implementa l'interfaccia PlayerStateObserver per osservare lo stato del giocatore.
  */
 public class HUDView implements PlayerStateObserver{
+
+    /**
+     * Il pannello dell'HUD.
+     */
     private HBox hudPane;
+
+    /**
+     * Etichetta per visualizzare il punteggio del giocatore.
+     */
     private Label scoreLabel;
+
+    /**
+     * Etichetta per visualizzare le vite del giocatore.
+     */
     private Label livesLabel;
+
+    /**
+     * Etichetta per visualizzare la capacità delle bombe del giocatore.
+     */
     private Label bombCapacityLabel;
+
+    /**
+     * Etichetta per visualizzare il raggio delle bombe del giocatore.
+     */
     private Label bombRadiusLabel;
 
     /**

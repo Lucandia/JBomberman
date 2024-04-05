@@ -7,8 +7,14 @@ import javafx.beans.property.SimpleIntegerProperty;
  */
 public abstract class XYModel {
 
-    // Properties
+    /**
+     * La coordinata x.
+     */
     protected final IntegerProperty x = new SimpleIntegerProperty();
+
+    /**
+     * La coordinata y.
+     */
     protected final IntegerProperty y = new SimpleIntegerProperty();
 
     /**

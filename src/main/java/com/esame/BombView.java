@@ -17,11 +17,35 @@ import javafx.beans.property.BooleanProperty;
  * La classe gestisce l'animazione della bomba e l'esplosione quando la bomba diventa inattiva.
  */
 public class BombView {
+
+    /**
+     * L'ImageView della bomba.
+     */
     private ImageView bombSprite;
+
+    /**
+     * L'animazione della bomba.
+     */
     private Timeline bombAnimation = null;
+
+    /**
+     * Il modello dello stage di gioco.
+     */
     private StageModel stage;
+
+    /**
+     * La proprietà booleana che indica se la bomba è attiva.
+     */
     private BooleanProperty active = new SimpleBooleanProperty(false);
+
+    /**
+     * Il pannello in cui visualizzare la bomba.
+     */
     private Pane pane;
+
+    /**
+     * Il modello della bomba.
+     */
     private BombModel model;
 
     /**
@@ -59,7 +83,7 @@ public class BombView {
     }
 
 
-    /*
+    /**
      * Crea e riproduce un'animazione dell'esplosione della bomba.
      */
     public void playExplosionAnimation() { 

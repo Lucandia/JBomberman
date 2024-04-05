@@ -5,6 +5,10 @@ package com.esame;
  * Estende la classe EmptyTile.
  */
 public class SpecialTile extends EmptyTile{
+
+    /**
+     * Il tipo di SpecialTile.
+     */
     protected SpecialTileType type;
 
     /**
