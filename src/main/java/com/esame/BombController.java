@@ -1,5 +1,7 @@
 package com.esame;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.ArrayList;
 import javafx.scene.layout.Pane;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -11,9 +13,9 @@ import javafx.beans.property.SimpleIntegerProperty;
 public class BombController {
     
     /**
-     * La mappa delle bombe attive e delle loro Views.
+     * La lista delle bombe attive.
      */
-    private LinkedHashMap<BombModel, BombView> bombMap = new LinkedHashMap<>();
+    private List<BombModel> bombList = new <BombModel>ArrayList();
 
     /**
      * Pannello in cui vengono visualizzate le bombe.
@@ -74,11 +76,14 @@ public class BombController {
     * mappa delle bombe, insieme alla sua view, e viene riprodotto un effetto sonoro.
     */
     public void input() {
-        if (bombMap.size() < maxBombs.get()) {
+        if (bombList.size() < maxBombs.get()) {
             int[] startPosition = stage.getTileStartCoordinates(currentX.get(), currentY.get());
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
                 AudioUtils.playSoundEffect("PlaceBomb.mp3");
-                bombMap.put(stage.getBombAtPosition(startPosition[0], startPosition[1]), new BombView(stage.getBombAtPosition(startPosition[0], startPosition[1]), pane, stage));
+                BombModel bomb = stage.getBombAtPosition(startPosition[0], startPosition[1]);
+                BombView bombView = new BombView(pane, stage);
+                bomb.addListener(bombView);
+                bombList.add(bomb);
             }
         }
     }
@@ -125,7 +130,6 @@ public class BombController {
     public void DetonateBomb(BombModel bomb) {
         AudioUtils.playSoundEffect("BombExplodes.mp3");
         int blast = bomb.getBlastRadius();
-        bomb.explode();
         int tileX = (int) bomb.getX() / stage.getTileSize();
         int tileY = (int) bomb.getY() / stage.getTileSize();
         stage.destroyTile(tileX, tileY);
@@ -141,7 +145,7 @@ public class BombController {
         for (int y = 1; y <= blast; y++) {
             if (destroyLimit(bomb, tileX, tileY + y)) break;
         }
-        bombMap.get(bomb).update();
+        bomb.explode();
     }
 
 
@@ -150,14 +154,14 @@ public class BombController {
     * 
     * @param elapsed il tempo trascorso dall'ultimo aggiornamento
     */
-    public void update(double elapsed) {
+    public void updateState(double elapsed) {
         // Update all bombs
-        bombMap.keySet().forEach(bomb -> bomb.update(elapsed));
+        bombList.forEach(bomb -> bomb.updateState(elapsed));
         // Detonate bombs that not active anymore
-        bombMap.entrySet().stream()
-            .filter(entry -> !entry.getKey().isActive())
-            .forEach(entry -> DetonateBomb(entry.getKey()));
+        bombList.stream()
+            .filter(bomb -> !bomb.isActive())
+            .forEach(bomb -> DetonateBomb(bomb));
         // Remove inactive bombs
-        bombMap.entrySet().removeIf(entry -> !entry.getKey().isActive());
+        bombList.removeIf(bomb -> !bomb.isActive());
     }
 }

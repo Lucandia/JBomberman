@@ -19,11 +19,12 @@ public class PlayerController {
      * Crea un nuovo oggetto PlayerController con il modello e la vista specificati.
      *
      * @param model il modello del giocatore
-     * @param view  la vista del giocatore
+     * @param avatar il numero dell'avatar del giocatore
      */
-    public PlayerController(PlayerModel model, EntityView view) {
+    public PlayerController(PlayerModel model, int avatar) {
         this.model = model;
-        this.view = view;
+        this.view = new EntityView("bomberman", true, 3, avatar - 1);
+        model.addListener(view);
     }
 
     /**
@@ -51,12 +52,20 @@ public class PlayerController {
     }
 
     /**
+     * Restituisce la vista del giocatore.
+     *
+     * @return la vista del giocatore
+     */
+    public EntityView getView() {
+        return view;
+    }
+
+    /**
      * Aggiorna il modello e la vista del giocatore.
      *
      * @param elapsed il tempo trascorso dall'ultimo aggiornamento
      */
-    public void update(double elapsed) {
-        model.update(elapsed);
-        view.update(elapsed);
+    public void updateState(double elapsed) {
+        model.updateState(elapsed);
     }
 }

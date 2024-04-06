@@ -43,6 +43,7 @@ public class EnemyModel2 extends EnemyModel {
                 new_pos = true;
             }
         }
+        notifyListeners();
     }
 
     /**
@@ -51,8 +52,8 @@ public class EnemyModel2 extends EnemyModel {
      * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
      */
     @Override
-    public void update(double elapsedTime) {
-        super.update(elapsedTime);
+    public void updateState(double elapsedTime) {
+        super.updateState(elapsedTime);
         int lastX = lastDirection[0];
         int lastY = lastDirection[1];
         int randomDirection = (int) (Math.random() * 4); // Genera un numero casuale tra 0 e 3
@@ -73,6 +74,7 @@ public class EnemyModel2 extends EnemyModel {
             lastDirection[0] = 0;
             lastDirection[1] = 1;
         }
+        notifyListeners();
     }
 }
 

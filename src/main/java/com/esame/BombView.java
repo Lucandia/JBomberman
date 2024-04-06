@@ -5,18 +5,22 @@ import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.beans.Observable;
+import javafx.beans.InvalidationListener;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Rectangle2D;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.BooleanProperty;
+// import javafx.beans.Observable;
+// import javafx.beans.property.SimpleBooleanProperty;
+// import javafx.beans.property.BooleanProperty;
 
 /**
  * Questa classe rappresenta la vista di una bomba nel gioco Bomberman.
  * La classe gestisce l'animazione della bomba e l'esplosione quando la bomba diventa inattiva.
  */
-public class BombView {
+public class BombView implements BombObserver, InvalidationListener{
 
     /**
      * L'ImageView della bomba.
@@ -34,59 +38,65 @@ public class BombView {
     private StageModel stage;
 
     /**
-     * La proprietà booleana che indica se la bomba è attiva.
-     */
-    private BooleanProperty active = new SimpleBooleanProperty(false);
-
-    /**
      * Il pannello in cui visualizzare la bomba.
      */
     private Pane pane;
 
     /**
-     * Il modello della bomba.
+     * Se la bomba e' stata attivata.
      */
-    private BombModel model;
+    private boolean activated = false;
 
     /**
      * Crea una nuova istanza di BombView.
      * 
-     * @param bombModel il modello della bomba
      * @param pane il pannello in cui visualizzare la bomba
      * @param stage il modello dello stage di gioco
      */
-    public BombView(BombModel bombModel, Pane pane, StageModel stage) {
+    public BombView(Pane pane, StageModel stage) {
         this.pane = pane;
-        this.model = bombModel;
         this.stage = stage;
-        active.bind(bombModel.activeProperty());
         // Assuming the sprite sheet is in the same package as the BombView
         Image image = new Image(getClass().getResourceAsStream("/sprites/bomb.png"));
         bombSprite = new ImageView(image);
         // Set the initial viewport to show the first sprite
         bombSprite.setViewport(new Rectangle2D(0, 0, 16, 16));
-        // Bind the ImageView's position to the model's position
-        bombSprite.layoutXProperty().set(bombModel.getX());
-        bombSprite.layoutYProperty().set(bombModel.getY());
 
+        /* USING JAVAFX PROPERTY INSTEAD OF OBSERVABLE PATTERN CODE */
+        // active.bind(bombModel.activeProperty());
+        // // Bind the ImageView's position to the model's position
+        // bombSprite.layoutXProperty().set(bombModel.getX());
+        // bombSprite.layoutYProperty().set(bombModel.getY());
+    }
+
+    /**
+     * Crea e riproduce un'animazione della bomba.
+     *
+     * @param bomb il modello della bomba
+     */
+    public void startBombAnimation(BombModel bomb) {
+        double totalTime = bomb.getTotalTime();
         // Animation timer to cycle through the sprites
-        double frameTime = bombModel.getTotalTime() / 10; // Time to cycle through all sprites
+        double frameTime = totalTime / 10; // Time to cycle through all sprites
         bombAnimation = new Timeline(
             new KeyFrame(Duration.seconds(0), e -> bombSprite.setViewport(new Rectangle2D(0, 0, 16, 16))),
             new KeyFrame(Duration.seconds(frameTime * 2), e -> bombSprite.setViewport(new Rectangle2D(17, 0, 16, 16))),
             new KeyFrame(Duration.seconds(frameTime * 3), e -> bombSprite.setViewport(new Rectangle2D(34, 0, 16, 16)))
         );
+        bombSprite.layoutXProperty().set(bomb.getX());
+        bombSprite.layoutYProperty().set(bomb.getY());
         bombAnimation.setCycleCount(Animation.INDEFINITE);
         bombAnimation.setAutoReverse(true);
         bombAnimation.play();
         addToPane();
     }
 
-
     /**
      * Crea e riproduce un'animazione dell'esplosione della bomba.
+     * 
+     * @param model il modello della bomba
      */
-    public void playExplosionAnimation() { 
+    public void playExplosionAnimation(BombModel model) { 
         int radius = model.getBlastRadius();
         final int size = stage.getTileSize(); 
         Image explosionImage = new Image(getClass().getResourceAsStream("/sprites/explosion.png"));
@@ -235,13 +245,29 @@ public class BombView {
     }
 
     /**
+     * Rimuove l'ImageView della bomba dal pannello se l'osservable bomba è stato invalidato.
+     */
+    @Override
+    public void invalidated(Observable observable) {
+        // Update the ImageView's position to match the model's position
+        pane.getChildren().remove(bombSprite);
+    }
+
+    /**
      * Aggiorna la View della bomba. Se la bomba non è attiva, riproduce l'animazione dell'esplosione
      * e rimuove l'ImageView della bomba dal pannello.
      */
-    public void update() {
-        if (!active.get()) {
-            playExplosionAnimation();
+    public void update(BombModel model) {
+        // Controllo se la bomba è attiva
+        if (!model.isActive()) {
+            // se non e' attiva, esplodo la bomba
+            playExplosionAnimation(model);
             pane.getChildren().remove(bombSprite);
             }
+        // se la bomba e' attiva e non e' stata attivata, inizio l'animazione della bomba
+        else if (!activated) {
+            activated = true;
+            startBombAnimation(model);
         }
+    }
 }

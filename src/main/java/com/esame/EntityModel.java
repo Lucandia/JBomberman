@@ -1,8 +1,11 @@
 package com.esame;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import java.util.List;
 import java.util.ArrayList;
 
 
@@ -10,7 +13,12 @@ import java.util.ArrayList;
  * Classe astratta che rappresenta il modello di un'entità nel gioco.
  * Estende la classe XYModel.
  */
-public abstract class EntityModel extends XYModel{
+public abstract class EntityModel extends XYModel implements Observable{
+
+    /**
+     * La lista degli osservatori dello stato dell'entità.
+     */
+    protected List<EntityStateObserver> observers = new ArrayList<>();
 
     /**
      * La vita dell'entità.
@@ -110,6 +118,36 @@ public abstract class EntityModel extends XYModel{
         setOccupiedTiles();
     }
 
+
+    /**
+     * Aggiunge un osservatore dello stato dell'entità.
+     * 
+     * @param listener l'osservatore da aggiungere
+     */
+    @Override
+    public void addListener(InvalidationListener listener) {
+        observers.add((EntityStateObserver) listener);
+    }
+
+    /**
+     * Rimuove un osservatore dello stato dell'entità.
+     * 
+     * @param listener l'osservatore da rimuovere
+     */
+    @Override
+    public void removeListener(InvalidationListener listener) {
+        observers.remove((EntityStateObserver) listener);
+    }
+
+    /**
+     * Notifica gli osservatori sullo stato dell'entità.
+     */
+    protected void notifyListeners() {
+        for (EntityStateObserver observer : observers) {
+            observer.update(this);
+        }
+    }
+
     /**
      * Toglie vita all'entità.
      * 
@@ -121,6 +159,7 @@ public abstract class EntityModel extends XYModel{
         if (isDead()) {
             clearOccupiedTiles();
         }
+        notifyListeners();
     }
 
     /**
@@ -139,6 +178,7 @@ public abstract class EntityModel extends XYModel{
      */
     public void setLife(int amount) {
         this.life.set(amount);
+        notifyListeners();
     }
 
     /**
@@ -178,6 +218,7 @@ public abstract class EntityModel extends XYModel{
      */
     public void setVelocity(double velocity) {
         this.velocity.set(velocity);
+        notifyListeners();
     }
 
     /**
@@ -265,6 +306,7 @@ public abstract class EntityModel extends XYModel{
      */
     public void setStage(StageModel stage) {
         this.stage = stage;
+        notifyListeners();
     }
 
     /**
@@ -355,6 +397,7 @@ public abstract class EntityModel extends XYModel{
             yProperty().set(getY() + y_move);
             // Update tiles occupancy
             setOccupiedTiles();
+            notifyListeners();
         }
         else isMoving = false;
     }
@@ -468,12 +511,12 @@ public abstract class EntityModel extends XYModel{
         }
     }
 
-
     /**
     * Ferma il movimento dell'entità.
     */
     public void stopMoving() {
         isMoving = false;
+        notifyListeners();
     }
 
     /**
@@ -481,7 +524,7 @@ public abstract class EntityModel extends XYModel{
      * 
      * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
      */
-    public void update(double elapsedTime){
+    public void updateState(double elapsedTime){
         if (isDead()) {
             return;
         }
@@ -491,6 +534,7 @@ public abstract class EntityModel extends XYModel{
             move(lastDirection[0], lastDirection[1]);
             timeSinceLastMove = 0.0; // Reset the timer
         }
+        notifyListeners();
     }
 
 }

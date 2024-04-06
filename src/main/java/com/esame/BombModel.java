@@ -1,5 +1,7 @@
 package com.esame;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +11,12 @@ import java.util.List;
  * Estende la classe EmptyTile e contiene informazioni sulla posizione, raggio di esplosione,
  * stato di attivazione, timer e altre proprietà della bomba.
  */
-public class BombModel extends EmptyTile{
+public class BombModel extends EmptyTile implements Observable{
+
+    /*
+    * La lista delle BombViews che osservano il modello observer della classe.
+    */
+    private List<BombView> observers = new ArrayList<>();
 
     /**
      * La lista delle posizioni detonate dalla bomba.
@@ -111,6 +118,7 @@ public class BombModel extends EmptyTile{
     public void explode() {
         active.set(false);
         setTimer(0);
+        notifyListeners();
     }
 
     /**
@@ -170,13 +178,40 @@ public class BombModel extends EmptyTile{
         return detonatePositions.contains(x + "," + y);
     }
     
+    /**
+     * Aggiunge un osservatore alla lista degli osservatori della bomba.
+     * 
+     * @param observer l'osservatore da aggiungere
+     */
+    public void addListener(InvalidationListener observer) {
+        observers.add((BombView) observer);
+    }
 
     /**
-        * Aggiorna lo stato della bomba.
-        * 
-        * @param elapsed il tempo trascorso dall'ultimo aggiornamento in millisecondi
-        */
-    public void update(double elapsed) {
+     * Rimuove un osservatore dalla lista degli osservatori della bomba.
+     * 
+     * @param observer l'osservatore da rimuovere
+     */
+    public void removeListener(InvalidationListener observer) {
+        observers.remove((BombView) observer);
+    }
+
+    /**
+     * Notifica tutti gli osservatori della bomba.
+     */
+    public void notifyListeners() {
+        for (BombView observer : observers) {
+            observer.update(this);
+        }
+    }
+
+    /**
+    * Aggiorna lo stato della bomba.
+    * 
+    * @param elapsed il tempo trascorso dall'ultimo aggiornamento in millisecondi
+    */
+    public void updateState(double elapsed) {
+        notifyListeners();
         if (isActive()) {
             timer -= elapsed;
             walkableTime -= elapsed;
@@ -188,5 +223,6 @@ public class BombModel extends EmptyTile{
                 explode();
             }
         }
+        notifyListeners();
     }
 }

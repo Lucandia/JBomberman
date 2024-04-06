@@ -3,11 +3,18 @@ import javafx.scene.media.AudioClip;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Classe per la gestione degli effetti sonori corti (come esplosioni o  inizio del gioco).
  */
 public class AudioUtils {
+
+    /**
+     * Insieme contenente tutte le clip sonore in riproduzione.
+     */
+    private static Set<AudioClip> playingClips = new HashSet<>();
 
     /**
      * Mappa contenente gli effetti sonori caricati in memoria.
@@ -38,9 +45,19 @@ public class AudioUtils {
         AudioClip clip = clips.get(audioFileName);
         if (clip != null) {
             clip.play();
+            playingClips.add(clip);
         } else {
             System.err.println("Effetto sonoro non caricato in memoria: " + audioFileName);
         }
+        playingClips.removeIf(oldclip -> !oldclip.isPlaying());
+    }
+
+    /**
+     * Ferma tutti gli effetti sonori attualmente in riproduzione.
+     */
+    public static void stopAll() {
+        playingClips.forEach(AudioClip::stop);
+        playingClips.clear();
     }
 
     /**

@@ -1,4 +1,5 @@
 package com.esame;
+import javafx.beans.Observable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -7,9 +8,9 @@ import javafx.scene.paint.Color;
 
 /**
  * La classe HUDView rappresenta la vista dell'HUD (Heads-Up Display) del gioco.
- * Implementa l'interfaccia PlayerStateObserver per osservare lo stato del giocatore.
+ * Implementa l'interfaccia EntityStateObserver per osservare lo stato del giocatore.
  */
-public class HUDView implements PlayerStateObserver{
+public class HUDView implements EntityStateObserver{
 
     /**
      * Il pannello dell'HUD.
@@ -83,14 +84,30 @@ public class HUDView implements PlayerStateObserver{
         return hudPane;
     }
 
+
+    /**
+     * Metodo chiamato quando un'osservabile è stato invalidato.
+     * 
+     * @param observable l'osservabile invalidato
+     */
+    @Override
+    public void invalidated(Observable observable) {
+        scoreLabel.setText("Score: /");
+        bombCapacityLabel.setText("Bombs: /");
+        bombRadiusLabel.setText("Radius: /");
+        livesLabel.setText("Life: /");      
+    }
+    
+
     /**
      * Metodo di aggiornamento chiamato quando lo stato del giocatore cambia.
      * Aggiorna i valori dell'HUD in base allo stato del giocatore.
      * 
-     * @param playerModel il modello del giocatore
+     * @param playerEntityModel il modello dell'entità del giocatore
      */
     @Override
-    public void update(PlayerModel playerModel) {
+    public void update(EntityModel playerEntityModel) {
+        PlayerModel playerModel = (PlayerModel) playerEntityModel;
         scoreLabel.setText("Score: " + playerModel.getScore());
         bombCapacityLabel.setText("Bombs: " + playerModel.getBombCapacity());
         bombRadiusLabel.setText("Radius: " + playerModel.getBombRadius());

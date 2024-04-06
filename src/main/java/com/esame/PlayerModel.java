@@ -1,6 +1,4 @@
 package com.esame;
-import java.util.ArrayList;
-import java.util.List;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -10,11 +8,6 @@ import javafx.beans.property.SimpleIntegerProperty;
  * sullo stato del giocatore.
  */
 public class PlayerModel extends EntityModel {
-
-    /**
-     * La lista degli osservatori dello stato del giocatore.
-     */
-    private List<PlayerStateObserver> observers = new ArrayList<>();
 
     /**
      * Il punteggio del giocatore.
@@ -65,33 +58,6 @@ public class PlayerModel extends EntityModel {
     }
 
     /**
-     * Aggiunge un osservatore dello stato del giocatore.
-     * 
-     * @param observer l'osservatore da aggiungere
-     */
-    public void addObserver(PlayerStateObserver observer) {
-        observers.add(observer);
-    }
-
-    /**
-     * Rimuove un osservatore dello stato del giocatore.
-     * 
-     * @param observer l'osservatore da rimuovere
-     */
-    public void removeObserver(PlayerStateObserver observer) {
-        observers.remove(observer);
-    }
-
-    /**
-     * Notifica gli osservatori sullo stato del giocatore.
-     */
-    protected void notifyObservers() {
-        for (PlayerStateObserver observer : observers) {
-            observer.update(this);
-        }
-    }
-
-    /**
      * Restituisce la proprietà del numero di vite del giocatore.
      * 
      * @return la proprietà del numero di vite del giocatore
@@ -119,7 +85,7 @@ public class PlayerModel extends EntityModel {
         }
         this.recovering = true;
         justLostLife = true;
-        notifyObservers();
+        notifyListeners();
     }
 
     /**
@@ -148,7 +114,7 @@ public class PlayerModel extends EntityModel {
         if (occupant instanceof EnemyModel) {
             loseLife(1);
         }
-        notifyObservers();
+        notifyListeners();
         return occupant;
     }
     
@@ -194,7 +160,7 @@ public class PlayerModel extends EntityModel {
     public void increaseBombCapacity() {
         this.bombCapacity.set(this.bombCapacity.get() + 1);
         justGainedPowerUp = true;
-        notifyObservers();
+        notifyListeners();
     }
 
     /**
@@ -221,7 +187,7 @@ public class PlayerModel extends EntityModel {
     public void increaseBombRadius() {
         this.bombRadius.set(this.bombRadius.get() + 1);
         justGainedPowerUp = true;
-        notifyObservers();
+        notifyListeners();
     }
 
     /**
@@ -231,7 +197,7 @@ public class PlayerModel extends EntityModel {
         // this.velocity.set(this.velocity.get() + 0.3);
         if (this.delayMove > 0.01) this.delayMove -= 0.01;
         justGainedPowerUp = true;
-        notifyObservers();
+        notifyListeners();
     }
 
     /**
@@ -253,7 +219,8 @@ public class PlayerModel extends EntityModel {
      * @param points il punteggio da aggiungere
      */
     public void addScore(int points) {
-        this.score.set(this.score.get() + points);
+        this.score.set(this.score.get() + points);  
+        notifyListeners();
     }
 
     /**
@@ -276,8 +243,8 @@ public class PlayerModel extends EntityModel {
      * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
      */
     @Override
-    public void update(double elapsedTime) {
-        super.update(elapsedTime);
+    public void updateState(double elapsedTime) {
+        super.updateState(elapsedTime);
         if (this.recovering) {
             this.recoveryTime--;
             if (this.recoveryTime == 0) {

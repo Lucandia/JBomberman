@@ -171,15 +171,16 @@ public class GameApp extends Application {
                         else if (result.isPresent() && result.get() == buttonQuit) {
                             // Stop the background music
                             backgroundMusic.stopMusic();
+                            AudioUtils.stopAll();
                             // Quit the application
                             Platform.exit();
                         }
                     });
                 } else {
                     // Regular game update logic if no special conditions met
-                    enemiesController.update(1.0 / 60.0);
-                    playerController.update(1.0 / 60.0);
-                    bombController.update(1.0 / 60.0);
+                    enemiesController.updateState(1.0 / 60.0);
+                    playerController.updateState(1.0 / 60.0);
+                    bombController.updateState(1.0 / 60.0);
                     stageView.updateView();
                 }
             }
@@ -223,12 +224,12 @@ public class GameApp extends Application {
             this.playerModel.setStage(stageModel);
         }
         stageModel.setPlayer(playerModel);
-        EntityView playerView = new EntityView(playerModel, "bomberman", true, 3, Integer.parseInt(data.getAvatar()) - 1);
+        this.playerController = new PlayerController(playerModel, Integer.parseInt(data.getAvatar()));
         this.enemiesController = new EnemiesController(numberOfEnemies, stageModel, gameLayer, level);
 
         // Layer the map and the player on the StackPane
         root.getChildren().add(stageView.getPane()); // Map as the base layer
-        gameLayer.getChildren().add(playerView.getEntitySprite()); // Add Bomberman on top of the map
+        gameLayer.getChildren().add(playerController.getView().getEntitySprite()); // Add Bomberman on top of the map
         root.getChildren().add(bombLayer); // Add the bomb layer to the root
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
@@ -236,14 +237,13 @@ public class GameApp extends Application {
         HUDView hudView = new HUDView();
         PlayerSound playerSound = new PlayerSound(); // inizializza il playerSound
         // aggiungi HUD come osservatore del playerModel
-        playerModel.addObserver(hudView);
-        playerModel.addObserver(playerSound); // aggiungi playerSound come osservatore del playerModel
+        playerModel.addListener(hudView);
+        playerModel.addListener(playerSound); // aggiungi playerSound come osservatore del playerModel
         hudView.update(playerModel); // initializza l'HUD con i valori iniziali
         borderPane.setCenter(root); // Set the game (map + player) as the center
         borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
 
         // Setup the controller with the scene
-        this.playerController = new PlayerController(playerModel, playerView);
         this.bombController = new BombController(playerModel, bombLayer);
         new InputController(playerController, bombController, mainScene);
         backgroundMusic.playMusic("Background.mp3");

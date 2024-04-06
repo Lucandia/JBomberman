@@ -32,6 +32,7 @@ public class EnemyModel extends EntityModel {
         if (occupant instanceof PlayerModel) {
             occupant.loseLife(1);
         }
+        notifyListeners();
         return occupant;
     }
 
@@ -41,11 +42,12 @@ public class EnemyModel extends EntityModel {
      * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento in millisecondi
      */
     @Override
-    public void update(double elapsedTime) {
-        super.update(elapsedTime);
+    public void updateState(double elapsedTime) {
+        super.updateState(elapsedTime);
         if (!this.isMoving) {
             this.startMoving(new int[] {-lastDirection[0], -lastDirection[1]});
         }
+        notifyListeners();
     }
 }
 
