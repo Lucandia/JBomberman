@@ -1,5 +1,4 @@
 package com.esame;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ArrayList;
 import javafx.scene.layout.Pane;
@@ -15,7 +14,7 @@ public class BombController {
     /**
      * La lista delle bombe attive.
      */
-    private List<BombModel> bombList = new <BombModel>ArrayList();
+    private List<BombModel> bombList = new ArrayList<>();
 
     /**
      * Pannello in cui vengono visualizzate le bombe.
