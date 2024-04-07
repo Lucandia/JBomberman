@@ -39,7 +39,7 @@ public class EnemiesController {
             EnemyModel enemyModel;
             EntityView enemyView;
             if ((i % (numberOfEnemies / level )) != 0) { // alternate between enemy types
-                enemyModel = new EnemyModel(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10,  stageModel);
+                enemyModel = new EnemyModel1(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10,  stageModel);
                 enemyView = new EntityView("enemy1");
             }
             else {

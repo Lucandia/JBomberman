@@ -14,10 +14,7 @@ public class EnemyModel2 extends EnemyModel {
      * @param stage il modello dello stage in cui si trova il nemico
      */
     public EnemyModel2(int initialX, int initialY, StageModel stage) {
-        super(initialX, initialY, stage);
-        this.life.set(200); // Vita iniziale
-        this.setBoundingBox(new int[] {15, 15});
-        this.setBoundingOffset(new int[] {8, 17});
+        super(initialX, initialY, new int[] {15, 15}, new int[] {8, 17}, 200, stage);
         // Metà della velocità del nemico originale, altrimenti e' troppo difficile da battere
         this.setVelocity(this.getVelocity() * 0.7);
     }
@@ -38,8 +35,8 @@ public class EnemyModel2 extends EnemyModel {
         while (!new_pos) {
             int[] randomXY = getStage().getRandomFreeTile();
             if (getStage().getTile(randomXY[0], randomXY[1]) instanceof EmptyTile && ((EmptyTile) getStage().getTile(randomXY[0], randomXY[1])).getOccupant() == null) {
-                this.xProperty().set(randomXY[0] * getStage().getTileSize());
-                this.yProperty().set(randomXY[1] * getStage().getTileSize());
+                this.xProperty().set(randomXY[0] * getStage().getTileSize() - this.getBoundingBox()[0] / 2);
+                this.yProperty().set(randomXY[1] * getStage().getTileSize() - this.getBoundingBox()[1] / 2);
                 new_pos = true;
             }
         }
@@ -47,34 +44,34 @@ public class EnemyModel2 extends EnemyModel {
     }
 
     /**
-     * Metodo per aggiornare lo stato del nemico.
-     * 
-     * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
+     * Metodo per far muovere il nemico.
+     * Il nemico conntrolla in quale direzione si è mosso l'ultima volta e 
+     * si muove in una direzione casuale eccetto tornare indietro.
      */
     @Override
-    public void updateState(double elapsedTime) {
-        super.updateState(elapsedTime);
+    public void movingBehaviour() {
         int lastX = lastDirection[0];
         int lastY = lastDirection[1];
+        // Se il nemico non si sta muovendo, resetta le ultime coordinate
+        if (!isMoving()) {
+            lastX = 0;
+            lastY = 0;
+        }
         int randomDirection = (int) (Math.random() * 4); // Genera un numero casuale tra 0 e 3
         // Muove il nemico in una direzione casuale
         if (randomDirection == 0 && canMoveTo(1, 0) && lastX != -1) {
-            lastDirection[0] = 1;
-            lastDirection[1] = 0;
+            startMoving(1, 0);
         }
         else if (randomDirection == 1 && canMoveTo(-1, 0) && lastX != 1) {
-            lastDirection[0] = -1;
-            lastDirection[1] = 0;
+            startMoving(-1, 0);
         }
         else if (randomDirection == 2 && canMoveTo(0, -1) && lastY != 1) {
-            lastDirection[0] = 0;
-            lastDirection[1] = -1;
+            startMoving(0, -1);
         }
         else if (randomDirection == 3 && canMoveTo(0, 1) && lastY != -1) {
-            lastDirection[0] = 0;
-            lastDirection[1] = 1;
+            startMoving(0, 1);
         }
-        notifyListeners();
     }
+
 }
 

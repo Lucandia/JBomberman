@@ -481,6 +481,21 @@ public abstract class EntityModel extends XYModel implements Observable{
     /**
      * Avvia il movimento dell'entità nella direzione specificata.
      *
+     * @param dx lo spostamento sull'asse x
+     * @param dy lo spostamento sull'asse y
+     */
+    public void startMoving(int dx, int dy) {
+        lastDirection[0] = dx;
+        lastDirection[1] = dy;
+        isMoving = true;
+        if (dx == 0 && dy == 0) {
+            isMoving = false;
+        }
+}
+
+    /**
+     * Avvia il movimento dell'entità nella direzione specificata.
+     *
      * @param direction la direzione del movimento (UP, DOWN, LEFT, RIGHT)
      */
     public void startMoving(String direction) {
