@@ -1,13 +1,20 @@
 package com.esame;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.beans.Observable;
+import javafx.beans.InvalidationListener;
 import java.util.Random;
 
 /**
  * Questa classe rappresenta il modello dello stage di gioco.
  * Contiene le informazioni sulle dimensioni dello stage e sui vari tipi di caselle.
  */
-public class StageModel {
+public class StageModel implements Observable {
+
+    /**
+     * La lista degli osservatori dello stage.
+     */
+    private List<StageObserver> observers = new ArrayList<>();
 
     /**
      * La larghezza dello stage.
@@ -429,6 +436,27 @@ public class StageModel {
         }
         int randomIndex = rand.nextInt(freeTileIndex.size());
         return freeTileIndex.remove(randomIndex);
+    }
+
+    /**
+     * Aggiunge un osservatore dello stage.
+     */
+    public void addListener(InvalidationListener listener) {
+        observers.add((StageObserver) listener);
+    }
+
+    /**
+     * Rimuove un osservatore dello stage.
+     */
+    public void removeListener(InvalidationListener listener) {
+        observers.remove((StageObserver) listener);
+    }
+
+    /**
+     * Notifica tutti gli osservatori dello stage.
+     */
+    public void notifyListeners() {
+        observers.forEach(observer -> observer.update(this));
     }
 
 }

@@ -1,4 +1,6 @@
 @startuml
+skinparam linetype polyline
+skinparam linetype ortho
 
 class com.esame.App {
 	{method}  {static} +main ( args : [Ljava.lang.String; ) : void
@@ -85,15 +87,21 @@ class com.esame.EnemiesController {
 }
 
 
-class com.esame.EnemyModel {
+abstract class com.esame.EnemyModel {
 	{method} +checkCollision ( dx : int , dy : int ) : com.esame.EntityModel
+	{method}  {abstract} +movingBehaviour () : void
 	{method} +updateState ( elapsedTime : double ) : void
+}
+
+
+class com.esame.EnemyModel1 {
+	{method} +movingBehaviour () : void
 }
 
 
 class com.esame.EnemyModel2 {
 	{method} +loseLife ( amount : int ) : void
-	{method} +updateState ( elapsedTime : double ) : void
+	{method} +movingBehaviour () : void
 }
 
 
@@ -124,6 +132,7 @@ abstract class com.esame.EntityModel {
 	{method} +removeListener ( listener : javafx.beans.InvalidationListener ) : void
 	{method} +startMoving ( direction : String ) : void
 	{method} +startMoving ( direction : [I ) : void
+	{method} +startMoving ( dx : int , dy : int ) : void
 	{method} +stopMoving () : void
 	{method} +updateState ( elapsedTime : double ) : void
 	{method} +velocityProperty () : javafx.beans.property.DoubleProperty
@@ -292,6 +301,7 @@ class com.esame.StageModel {
 	{field} -tiles : [[Lcom.esame.Tile;
 	{field} -width : int
 	{method} +addBombAtPosition ( x : int , y : int , bombRadius : int ) : boolean
+	{method} +addListener ( listener : javafx.beans.InvalidationListener ) : void
 	{method} +canExplodeAtPosition ( x : int , y : int ) : boolean
 	{method} +destroyTile ( x : int , y : int ) : boolean
 	{method} +destroyTileAtPosition ( x : int , y : int ) : boolean
@@ -303,8 +313,15 @@ class com.esame.StageModel {
 	{method} +getTileAtPosition ( x : int , y : int ) : com.esame.Tile
 	{method} +getTileStartCoordinates ( x : int , y : int ) : [I
 	{method} +isBorder ( x : int , y : int ) : boolean
+	{method} +notifyListeners () : void
+	{method} +removeListener ( listener : javafx.beans.InvalidationListener ) : void
 	{method} +setTile ( x : int , y : int , tile : com.esame.Tile ) : void
 	{method} +setTileAtPosition ( x : int , y : int , tile : com.esame.Tile ) : void
+}
+
+
+interface com.esame.StageObserver {
+	{method}  {abstract} +update ( stageModel : com.esame.StageModel ) : void
 }
 
 
@@ -313,7 +330,8 @@ class com.esame.StageView {
 	{field} -pane : javafx.scene.layout.Pane
 	{field} -stageImage : javafx.scene.image.Image
 	{field} -tilesImage : javafx.scene.image.Image
-	{method} +updateView () : void
+	{method} +invalidated ( observable : javafx.beans.Observable ) : void
+	{method} +update ( stage : com.esame.StageModel ) : void
 }
 
 
@@ -351,6 +369,55 @@ com.esame.EmptyTile -->  com.esame.EntityModel : occupant
 com.esame.EmptyTile --|>  com.esame.Tile
 com.esame.EnemiesController "1" o-- "0..*"  com.esame.EnemyModel : enemies
 com.esame.EnemyModel --|>  com.esame.EntityModel
+com.esame.EnemyModel1 --|>  com.esame.EnemyModel
+com.esame.EnemyModel2 --|>  com.esame.EnemyModel
+com.esame.EntityModel "1" o-- "0..*"  com.esame.EmptyTile : occupiedTiles
+com.esame.EntityModel "1" o-- "0..*"  com.esame.EntityStateObserver : observers
+com.esame.EntityModel -->  com.esame.StageModel : stage
+com.esame.EntityModel --|>  com.esame.XYModel
+com.esame.EntityView ..|>  com.esame.EntityStateObserver
+com.esame.GameApp -->  com.esame.BackgroundMusic : backgroundMusic
+com.esame.GameApp -->  com.esame.BombController : bombController
+com.esame.GameApp -->  com.esame.EnemiesController : enemiesController
+com.esame.GameApp -->  com.esame.PlayerController : playerController
+com.esame.GameApp -->  com.esame.PlayerData : data
+com.esame.GameApp -->  com.esame.PlayerModel : playerModel
+com.esame.GameApp -->  com.esame.StageModel : stageModel
+com.esame.HUDView ..|>  com.esame.EntityStateObserver
+com.esame.InputController -->  com.esame.BombController : bomb
+com.esame.InputController -->  com.esame.PlayerController : player
+com.esame.MainMenu "1" o-- "0..*"  com.esame.PlayerData : playerDataMap
+com.esame.PlayerController -->  com.esame.EntityView : view
+com.esame.PlayerController -->  com.esame.PlayerModel : model
+com.esame.PlayerModel --|>  com.esame.EntityModel
+com.esame.PlayerSound ..|>  com.esame.EntityStateObserver
+com.esame.PowerUp -->  com.esame.PowerUpBehaviour : behaviour
+com.esame.PowerUp --|>  com.esame.SpecialTile
+com.esame.PowerUpBlast ..|>  com.esame.PowerUpBehaviour
+com.esame.PowerUpBomb ..|>  com.esame.PowerUpBehaviour
+com.esame.PowerUpSpeed ..|>  com.esame.PowerUpBehaviour
+com.esame.SpecialTile --|>  com.esame.EmptyTile
+com.esame.StageModel "1" o-- "0..*"  com.esame.StageObserver : observers
+com.esame.StageModel -->  com.esame.PlayerModel : player
+com.esame.StageModel -->  com.esame.SpecialTile : nextLevelDoor
+com.esame.StageView ..|>  com.esame.StageObserver
+com.esame.Tile --|>  com.esame.XYModel
+
+
+@enduml
+
+
+com.esame.BombController "1" o-- "0..*"  com.esame.BombModel : bombList
+com.esame.BombController -->  com.esame.StageModel : stage
+com.esame.BombModel "1" o-- "0..*"  com.esame.BombView : observers
+com.esame.BombModel --|>  com.esame.EmptyTile
+com.esame.BombView -->  com.esame.StageModel : stage
+com.esame.BombView ..|>  com.esame.BombObserver
+com.esame.EmptyTile -->  com.esame.EntityModel : occupant
+com.esame.EmptyTile --|>  com.esame.Tile
+com.esame.EnemiesController "1" o-- "0..*"  com.esame.EnemyModel : enemies
+com.esame.EnemyModel --|>  com.esame.EntityModel
+com.esame.EnemyModel1 --|>  com.esame.EnemyModel
 com.esame.EnemyModel2 --|>  com.esame.EnemyModel
 com.esame.EntityModel "1" o-- "0..*"  com.esame.EmptyTile : occupiedTiles
 com.esame.EntityModel "1" o-- "0..*"  com.esame.EntityStateObserver : observers
@@ -382,6 +449,51 @@ com.esame.StageModel -->  com.esame.PlayerModel : player
 com.esame.StageModel -->  com.esame.SpecialTile : nextLevelDoor
 com.esame.StageView -->  com.esame.StageModel : stage
 com.esame.Tile --|>  com.esame.XYModel
+
+
+
+' com.esame.BombController "1" o-- "0..*"  com.esame.BombModel : bombList
+' com.esame.BombController -->  com.esame.StageModel : stage
+' com.esame.BombModel "1" o-- "0..*"  com.esame.BombView : observers
+' com.esame.BombModel --|>  com.esame.EmptyTile
+' com.esame.BombView -->  com.esame.StageModel : stage
+' com.esame.BombView ..|>  com.esame.BombObserver
+' com.esame.EmptyTile -->  com.esame.EntityModel : occupant
+' com.esame.EmptyTile --|>  com.esame.Tile
+' com.esame.EnemiesController "1" o-- "0..*"  com.esame.EnemyModel : enemies
+' com.esame.EnemyModel --|>  com.esame.EntityModel
+' com.esame.EnemyModel1 --|>  com.esame.EnemyModel
+' com.esame.EnemyModel2 --|>  com.esame.EnemyModel
+' com.esame.EntityModel "1" o-- "0..*"  com.esame.EmptyTile : occupiedTiles
+' com.esame.EntityModel "1" o-- "0..*"  com.esame.EntityStateObserver : observers
+' com.esame.EntityModel -->  com.esame.StageModel : stage
+' com.esame.EntityModel --|>  com.esame.XYModel
+' com.esame.EntityView ..|>  com.esame.EntityStateObserver
+' com.esame.GameApp -->  com.esame.BackgroundMusic : backgroundMusic
+' com.esame.GameApp -->  com.esame.BombController : bombController
+' com.esame.GameApp -->  com.esame.EnemiesController : enemiesController
+' com.esame.GameApp -->  com.esame.PlayerController : playerController
+' com.esame.GameApp -->  com.esame.PlayerData : data
+' com.esame.GameApp -->  com.esame.PlayerModel : playerModel
+' com.esame.GameApp -->  com.esame.StageView : stageView
+' com.esame.HUDView ..|>  com.esame.EntityStateObserver
+' com.esame.InputController -->  com.esame.BombController : bomb
+' com.esame.InputController -->  com.esame.PlayerController : player
+' com.esame.MainMenu "1" o-- "0..*"  com.esame.PlayerData : playerDataMap
+' com.esame.PlayerController -->  com.esame.EntityView : view
+' com.esame.PlayerController -->  com.esame.PlayerModel : model
+' com.esame.PlayerModel --|>  com.esame.EntityModel
+' com.esame.PlayerSound ..|>  com.esame.EntityStateObserver
+' com.esame.PowerUp -->  com.esame.PowerUpBehaviour : behaviour
+' com.esame.PowerUp --|>  com.esame.SpecialTile
+' com.esame.PowerUpBlast ..|>  com.esame.PowerUpBehaviour
+' com.esame.PowerUpBomb ..|>  com.esame.PowerUpBehaviour
+' com.esame.PowerUpSpeed ..|>  com.esame.PowerUpBehaviour
+' com.esame.SpecialTile --|>  com.esame.EmptyTile
+' com.esame.StageModel -->  com.esame.PlayerModel : player
+' com.esame.StageModel -->  com.esame.SpecialTile : nextLevelDoor
+' com.esame.StageView -->  com.esame.StageModel : stage
+' com.esame.Tile --|>  com.esame.XYModel
 
 
 @enduml

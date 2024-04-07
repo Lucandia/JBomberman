@@ -1,9 +1,10 @@
 package com.esame;
+import javafx.beans.InvalidationListener;
 
 /**
  * Questa interfaccia rappresenta un osservatore dello stato della bomba
  */
-public interface BombObserver {
+public interface BombObserver extends InvalidationListener{
     
     /**
      * Metodo chiamato quando lo stato della bomba viene aggiornato.

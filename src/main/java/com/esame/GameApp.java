@@ -31,9 +31,9 @@ public class GameApp extends Application {
     private PlayerData data;
 
     /**
-     * La vista dello stage.
+     * Il modello dello stage.
      */
-    private StageView stageView;
+    private StageModel stageModel;
 
     /**
      * Il controller del giocatore.
@@ -181,7 +181,7 @@ public class GameApp extends Application {
                     enemiesController.updateState(1.0 / 60.0);
                     playerController.updateState(1.0 / 60.0);
                     bombController.updateState(1.0 / 60.0);
-                    stageView.updateView();
+                    stageModel.notifyListeners();
                 }
             }
         };
@@ -204,9 +204,9 @@ public class GameApp extends Application {
         BorderPane borderPane = new BorderPane();
 
         // Initialize the Stage
-        StageModel stageModel = new StageModel();
-        StageView stageView = new StageView(level, stageModel);
-        this.stageView = stageView;
+        this.stageModel = new StageModel();
+        StageView stageView = new StageView(level);
+        stageModel.addListener(stageView);
 
         Scene mainScene = new Scene(borderPane, 272, 224);
         mainScene.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());

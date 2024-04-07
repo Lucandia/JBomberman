@@ -299,6 +299,7 @@ class com.esame.StageModel {
 	{field} -tiles : [[Lcom.esame.Tile;
 	{field} -width : int
 	{method} +addBombAtPosition ( x : int , y : int , bombRadius : int ) : boolean
+	{method} +addListener ( listener : javafx.beans.InvalidationListener ) : void
 	{method} +canExplodeAtPosition ( x : int , y : int ) : boolean
 	{method} +destroyTile ( x : int , y : int ) : boolean
 	{method} +destroyTileAtPosition ( x : int , y : int ) : boolean
@@ -310,8 +311,15 @@ class com.esame.StageModel {
 	{method} +getTileAtPosition ( x : int , y : int ) : com.esame.Tile
 	{method} +getTileStartCoordinates ( x : int , y : int ) : [I
 	{method} +isBorder ( x : int , y : int ) : boolean
+	{method} +notifyListeners () : void
+	{method} +removeListener ( listener : javafx.beans.InvalidationListener ) : void
 	{method} +setTile ( x : int , y : int , tile : com.esame.Tile ) : void
 	{method} +setTileAtPosition ( x : int , y : int , tile : com.esame.Tile ) : void
+}
+
+
+interface com.esame.StageObserver {
+	{method}  {abstract} +update ( stageModel : com.esame.StageModel ) : void
 }
 
 
@@ -320,7 +328,8 @@ class com.esame.StageView {
 	{field} -pane : javafx.scene.layout.Pane
 	{field} -stageImage : javafx.scene.image.Image
 	{field} -tilesImage : javafx.scene.image.Image
-	{method} +updateView () : void
+	{method} +invalidated ( observable : javafx.beans.Observable ) : void
+	{method} +update ( stage : com.esame.StageModel ) : void
 }
 
 
@@ -371,7 +380,7 @@ com.esame.GameApp -->  com.esame.EnemiesController : enemiesController
 com.esame.GameApp -->  com.esame.PlayerController : playerController
 com.esame.GameApp -->  com.esame.PlayerData : data
 com.esame.GameApp -->  com.esame.PlayerModel : playerModel
-com.esame.GameApp -->  com.esame.StageView : stageView
+com.esame.GameApp -->  com.esame.StageModel : stageModel
 com.esame.HUDView ..|>  com.esame.EntityStateObserver
 com.esame.InputController -->  com.esame.BombController : bomb
 com.esame.InputController -->  com.esame.PlayerController : player
@@ -386,9 +395,10 @@ com.esame.PowerUpBlast ..|>  com.esame.PowerUpBehaviour
 com.esame.PowerUpBomb ..|>  com.esame.PowerUpBehaviour
 com.esame.PowerUpSpeed ..|>  com.esame.PowerUpBehaviour
 com.esame.SpecialTile --|>  com.esame.EmptyTile
+com.esame.StageModel "1" o-- "0..*"  com.esame.StageObserver : observers
 com.esame.StageModel -->  com.esame.PlayerModel : player
 com.esame.StageModel -->  com.esame.SpecialTile : nextLevelDoor
-com.esame.StageView -->  com.esame.StageModel : stage
+com.esame.StageView ..|>  com.esame.StageObserver
 com.esame.Tile --|>  com.esame.XYModel
 
 

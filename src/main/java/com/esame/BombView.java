@@ -6,7 +6,6 @@ import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.Observable;
-import javafx.beans.InvalidationListener;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -20,7 +19,7 @@ import javafx.geometry.Rectangle2D;
  * Questa classe rappresenta la vista di una bomba nel gioco Bomberman.
  * La classe gestisce l'animazione della bomba e l'esplosione quando la bomba diventa inattiva.
  */
-public class BombView implements BombObserver, InvalidationListener{
+public class BombView implements BombObserver{
 
     /**
      * L'ImageView della bomba.

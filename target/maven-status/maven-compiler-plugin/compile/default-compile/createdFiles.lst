@@ -26,6 +26,7 @@ com/esame/EnemyModel.class
 com/esame/BackgroundMusic.class
 com/esame/EmptyTile.class
 com/esame/PowerUpBlast.class
+com/esame/StageObserver.class
 com/esame/StageView.class
 com/esame/GameApp.class
 com/esame/EnemiesController.class

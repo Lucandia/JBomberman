@@ -11,7 +11,7 @@ import javafx.scene.layout.Pane;
  * Contiene un pannello con un'immagine di sfondo del palco e
  * un'immagine contenente le sprite delle caselle.
  */
-public class StageView {
+public class StageView implements StageObserver {
 
     /**
      * Il pannello per contenere il palco e le caselle.
@@ -29,11 +29,6 @@ public class StageView {
     private Image tilesImage; // Immagine contenente le sprite delle caselle
 
     /**
-     * Il modello dello stage.
-     */
-    private StageModel stage;
-
-    /**
      * L'immagine combinata che contiene lo sfondo del palco e le caselle.
      */
     private ImageView combinedView;
@@ -45,23 +40,23 @@ public class StageView {
      * Esegue l'aggiornamento iniziale della vista.
      *
      * @param levelNumber Il numero di livello
-     * @param stage Il modello del palco
      */
-    public StageView(int levelNumber, StageModel stage) {
-        this.stage = stage;
+    public StageView(int levelNumber) {
         // Carica le immagini del palco e delle caselle in base al numero di livello
         stageImage = new Image(getClass().getResourceAsStream("/sprites/level" + levelNumber + "_stage.png"));
         tilesImage = new Image(getClass().getResourceAsStream("/sprites/level" + levelNumber + "_tiles.png"));
         combinedView = new ImageView();
         pane.getChildren().add(combinedView); // Aggiunge la vista combinata all'interno del pannello
-        updateView(); // Aggiornamento iniziale
     }
 
     /**
      * Aggiorna la vista del palco.
      * Crea un'immagine combinata che contiene lo sfondo del palco e le caselle.
+     * 
+     * @param stage Il modello dello stage
      */
-    public void updateView() {
+    @Override
+    public void update(StageModel stage) {
         int tileSize = stage.getTileSize();
         int width = stage.getWidth() * tileSize;
         int height = stage.getHeight() * tileSize;
@@ -104,4 +99,12 @@ public class StageView {
     public Pane getPane() {
         return pane;
     }
+
+    /**
+     * Rimuove la vista combinata dal pannello se il modello dello stage è stato invalidato.
+     */
+    public void invalidated(javafx.beans.Observable observable) {
+        pane.getChildren().remove(combinedView);
+    }
+
 }
