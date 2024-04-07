@@ -32,9 +32,9 @@ public class BombView implements BombObserver{
     private Timeline bombAnimation = null;
 
     /**
-     * Il modello dello stage di gioco.
+     * La dimensione di un singolo tile.
      */
-    private StageModel stage;
+    private int size;
 
     /**
      * Il pannello in cui visualizzare la bomba.
@@ -50,11 +50,11 @@ public class BombView implements BombObserver{
      * Crea una nuova istanza di BombView.
      * 
      * @param pane il pannello in cui visualizzare la bomba
-     * @param stage il modello dello stage di gioco
+     * @param size la dimensione della dimensione di un singolo tile
      */
-    public BombView(Pane pane, StageModel stage) {
+    public BombView(Pane pane, int size) {
         this.pane = pane;
-        this.stage = stage;
+        this.size = size;
         // Assuming the sprite sheet is in the same package as the BombView
         Image image = new Image(getClass().getResourceAsStream("/sprites/bomb.png"));
         bombSprite = new ImageView(image);
@@ -97,7 +97,6 @@ public class BombView implements BombObserver{
      */
     public void playExplosionAnimation(BombModel model) { 
         int radius = model.getBlastRadius();
-        final int size = stage.getTileSize(); 
         Image explosionImage = new Image(getClass().getResourceAsStream("/sprites/explosion.png"));
         // List to hold all explosion sprites
         List<ImageView> explosionSprites = new ArrayList<>();

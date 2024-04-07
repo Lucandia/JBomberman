@@ -103,7 +103,7 @@
                         </goals>
                         <phase>generate-test-sources</phase>
                         <configuration>
-                            <outputFilename>testdiagram.txt</outputFilename>
+                            <outputFilename>diagram.puml</outputFilename>
                             <scanPackages>
                                 <scanPackage>
                                 com.esame

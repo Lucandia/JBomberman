@@ -80,7 +80,7 @@ public class BombController {
             if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
                 AudioUtils.playSoundEffect("PlaceBomb.mp3");
                 BombModel bomb = stage.getBombAtPosition(startPosition[0], startPosition[1]);
-                BombView bombView = new BombView(pane, stage);
+                BombView bombView = new BombView(pane, stage.getTileSize());
                 bomb.addListener(bombView);
                 bombList.add(bomb);
             }
