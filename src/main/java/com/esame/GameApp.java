@@ -1,6 +1,8 @@
 package com.esame;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
@@ -11,6 +13,9 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.animation.AnimationTimer;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 // import stuff to have a dialog box
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -66,6 +71,11 @@ public class GameApp extends Application {
     private BackgroundMusic backgroundMusic = new BackgroundMusic();
 
     /**
+     * Il timer del gioco.
+     */
+    private IntegerProperty timer = new SimpleIntegerProperty();
+
+    /**
         * Inizializza il gioco con i dati del giocatore e il numero di nemici.
         * 
         * @param data I dati del giocatore
@@ -95,14 +105,15 @@ public class GameApp extends Application {
             @Override
             public void handle(long now) {
                 // Check for player death or level completion
-                if (playerModel.isDead() || (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor())) {
+                if (playerModel.isDead() || timer.get() <= 0 || (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor())) {
                     // Stop the game loop first to prevent any updates while the dialog is shown
+                    boolean lost = playerModel.isDead() || timer.get() <= 0;
                     playerModel.stopMoving(); 
                     backgroundMusic.stopMusic();
                     this.stop();
                     int current_level = data.getLastLevelInt();
                     // save the data
-                    if (playerModel.isDead()) {
+                    if (lost) {
                         data.setLostGames(data.getLostGamesInt() + 1);
                         AudioUtils.playSoundEffect("GameOver.mp3");
                     } else {
@@ -127,10 +138,10 @@ public class GameApp extends Application {
                         DialogPane dialogPane = alert.getDialogPane();
                         dialogPane.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
                         // Add buttons to the dialog
-                        alert.setTitle(playerModel.isDead() ? "Game Over!" : "Level Complete!");
+                        alert.setTitle(lost ? "Game Over!" : "Level Complete!");
                         alert.getDialogPane().setGraphic(null);
-                        alert.setHeaderText(playerModel.isDead() ? "Game over!" : "Level Complete!");
-                        if (!playerModel.isDead()) {
+                        alert.setHeaderText(lost ? "Game over!" : "Level Complete!");
+                        if (!lost) {
                             if (current_level == 3) {
                                 alert.setContentText("Congratulations! You have completed all levels! Let's try more enemies?");
                             } else {
@@ -139,7 +150,7 @@ public class GameApp extends Application {
                         } else {
                             alert.setContentText("You can do it! Try again!");
                         }
-                        ButtonType buttonRestartOrContinue = new ButtonType(playerModel.isDead() ? "Try again" : "Continue");
+                        ButtonType buttonRestartOrContinue = new ButtonType(lost ? "Try again" : "Continue");
                         ButtonType buttonExit = new ButtonType("Exit to Main Menu");
                         ButtonType buttonQuit = new ButtonType("Quit");
                         
@@ -147,7 +158,7 @@ public class GameApp extends Application {
 
                         Optional<ButtonType> result = alert.showAndWait();
                         if (result.isPresent() && result.get() == buttonRestartOrContinue) {
-                            if (playerModel.isDead()) {
+                            if (lost) {
                                 // Restart current level if the player died
                                 playerModel = null;
                                 setupGame(primaryStage, data.getLastLevelInt());
@@ -196,6 +207,7 @@ public class GameApp extends Application {
      * @param level il livello del gioco
      */
     private void setupGame(Stage primaryStage, int level) {
+        timer.set(180); // Set the timer to 3 minutes
         AudioUtils.playSoundEffect("StageStart.mp3");
         // Use a StackPane as the root to allow layering of the map and the player
         StackPane root = new StackPane();
@@ -234,7 +246,7 @@ public class GameApp extends Application {
         root.getChildren().add(gameLayer); // Add the game layer to the root
 
         // usa un BorderPane per posizionare l'HUD sopra il gioco
-        HUDView hudView = new HUDView();
+        HUDView hudView = new HUDView(timer);
         PlayerSound playerSound = new PlayerSound(); // inizializza il playerSound
         // aggiungi HUD come osservatore del playerModel
         playerModel.addListener(hudView);
@@ -247,6 +259,18 @@ public class GameApp extends Application {
         this.bombController = new BombController(playerModel, bombLayer);
         new InputController(playerController, bombController, mainScene);
         backgroundMusic.playMusic("Background.mp3");
+
+        // Fai partire il timer
+        Timeline timeline = new Timeline(); // Initialize the timeline
+        timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1), event -> {
+            timer.set(timer.get() - 1);
+            if (timer.get() <= 0) {
+                // Timer reached 0; stop the timeline
+                timeline.stop();
+            }
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
     }
 
     /**

@@ -1,0 +1,4333 @@
+package com.esame;
+
+/**
+ * La classe App rappresenta il punto di ingresso dell'applicazione.
+ * Contiene il metodo main che avvia l'applicazione e richiama il menu principale.
+ */
+public class App {
+    
+    /**
+     * Il metodo main avvia l'esecuzione del gioco.
+     * 
+     * @param args gli argomenti della riga di comando
+     */
+    public static void main(String[] args) {
+        MainMenu.main(args);
+    }
+}
+package com.esame;
+import javafx.scene.media.AudioClip;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+
+/**
+ * Classe per la gestione degli effetti sonori corti (come esplosioni o  inizio del gioco).
+ */
+public class AudioUtils {
+
+    /**
+     * Insieme contenente tutte le clip sonore in riproduzione.
+     */
+    private static Set<AudioClip> playingClips = new HashSet<>();
+
+    /**
+     * Mappa contenente gli effetti sonori caricati in memoria.
+     */
+    private static final Map<String, AudioClip> clips = new HashMap<>();
+
+    /**
+     * Carica in memoria un effetto sonoro specificato dal nome del file.
+     *
+     * @param audioFileName Il nome del file audio da caricare.
+     */
+    public static void preloadSoundEffect(String audioFileName) {
+        URL soundEffectUrl = AudioUtils.class.getResource("/audio/" + audioFileName);
+        if (soundEffectUrl != null) {
+            AudioClip clip = new AudioClip(soundEffectUrl.toString());
+            clips.put(audioFileName, clip);
+        } else {
+            System.err.println("Impossibile caricare in memoria il file audio: " + audioFileName);
+        }
+    }
+
+    /**
+     * Riproduce un effetto sonoro specificato dal nome del file.
+     *
+     * @param audioFileName Il nome del file audio da riprodurre.
+     */
+    public static void playSoundEffect(String audioFileName) {
+        AudioClip clip = clips.get(audioFileName);
+        if (clip != null) {
+            clip.play();
+            playingClips.add(clip);
+        } else {
+            System.err.println("Effetto sonoro non caricato in memoria: " + audioFileName);
+        }
+        playingClips.removeIf(oldclip -> !oldclip.isPlaying());
+    }
+
+    /**
+     * Ferma tutti gli effetti sonori attualmente in riproduzione.
+     */
+    public static void stopAll() {
+        playingClips.forEach(AudioClip::stop);
+        playingClips.clear();
+    }
+
+    /**
+     * Carica in memoria tutti gli effetti sonori.
+     */
+    public static void preloadAll() {
+        preloadSoundEffect("BombExplodes.mp3");
+        preloadSoundEffect("GameOver.mp3");
+        preloadSoundEffect("ItemGet.mp3");
+        preloadSoundEffect("LoseLife.mp3");
+        preloadSoundEffect("MainMenu.mp3");
+        preloadSoundEffect("PlaceBomb.mp3");
+        preloadSoundEffect("StageClear.mp3");
+        preloadSoundEffect("StageStart.mp3");
+        preloadSoundEffect("Walking.mp3");
+    }
+}
+package com.esame;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import java.net.URL;
+
+/**
+ * Questa classe gestisce la riproduzione di musica di sottofondo nel gioco.
+ */
+public class BackgroundMusic {
+
+    /**
+     * Il lettore multimediale per la riproduzione della musica.
+     */
+    private MediaPlayer mediaPlayer;
+
+    /**
+     * Riproduce la musica di sottofondo specificata dal nome del file audio.
+     *
+     * @param audioFileName il nome del file audio da riprodurre
+     */
+    public void playMusic(String audioFileName) {
+        try {
+            // Carica il file audio
+            URL musicFileUrl = getClass().getResource("/audio/" + audioFileName);
+            if (musicFileUrl != null) {
+                Media media = new Media(musicFileUrl.toExternalForm());
+                mediaPlayer = new MediaPlayer(media);
+                mediaPlayer.setOnEndOfMedia(new Runnable() {
+                    @Override
+                    public void run() {
+                        mediaPlayer.seek(javafx.util.Duration.ZERO); // Torna all'inizio
+                    }
+                });
+                mediaPlayer.play();
+                mediaPlayer.setVolume(0.7);
+            } else {
+                System.err.println("Impossibile trovare il file audio: " + audioFileName);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Errore durante la riproduzione del file audio.");
+        }
+    }
+
+    /**
+     * Ferma la riproduzione della musica di sottofondo.
+     */
+    public void stopMusic() {
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+        }
+    }
+
+}
+package com.esame;
+import java.util.List;
+import java.util.ArrayList;
+import javafx.scene.layout.Pane;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
+/**
+ * Questa classe gestisce il controllo delle bombe nel gioco.
+ * Mantiene una mappa delle bombe attive e delle loro Views e fornisce metodi per piazzare, detonare e aggiornare le bombe.
+ */
+public class BombController {
+    
+    /**
+     * La lista delle bombe attive.
+     */
+    private List<BombModel> bombList = new ArrayList<>();
+
+    /**
+     * Pannello in cui vengono visualizzate le bombe.
+     */
+    private Pane pane;
+
+    /**
+     * Il modello dello stage.
+     */
+    private StageModel stage;
+
+    /**
+     * La coordinata x corrente del giocatore.
+     */
+    private IntegerProperty currentX = new SimpleIntegerProperty();
+
+    /**
+     * La coordinata y corrente del giocatore.
+     */
+    private IntegerProperty currentY = new SimpleIntegerProperty();
+
+
+    /**
+     * Il numero massimo di bombe che il giocatore può piazzare.
+     */
+    private IntegerProperty maxBombs = new SimpleIntegerProperty();
+
+
+    /**
+     * Il raggio di esplosione delle bombe.
+     */
+    private IntegerProperty bombRadius = new SimpleIntegerProperty();
+
+
+    /**
+     * Questa classe rappresenta il controller delle bombe nel gioco.
+     * Si occupa di gestire la posizione e la detonazione delle bombe
+     * in base al modello del bomberman.
+     *
+     * @param playerModel il modello del giocatore
+     * @param pane il pannello in cui vengono visualizzate le bombe
+     */
+    public BombController(PlayerModel playerModel, Pane pane) {
+        currentX.bind(playerModel.centerXProperty());
+        currentY.bind(playerModel.centerYProperty());
+        maxBombs.bind(playerModel.bombCapacityProperty());
+        bombRadius.bind(playerModel.bombRadiusProperty());
+        this.pane = pane;
+        this.stage = playerModel.getStage();
+    }
+
+    
+    /**
+    * Gestisce l'input per piazzare una bomba.
+    * Se il numero di bombe presenti sulla mappa è inferiore al numero massimo consentito,
+    * viene calcolata la posizione della bomba in base alla posizione corrente del giocatore.
+    * Se è possibile piazzare la bomba nella posizione calcolata, la bomba viene aggiunta alla 
+    * mappa delle bombe, insieme alla sua view, e viene riprodotto un effetto sonoro.
+    */
+    public void input() {
+        if (bombList.size() < maxBombs.get()) {
+            int[] startPosition = stage.getTileStartCoordinates(currentX.get(), currentY.get());
+            if (stage.addBombAtPosition(startPosition[0], startPosition[1], bombRadius.get())) {
+                AudioUtils.playSoundEffect("PlaceBomb.mp3");
+                BombModel bomb = stage.getBombAtPosition(startPosition[0], startPosition[1]);
+                BombView bombView = new BombView(pane, stage.getTileSize());
+                bomb.addListener(bombView);
+                bombList.add(bomb);
+            }
+        }
+    }
+
+    /**
+     * Questo metodo controlla se una bomba può distruggere una casella (una Tile) in una determinata posizione.
+     * Restituisce true se la casella può essere distrutta, altrimenti restituisce false.
+     *
+     * @param bomb l'oggetto BombModel che rappresenta la bomba
+     * @param x la coordinata x della posizione della casella
+     * @param y la coordinata y della posizione della casella
+     * @return true se la casella può essere distrutta, altrimenti false
+     */
+    public boolean destroyLimit(BombModel bomb, int x, int y) {
+        // uso le stringe perche' se uso int[], equals non funziona bene (cerca il riferimento)
+        Tile tile = stage.getTile(x, y);
+        if (tile == null) return true; // Tile is out of bounds
+        // the tile is destructible
+        else if (!tile.isDestructible()) {
+            return true;
+        }
+        else if (tile.isDetonable()) {
+            bomb.addDetonatePosition(x, y);
+            if (tile instanceof BombModel) {
+                // Se la bomba e' gia' stata esaminata, non la esplodo
+                DetonateBomb((BombModel) tile);
+                return true;
+            }
+            else {
+                stage.destroyTile(x, y);
+                return true;
+            }
+        }
+        bomb.addDetonatePosition(x, y);
+        return false;
+    }
+
+
+    /**
+     * Detona una bomba e distrugge i blocchi nelle direzioni orizzontali e verticali.
+     * 
+     * @param bomb la bomba da far detonare
+     */
+    public void DetonateBomb(BombModel bomb) {
+        AudioUtils.playSoundEffect("BombExplodes.mp3");
+        int blast = bomb.getBlastRadius();
+        int tileX = (int) bomb.getX() / stage.getTileSize();
+        int tileY = (int) bomb.getY() / stage.getTileSize();
+        stage.destroyTile(tileX, tileY);
+        for (int x = -1; x >= -blast; x--) {
+            if (destroyLimit(bomb, tileX + x, tileY)) break;
+        }
+        for (int x = 1; x <= blast; x++) {
+            if (destroyLimit(bomb, tileX + x, tileY)) break;
+        }
+        for (int y = -1; y >= -blast; y--) {
+            if (destroyLimit(bomb, tileX, tileY + y)) break;
+        }
+        for (int y = 1; y <= blast; y++) {
+            if (destroyLimit(bomb, tileX, tileY + y)) break;
+        }
+        bomb.explode();
+    }
+
+
+    /**
+    * Aggiorna tutte le bombe, fa detonare quelle che non sono piu' attive e rimuove le bombe inattive.
+    * 
+    * @param elapsed il tempo trascorso dall'ultimo aggiornamento
+    */
+    public void updateState(double elapsed) {
+        // Update all bombs
+        bombList.forEach(bomb -> bomb.updateState(elapsed));
+        // Detonate bombs that not active anymore
+        bombList.stream()
+            .filter(bomb -> !bomb.isActive())
+            .forEach(bomb -> DetonateBomb(bomb));
+        // Remove inactive bombs
+        bombList.removeIf(bomb -> !bomb.isActive());
+    }
+}
+package com.esame;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Questa classe rappresenta il modello di una bomba nel gioco JBomberman.
+ * Estende la classe EmptyTile e contiene informazioni sulla posizione, raggio di esplosione,
+ * stato di attivazione, timer e altre proprietà della bomba.
+ */
+public class BombModel extends EmptyTile implements Observable{
+
+    /*
+    * La lista delle BombViews che osservano il modello observer della classe.
+    */
+    private List<BombView> observers = new ArrayList<>();
+
+    /**
+     * La lista delle posizioni detonate dalla bomba.
+     */
+    private List<String> detonatePositions = new ArrayList<>();
+
+    /**
+     * Il raggio di esplosione della bomba.
+     */
+    private int blastRadius = 1; // Default blast radius
+
+    /**
+     * La proprietà booleana di JavaFX che rappresenta lo stato di attivazione della bomba.
+     */
+    private BooleanProperty active = new SimpleBooleanProperty(true); // Bomb is active by default  
+
+    /**
+     * Il timer della bomba.
+     */
+    private final double totalTime = 3; // Bomb timer in seconds
+
+    /**
+     * Il timer della bomba.
+     */
+    private double timer = totalTime; // Bomb timer in seconds
+
+    /**
+     * Il tempo in cui la bomba è camminabile.
+     */
+    private double walkableTime = totalTime / 5; // time on which you can walk on the bomb
+
+    /**
+     * Costruttore della classe BombModel.
+     * Crea un oggetto BombModel con le coordinate x e y specificate e il raggio di esplosione.
+     *
+     * @param x la coordinata x della bomba
+     * @param y la coordinata y della bomba
+     * @param radius il raggio di esplosione della bomba
+     */
+    public BombModel(int x, int y, int radius) {
+        super(x, y);
+        blastRadius = radius;
+    }
+
+    /**
+     * Costruttore della classe BombModel.
+     * Crea un oggetto BombModel con le coordinate x e y specificate, il raggio di esplosione e il timer.
+     *
+     * @param x la coordinata x della bomba
+     * @param y la coordinata y della bomba
+     * @param radius il raggio di esplosione della bomba
+     * @param time il timer della bomba
+     */
+    public BombModel(int x, int y, int radius, double time) {
+        super(x, y);
+        blastRadius = radius;
+        time = timer;
+    }
+
+    /**
+     * Restituisce true se la bomba è detonabile, altrimenti restituisce false.
+     *
+     * @return true se la bomba è detonabile, altrimenti false
+     */
+    public boolean isDetonable() {
+        return true;
+    }
+
+    /**
+     * Restituisce il raggio di esplosione della bomba.
+     *
+     * @return il raggio di esplosione della bomba
+     */
+    public int getBlastRadius() {
+        return blastRadius;
+    }
+
+    /**
+     * Restituisce la proprietà booleana di JavaFX che rappresenta lo stato di attivazione della bomba.
+     *
+     * @return la proprietà booleana JavaFX che rappresenta lo stato di attivazione della bomba
+     */
+    public BooleanProperty activeProperty() {
+        return active;
+    }
+
+    /**
+     * Restituisce true se la bomba è attiva, altrimenti restituisce false.
+     *
+     * @return true se la bomba è attiva, altrimenti false
+     */
+    public boolean isActive() {
+        return active.get();
+    }
+
+    /**
+     * Questo metodo "esplode" la bomba, disattivandola e impostando il timer a 0.
+     */
+    public void explode() {
+        active.set(false);
+        setTimer(0);
+        notifyListeners();
+    }
+
+    /**
+     * Restituisce il timer della bomba.
+     *
+     * @return il timer della bomba
+     */
+    public double getTimer() {
+        return timer;
+    }
+
+    /**
+     * Imposta il timer della bomba.
+     *
+     * @param time il timer della bomba
+     */
+    public void setTimer(double time) {
+        timer = time;
+    }
+
+    /**
+     * Restituisce true se la bomba è camminabile, altrimenti restituisce false.
+     *
+     * @return true se la bomba è camminabile, altrimenti false
+     */
+    public double getTotalTime() {
+        return totalTime;
+    }
+
+    /**
+     * Restituisce la lista delle posizioni detonate dalla bomba.
+     *
+     * @return la lista delle posizioni detonate dalla bomba
+     */
+    public List<String> getDetonatePositions() {
+        return detonatePositions;
+    }
+
+    /**
+     * Aggiunge una posizione alla lista delle posizioni detonate dalla bomba.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     */
+    public void addDetonatePosition(int x, int y) {
+        detonatePositions.add(x + "," + y);
+    }
+
+    /**
+     * Restituisce true se la bomba contiene una posizione detonata specificata, altrimenti restituisce false.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return true se la lista delle posizioni detonate contiene le coordinate di input, altrimenti false
+     */
+    public boolean containsDetonatePosition(int x, int y) {
+        return detonatePositions.contains(x + "," + y);
+    }
+    
+    /**
+     * Aggiunge un osservatore alla lista degli osservatori della bomba.
+     * 
+     * @param observer l'osservatore da aggiungere
+     */
+    public void addListener(InvalidationListener observer) {
+        observers.add((BombView) observer);
+    }
+
+    /**
+     * Rimuove un osservatore dalla lista degli osservatori della bomba.
+     * 
+     * @param observer l'osservatore da rimuovere
+     */
+    public void removeListener(InvalidationListener observer) {
+        observers.remove((BombView) observer);
+    }
+
+    /**
+     * Notifica tutti gli osservatori della bomba.
+     */
+    public void notifyListeners() {
+        for (BombView observer : observers) {
+            observer.update(this);
+        }
+    }
+
+    /**
+    * Aggiorna lo stato della bomba.
+    * 
+    * @param elapsed il tempo trascorso dall'ultimo aggiornamento in millisecondi
+    */
+    public void updateState(double elapsed) {
+        notifyListeners();
+        if (isActive()) {
+            timer -= elapsed;
+            walkableTime -= elapsed;
+            if (walkableTime <= 0) {
+                setWalkable(false);
+            }
+            if (timer <= 0) {
+                // Bomb should explode
+                explode();
+            }
+        }
+        notifyListeners();
+    }
+}
+package com.esame;
+import javafx.beans.InvalidationListener;
+
+/**
+ * Questa interfaccia rappresenta un osservatore dello stato della bomba
+ */
+public interface BombObserver extends InvalidationListener{
+    
+    /**
+     * Metodo chiamato quando lo stato della bomba viene aggiornato.
+     * 
+     * @param bombModel la bomba che ha aggiornato il suo stato
+     */
+    void update(BombModel bombModel);
+}
+package com.esame;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
+import javafx.util.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.beans.Observable;
+
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.geometry.Rectangle2D;
+// import javafx.beans.Observable;
+// import javafx.beans.property.SimpleBooleanProperty;
+// import javafx.beans.property.BooleanProperty;
+
+/**
+ * Questa classe rappresenta la vista di una bomba nel gioco Bomberman.
+ * La classe gestisce l'animazione della bomba e l'esplosione quando la bomba diventa inattiva.
+ */
+public class BombView implements BombObserver{
+
+    /**
+     * L'ImageView della bomba.
+     */
+    private ImageView bombSprite;
+
+    /**
+     * L'animazione della bomba.
+     */
+    private Timeline bombAnimation = null;
+
+    /**
+     * La dimensione di un singolo tile.
+     */
+    private int size;
+
+    /**
+     * Il pannello in cui visualizzare la bomba.
+     */
+    private Pane pane;
+
+    /**
+     * Se la bomba e' stata attivata.
+     */
+    private boolean activated = false;
+
+    /**
+     * Crea una nuova istanza di BombView.
+     * 
+     * @param pane il pannello in cui visualizzare la bomba
+     * @param size la dimensione della dimensione di un singolo tile
+     */
+    public BombView(Pane pane, int size) {
+        this.pane = pane;
+        this.size = size;
+        // Assuming the sprite sheet is in the same package as the BombView
+        Image image = new Image(getClass().getResourceAsStream("/sprites/bomb.png"));
+        bombSprite = new ImageView(image);
+        // Set the initial viewport to show the first sprite
+        bombSprite.setViewport(new Rectangle2D(0, 0, 16, 16));
+
+        /* USING JAVAFX PROPERTY INSTEAD OF OBSERVABLE PATTERN CODE */
+        // active.bind(bombModel.activeProperty());
+        // // Bind the ImageView's position to the model's position
+        // bombSprite.layoutXProperty().set(bombModel.getX());
+        // bombSprite.layoutYProperty().set(bombModel.getY());
+    }
+
+    /**
+     * Crea e riproduce un'animazione della bomba.
+     *
+     * @param bomb il modello della bomba
+     */
+    public void startBombAnimation(BombModel bomb) {
+        double totalTime = bomb.getTotalTime();
+        // Animation timer to cycle through the sprites
+        double frameTime = totalTime / 10; // Time to cycle through all sprites
+        bombAnimation = new Timeline(
+            new KeyFrame(Duration.seconds(0), e -> bombSprite.setViewport(new Rectangle2D(0, 0, 16, 16))),
+            new KeyFrame(Duration.seconds(frameTime * 2), e -> bombSprite.setViewport(new Rectangle2D(17, 0, 16, 16))),
+            new KeyFrame(Duration.seconds(frameTime * 3), e -> bombSprite.setViewport(new Rectangle2D(34, 0, 16, 16)))
+        );
+        bombSprite.layoutXProperty().set(bomb.getX());
+        bombSprite.layoutYProperty().set(bomb.getY());
+        bombAnimation.setCycleCount(Animation.INDEFINITE);
+        bombAnimation.setAutoReverse(true);
+        bombAnimation.play();
+        addToPane();
+    }
+
+    /**
+     * Crea e riproduce un'animazione dell'esplosione della bomba.
+     * 
+     * @param model il modello della bomba
+     */
+    public void playExplosionAnimation(BombModel model) { 
+        int radius = model.getBlastRadius();
+        Image explosionImage = new Image(getClass().getResourceAsStream("/sprites/explosion.png"));
+        // List to hold all explosion sprites
+        List<ImageView> explosionSprites = new ArrayList<>();
+        // Assuming the bomb is placed in the center of the tile
+        int bombX = (int) bombSprite.layoutXProperty().get();
+        int bombY = (int) bombSprite.layoutYProperty().get();
+        int tileX = (int) bombX / size;
+        int tileY = (int) bombY / size;
+
+        // Generate explosion at the bomb position
+        ImageView mainExplosionSprite = new ImageView(explosionImage);
+        mainExplosionSprite.setViewport(new Rectangle2D(32, 32, size, size)); // Set to the initial frame
+        mainExplosionSprite.layoutXProperty().set(bombX); // Centering the explosion sprite
+        mainExplosionSprite.layoutYProperty().set(bombY);
+        explosionSprites.add(mainExplosionSprite);
+        pane.getChildren().add(mainExplosionSprite);
+
+        // Generate explosion on the positive x axis
+        int max_dx = radius;
+        for (int dx = 1; dx <= radius; dx++) {
+            if (model.containsDetonatePosition(tileX + dx, tileY)) {
+                // Check the explosion to display
+                if (!model.containsDetonatePosition(tileX + dx + 1, tileY)) {
+                    max_dx = dx;
+                }
+                    ImageView explosionSprite = new ImageView(explosionImage);
+                    int rect_x = 3;
+                    int rect_y = 2;
+                    if (dx == max_dx) {
+                        rect_x = 4;
+                    }
+                    explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
+                    explosionSprite.layoutXProperty().set(bombX + dx * size); // Centering the explosion sprite
+                    explosionSprite.layoutYProperty().set(bombY);
+                    explosionSprites.add(explosionSprite);
+                    pane.getChildren().add(explosionSprite);
+                }
+            else break;
+            if (dx == max_dx) break;
+        }
+
+        // Generate explosion on the negative x axis
+        int min_dx = -radius;
+        for (int dx = -1; dx >= -radius; dx--) {
+            // Check the explosion to display
+            if (model.containsDetonatePosition(tileX + dx, tileY)) {
+                if (!model.containsDetonatePosition(tileX + dx - 1, tileY)) {
+                    min_dx = dx;
+                }
+                ImageView explosionSprite = new ImageView(explosionImage);
+                int rect_x = 1;
+                int rect_y = 2;
+                if (dx == min_dx) {
+                    rect_x = 0;
+                }
+                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
+                explosionSprite.layoutXProperty().set(bombX + dx * size); // Centering the explosion sprite
+                explosionSprite.layoutYProperty().set(bombY);
+                explosionSprites.add(explosionSprite);
+                pane.getChildren().add(explosionSprite);
+            }
+            else break;
+            if (dx == min_dx) break;
+        }
+
+        // Generate explosion on the positive y axis
+        int max_dy = radius;
+        for (int dy = 1; dy <= radius; dy++) {
+            // Check the explosion to display
+            if (model.containsDetonatePosition(tileX, tileY + dy)) {
+                if (!model.containsDetonatePosition(tileX, tileY + dy + 1)) {
+                    max_dy = dy;
+                }
+                ImageView explosionSprite = new ImageView(explosionImage);
+                int rect_x = 2;
+                int rect_y = 3;
+                if (dy == max_dy) {
+                    rect_y = 4;
+                }
+                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
+                explosionSprite.layoutXProperty().set(bombX); // Centering the explosion sprite
+                explosionSprite.layoutYProperty().set(bombY + dy * size);
+                explosionSprites.add(explosionSprite);
+                pane.getChildren().add(explosionSprite);
+            }
+            else break;
+            if (dy == max_dy) break;
+        }
+
+        // Generate explosion on the negative y axis
+        int min_dy = -radius;
+        for (int dy = -1; dy >= -radius; dy--) {
+            // Check the explosion to display
+            if (model.containsDetonatePosition(tileX, tileY + dy)) {
+                if (!model.containsDetonatePosition(tileX, tileY + dy - 1)){
+                    min_dy = dy;
+                }
+                ImageView explosionSprite = new ImageView(explosionImage);
+                int rect_x = 2;
+                int rect_y = 1;
+                if (dy == min_dy) {
+                    rect_y = 0;
+                }
+                explosionSprite.setViewport(new Rectangle2D(rect_x * size, rect_y * size, size, size)); // Set to the initial frame
+                explosionSprite.layoutXProperty().set(bombX); // Centering the explosion sprite
+                explosionSprite.layoutYProperty().set(bombY + dy * size);
+                explosionSprites.add(explosionSprite);
+                pane.getChildren().add(explosionSprite);
+            }
+            else break;
+            if (dy == min_dy) break;
+        }
+    
+        double frameTime = model.getTotalTime() / 25; // Time between each frame of the explosion animation
+        // Create and play the explosion animation
+        Timeline explosionAnimation = new Timeline();
+        for (int frameIndex = 0; frameIndex < 5; frameIndex++) { // For each frame of the explosion
+            final int index = frameIndex;
+            explosionAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(index * frameTime), e -> {
+                for (ImageView sprite : explosionSprites) {
+                    Rectangle2D viewport = sprite.getViewport();
+                    sprite.setViewport(new Rectangle2D(viewport.getMinX() + 16 * 5 * index, viewport.getMinY(), size, size));
+                }
+            }));
+        }
+        explosionAnimation.setOnFinished(e -> explosionSprites.forEach(sprite -> pane.getChildren().remove(sprite))); // Remove sprites after animation
+        explosionAnimation.play();
+    }
+    
+    /**
+     * Restituisce l'ImageView della bomba.
+     *
+     * @return l'ImageView della bomba
+     */
+    public ImageView getbombSprite() {
+        return bombSprite;
+    }
+
+    /**
+     * Aggiunge l'ImageView della bomba al pannello.
+     */
+    public void addToPane() {
+        pane.getChildren().add(getbombSprite());
+    }
+
+    /**
+     * Rimuove l'ImageView della bomba dal pannello se l'osservable bomba è stato invalidato.
+     */
+    @Override
+    public void invalidated(Observable observable) {
+        // Update the ImageView's position to match the model's position
+        pane.getChildren().remove(bombSprite);
+    }
+
+    /**
+     * Aggiorna la View della bomba. Se la bomba non è attiva, riproduce l'animazione dell'esplosione
+     * e rimuove l'ImageView della bomba dal pannello.
+     */
+    public void update(BombModel model) {
+        // Controllo se la bomba è attiva
+        if (!model.isActive()) {
+            // se non e' attiva, esplodo la bomba
+            playExplosionAnimation(model);
+            pane.getChildren().remove(bombSprite);
+            }
+        // se la bomba e' attiva e non e' stata attivata, inizio l'animazione della bomba
+        else if (!activated) {
+            activated = true;
+            startBombAnimation(model);
+        }
+    }
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta una casella vuota (empty tile) nel gioco.
+ * Estende la classe Tile e implementa le funzionalità specifiche
+ * di una casella vuota.
+ */
+public class EmptyTile extends Tile{
+
+    /*
+     * Il modello dell'entità che occupa la casella.
+     */
+    private EntityModel occupant = null;
+
+    /**
+     * Costruttore della classe EmptyTile.
+     * 
+     * @param x La coordinata x della casella.
+     * @param y La coordinata y della casella.
+     */
+    public EmptyTile(int x, int y) {
+        super(x, y, true, false, true);
+    }
+
+    /**
+     * Verifica se la casella è occupata.
+     * 
+     * @return true se la casella è occupata, false altrimenti.
+     */
+    public boolean isOccupied() {
+        return occupant != null;
+    }
+
+    /**
+     * Verificase la casella è detonabile.
+     * 
+     * @return true se la casella è occupata, false altrimenti.
+     */
+    public boolean isDetonable() {
+        return isOccupied();
+    }
+
+    /**
+     * Ottenere il modello dell'entita' che occupa la casella.
+     * 
+     * @return Il modello dell'entita' che occupa la casella.
+     */
+    public EntityModel getOccupant() {
+        return occupant;
+    }
+
+    /**
+     * Metodo per impostare il modello dell'entita' che occupa la casella.
+     * 
+     * @param occupant Il modello dell'entita' che occupa la casella.
+     */
+    public void setOccupant(EntityModel occupant) {
+        this.occupant = occupant;
+    }
+}package com.esame;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javafx.scene.layout.Pane;
+
+/**
+ * Questa classe rappresenta il controller degli avversari nel gioco.
+ * Gestisce la creazione, l'aggiunta, la rimozione e l'aggiornamento degli avversari.
+ */
+public class EnemiesController {
+
+    /**
+     * La lista degli avversari.
+     */
+    private List<EnemyModel> enemies = new ArrayList<EnemyModel>();
+
+    /**
+     * Costruttore della classe EnemiesController.
+     * 
+     * @param numberOfEnemies il numero di nemici da creare
+     * @param stageModel il modello dello stage di gioco
+     * @param gameLayer il layer di gioco in cui posizionare i nemici
+     * @param level il livello di gioco corrente
+     */
+    public EnemiesController(int numberOfEnemies, StageModel stageModel, Pane gameLayer, int level) {
+        List<int[]> freeTileIndex = stageModel.getFreeTileIndex();
+        Random random = new Random();
+        int i = 1;
+        while (i <= numberOfEnemies) {
+            int randomIndex = random.nextInt(freeTileIndex.size());
+            int[] tileIndex = freeTileIndex.get(randomIndex);
+            if (((EmptyTile) stageModel.getTile(tileIndex[0], tileIndex[1])).getOccupant() != null) {
+                continue;
+            }
+            EnemyModel enemyModel;
+            EntityView enemyView;
+            if ((i % (numberOfEnemies / level )) != 0) { // alternate between enemy types
+                enemyModel = new EnemyModel1(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10,  stageModel);
+                enemyView = new EntityView("enemy1");
+            }
+            else {
+                enemyModel = new EnemyModel2(tileIndex[0] * stageModel.getTileSize(), tileIndex[1] * stageModel.getTileSize() - 10, stageModel);
+                enemyView = new EntityView("enemy2", true, 6);
+            }
+            if (stageModel.getTile(tileIndex[0], tileIndex[1] - 1) instanceof EmptyTile || stageModel.getTile(tileIndex[0], tileIndex[1] + 1) instanceof EmptyTile) {
+                enemyModel.startMoving("UP");
+            } else {
+                enemyModel.startMoving("RIGHT");
+            }
+            enemyModel.addListener(enemyView); // add view as observer
+            gameLayer.getChildren().add(enemyView.getEntitySprite());
+            addEnemy(enemyModel);
+            i++;
+        }
+    }
+
+    /**
+    * Aggiunge un nemico al controller dei nemici.
+    * 
+    * @param enemy il modello del nemico da aggiungere
+    */
+    public void addEnemy(EnemyModel enemy) {
+        enemies.add(enemy);
+    }
+
+    /**
+     * Rimuove un nemico dal controller dei nemici.
+     * 
+     * @param enemy il modello del nemico da rimuovere
+     */
+    public void removeEnemy(EnemyModel enemy) {
+        int index = enemies.indexOf(enemy);
+        if (index != -1) {
+            enemies.remove(index);
+        }
+    }
+
+    /**
+     * Ottiene la lista dei nemici.
+     * 
+     * @return la lista dei nemici
+     */
+    public List<EnemyModel> getEnemies() {
+        return enemies;
+    }
+
+
+    /**
+     * Aggiorna i nemici.
+     * Rimuove i nemici morti.
+     *
+     * @param elapsed il tempo trascorso dall'ultimo aggiornamento
+     */
+    public void updateState(double elapsed) {
+        // update enemy
+        enemies.forEach(enemy -> enemy.updateState(elapsed));
+
+        // Remove dead enemies
+        IntStream.range(0, enemies.size()) //iterate over indices
+            .filter(i -> enemies.get(i).isDead()) // filter, keep only dead enemies
+            .boxed() // convert to Integer
+            .collect(Collectors.toCollection(LinkedList::new)) // collect to LinkedList
+            .descendingIterator() // iterate in reverse order to avoid index shift
+            .forEachRemaining(i -> { // remove dead enemies
+                enemies.remove((int)i);
+            });
+    }
+
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta un nemico nel gioco.
+ * Estende la classe EntityModel e implementa le specifiche
+ * caratteristiche generali di un nemico.
+ */
+public abstract class EnemyModel extends EntityModel {
+
+    /**
+     * Costruttore della classe EnemyModel.
+     * 
+     * @param initialX le coordinate x iniziali del nemico
+     * @param initialY le coordinate y iniziali del nemico
+     * @param boundingBox il bounding box dell'entità
+     * @param boundingOffset l'offset del bounding box
+     * @param life la vita iniziale del nemico
+     * @param stage il modello dello stage di gioco
+     */
+    public EnemyModel(int initialX, int initialY, int[] boundingBox, int[] boundingOffset, int life, StageModel stage) {
+        super(initialX, initialY, boundingBox, boundingOffset, life, stage);
+    }
+
+
+    /**
+    * Controlla la collisione con un'altra entità.
+    * Se la collisione avviene con un giocatore, il giocatore perde una vita.
+    * 
+    * @param dx lo spostamento sull'asse x
+    * @param dy lo spostamento sull'asse y
+    * @return l'entità con cui si è verificata la collisione (null se non c'è stata collisione)
+    */
+    @Override
+    public EntityModel checkCollision(int dx, int dy) {
+        EntityModel occupant = super.checkCollision(dx, dy);
+        if (occupant instanceof PlayerModel) {
+            occupant.loseLife(1);
+        }
+        notifyListeners();
+        return occupant;
+    }
+
+    /**
+     * Metodo per far muovere il nemico.
+     * 
+     */
+    public abstract void movingBehaviour();
+
+    /**
+     * Aggiorna il modello del nemico.
+     * 
+     * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento in millisecondi
+     */
+    @Override
+    public void updateState(double elapsedTime) {
+        super.updateState(elapsedTime);
+        movingBehaviour();
+        notifyListeners();
+    }
+}
+
+package com.esame;
+
+/**
+ * Questa classe rappresenta il primo tipo di nemico nel gioco.
+ * Estende la classe EnemyModel e cambia il comportamento del nemico.
+ * Il nemico si muove in in una direzione avanti e indietro.
+ */
+public class EnemyModel1 extends EnemyModel {
+
+    /**
+     * Costruttore della classe EnemyModel.
+     * 
+     * @param initialX le coordinate x iniziali del nemico
+     * @param initialY le coordinate y iniziali del nemico
+     * @param stage il modello dello stage di gioco
+     */
+    public EnemyModel1(int initialX, int initialY, StageModel stage) {
+        super(initialX, initialY, new int[] {15, 15}, new int[] {8, 17}, 100, stage);
+    }
+
+    /**
+     * Implementa il comportamento di movimento per il nemico.
+     * Se il nemico non si sta muovendo, inizia a muoversi nella direzione opposta all'ultima direzione.
+     */
+    @Override
+    public void movingBehaviour() {
+        if (!this.isMoving) {
+            this.startMoving(new int[] {-lastDirection[0], -lastDirection[1]});
+        }
+    }
+}
+
+package com.esame;
+
+/**
+ * Questa classe rappresenta il secondo tipo di nemico nel gioco.
+ * Estende la classe EnemyModel e cambia il comportamento del nemico.
+ */
+public class EnemyModel2 extends EnemyModel {
+
+    /**
+     * Costruttore per la classe EnemyModel2.
+     * 
+     * @param initialX la coordinata x iniziale del nemico
+     * @param initialY la coordinata y iniziale del nemico
+     * @param stage il modello dello stage in cui si trova il nemico
+     */
+    public EnemyModel2(int initialX, int initialY, StageModel stage) {
+        super(initialX, initialY, new int[] {15, 15}, new int[] {8, 17}, 200, stage);
+        // Metà della velocità del nemico originale, altrimenti e' troppo difficile da battere
+        this.setVelocity(this.getVelocity() * 0.7);
+    }
+
+    /**
+     * Metodo per togliere vita al nemico. Quando il nemico perde vita, 
+     * si teletrasporta in una casella casuale libera.
+     *
+     * @param amount la quantità di vita da rimuovere
+     */
+    @Override
+    public void loseLife(int amount) {
+        super.loseLife(amount);
+        if (isDead()) return;
+        boolean new_pos = false;
+        // Imposta l'occupante della tile corrente a null
+        ((EmptyTile) getStage().getTileAtPosition((int) this.centerOfMass()[0], (int) this.centerOfMass()[1])).setOccupant(null);
+        while (!new_pos) {
+            int[] randomXY = getStage().getRandomFreeTile();
+            if (getStage().getTile(randomXY[0], randomXY[1]) instanceof EmptyTile && ((EmptyTile) getStage().getTile(randomXY[0], randomXY[1])).getOccupant() == null) {
+                this.xProperty().set(randomXY[0] * getStage().getTileSize() - this.getBoundingBox()[0] / 2);
+                this.yProperty().set(randomXY[1] * getStage().getTileSize() - this.getBoundingBox()[1] / 2);
+                new_pos = true;
+            }
+        }
+        notifyListeners();
+    }
+
+    /**
+     * Metodo per far muovere il nemico.
+     * Il nemico conntrolla in quale direzione si è mosso l'ultima volta e 
+     * si muove in una direzione casuale eccetto tornare indietro.
+     */
+    @Override
+    public void movingBehaviour() {
+        int lastX = lastDirection[0];
+        int lastY = lastDirection[1];
+        // Se il nemico non si sta muovendo, resetta le ultime coordinate
+        if (!isMoving()) {
+            lastX = 0;
+            lastY = 0;
+        }
+        int randomDirection = (int) (Math.random() * 4); // Genera un numero casuale tra 0 e 3
+        // Muove il nemico in una direzione casuale
+        if (randomDirection == 0 && canMoveTo(1, 0) && lastX != -1) {
+            startMoving(1, 0);
+        }
+        else if (randomDirection == 1 && canMoveTo(-1, 0) && lastX != 1) {
+            startMoving(-1, 0);
+        }
+        else if (randomDirection == 2 && canMoveTo(0, -1) && lastY != 1) {
+            startMoving(0, -1);
+        }
+        else if (randomDirection == 3 && canMoveTo(0, 1) && lastY != -1) {
+            startMoving(0, 1);
+        }
+    }
+
+}
+
+package com.esame;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import java.util.List;
+import java.util.ArrayList;
+
+
+/**
+ * Classe astratta che rappresenta il modello di un'entità nel gioco.
+ * Estende la classe XYModel.
+ */
+public abstract class EntityModel extends XYModel implements Observable{
+
+    /**
+     * La lista degli osservatori dello stato dell'entità.
+     */
+    protected List<EntityStateObserver> observers = new ArrayList<>();
+
+    /**
+     * La vita dell'entità.
+     */
+    protected final IntegerProperty life = new SimpleIntegerProperty(100);
+
+    /**
+     * La velocità dell'entità.
+     */
+    protected final DoubleProperty velocity = new SimpleDoubleProperty(1);
+
+    /**
+     * La coordinata X del centro dell'entità.
+     */
+    protected IntegerProperty centerX = new SimpleIntegerProperty();
+
+    /**
+     * La coordinata Y del centro dell'entità.
+     */
+    protected IntegerProperty centerY = new SimpleIntegerProperty();
+
+    /**
+     * Il tempo trascorso dall'ultimo movimento.
+     */
+    protected double timeSinceLastMove = 0.0;
+
+    /**
+     * Il tempo di ritardo tra i movimenti.
+     */
+    protected double delayMove = 0.05; // Time in seconds between moves
+
+    /**
+     * La bounding box dell'entità.
+     */
+    protected final int[] boundingBox = {0, 0};
+
+    /**
+     * L'offset della bounding box.
+     */
+    protected final int[] boundingOffset = {0, 0};
+
+    /**
+     * Indica se l'entità si sta muovendo.
+     */
+    protected boolean isMoving = false;
+
+    /**
+     * L'ultima direzione dell'entità.
+     */
+    protected int[] lastDirection = {0, 0};
+
+    /**
+     * Lo stage di appartenenza dell'entità.
+     */
+    protected StageModel stage;
+
+    /**
+     * Le caselle occupate dall'entità.
+     */
+    protected ArrayList<EmptyTile> occupiedTiles = new ArrayList<>();
+
+    /**
+     * Costruisce un nuovo oggetto EntityModel con la posizione (x, y) specificata e lo stage di appartenenza.
+     * 
+     * @param x la coordinata x dell'entità
+     * @param y la coordinata y dell'entità
+     * @param stage lo stage di appartenenza dell'entità
+     */
+    public EntityModel(int x, int y, StageModel stage) {
+        this(x, y, new int[] {16, 16}, new int[] {16, 16}, 100, null);
+    }
+
+    /**
+     * Costruisce un nuovo oggetto EntityModel con la posizione (x, y) specificata, lo stage di appartenenza e la vita iniziale.
+     * 
+     * @param x la coordinata x dell'entità
+     * @param y la coordinata y dell'entità
+     * @param boundingBox l'array {x, y} che rappresenta la bounding box dell'entità
+     * @param boundingOffset l'array {x, y} che rappresenta l'offset della bounding box
+     * @param life la vita iniziale dell'entità
+     * @param stage lo stage di appartenenza dell'entità
+     */
+    public EntityModel(int x, int y, int[] boundingBox, int[] boundingOffset,  int life, StageModel stage) {
+        super(x, y);
+        this.stage = stage;
+        this.life.set(life);
+        if (boundingBox!=null && boundingOffset.length == 2){
+            this.boundingBox[0] = boundingBox[0];
+            this.boundingBox[1] = boundingBox[1];
+        }
+        if (boundingOffset!=null && boundingOffset.length == 2){
+            this.boundingOffset[0] = boundingOffset[0];
+            this.boundingOffset[1] = boundingOffset[1];
+        }
+        centerX.bind(this.x.add(this.boundingOffset[0]));
+        centerY.bind(this.y.add(this.boundingOffset[1]));
+        setOccupiedTiles();
+    }
+
+
+    /**
+     * Aggiunge un osservatore dello stato dell'entità.
+     * 
+     * @param listener l'osservatore da aggiungere
+     */
+    @Override
+    public void addListener(InvalidationListener listener) {
+        observers.add((EntityStateObserver) listener);
+    }
+
+    /**
+     * Rimuove un osservatore dello stato dell'entità.
+     * 
+     * @param listener l'osservatore da rimuovere
+     */
+    @Override
+    public void removeListener(InvalidationListener listener) {
+        observers.remove((EntityStateObserver) listener);
+    }
+
+    /**
+     * Notifica gli osservatori sullo stato dell'entità.
+     */
+    protected void notifyListeners() {
+        for (EntityStateObserver observer : observers) {
+            observer.update(this);
+        }
+    }
+
+    /**
+     * Toglie vita all'entità.
+     * 
+     * @param amount la quantità di vita da rimuovere
+     */
+    public void loseLife(int amount) {
+        AudioUtils.playSoundEffect("LoseLife.mp3");
+        this.life.set(getLife() - amount);
+        if (isDead()) {
+            clearOccupiedTiles();
+        }
+        notifyListeners();
+    }
+
+    /**
+     * Controlla se l'entità è morta.
+     * 
+     * @return true se l'entità è morta, false altrimenti
+     */
+    public boolean isDead() {
+        return getLife() <= 0;
+    }
+
+    /**
+     * Imposta la vita dell'entità.
+     * 
+     * @param amount la quantità di vita da impostare
+     */
+    public void setLife(int amount) {
+        this.life.set(amount);
+        notifyListeners();
+    }
+
+    /**
+     * Ritorna la proprietà della vita dell'entità.
+     * (il IntegerProperty è un tipo di ObservableValue che contiene un valore di tipo int)
+     * 
+     * @return l' IntegerProperty della vita 
+     */
+    public int getLife() {
+        return life.get();
+    }
+
+
+    /**
+     * Ritorna la proprietà della velocita' dell'entità.
+     * (il DoubleProperty è un tipo di ObservableValue che contiene un valore di tipo double)
+     * 
+     * @return il DoubleProperty della velocità 
+     */
+    public DoubleProperty velocityProperty() {
+        return velocity;
+    }
+
+    /**
+     * Ritorna la velocità dell'entità.
+     * 
+     * @return la velocità dell'entità
+     */
+    public double getVelocity() {
+        return velocity.get();
+    }
+
+    /**
+     * Imposta la velocità dell'entità.
+     * 
+     * @param velocity la velocità da impostare
+     */
+    public void setVelocity(double velocity) {
+        this.velocity.set(velocity);
+        notifyListeners();
+    }
+
+    /**
+     * Restituisce il modello dello stage.
+     *
+     * @return il modello dello stage
+     */
+    public StageModel getStage() {
+        return stage;
+    }
+
+    /**
+     * Restituisce la bounding box dell'entità.
+     *
+     * @return l'array {x,y} che rappresenta la bounding box dell'entità
+     */
+    public int[] getBoundingBox() {
+        return boundingBox;
+    }
+
+    /**
+     * Restituisce l'offset della bounding box.
+     *
+     * @return l'array {x,y} che rappresenta l'offset della bounding box
+     */
+    public int[] getBoundingOffset() {
+        return boundingOffset;
+    }
+
+    /**
+     * Restituisce l'ultima direzione dell'entità.
+     *
+     * @return l'array {x,y} che rappresenta l'ultima direzione dell'entità
+     */
+    public int[] getLastDirection() {
+        return lastDirection;
+    }
+
+    /**
+     * Restituisce una stringa che rappresenta l'ultima direzione dell'entità.
+     *
+     * @return la stringa che rappresenta l'ultima direzione dell'entità
+     */
+    public String getLastDirectionString() {
+        if (lastDirection[0] == 0 && lastDirection[1] == -1) return "UP";
+        else if (lastDirection[0] == 0 && lastDirection[1] == 1) return "DOWN";
+        else if (lastDirection[0] == -1 && lastDirection[1] == 0) return "LEFT";
+        else if (lastDirection[0] == 1 && lastDirection[1] == 0) return "RIGHT";
+        else return "";
+    }
+
+    /**
+     * Restituisce true se l'entità si sta muovendo, altrimenti restituisce false.
+     *
+     * @return true se l'entità si sta muovendo, altrimenti false.
+     */
+    public boolean isMoving() {
+        return isMoving;
+    }
+
+    /**
+     * Imposta il bounding box dell'entità.
+     *
+     * @param boundingBox un array di interi contenente le coordinate del bounding box
+     */
+    public void setBoundingBox(int[] boundingBox) {
+        this.boundingBox[0] = boundingBox[0];
+        this.boundingBox[1] = boundingBox[1];
+    }
+
+    /**
+     * Imposta l'offset di delimitazione dell'entità.
+     *
+     * @param boundingOffset l'array contenente l'offset di delimitazione dell'entità, con il primo elemento rappresentante l'offset sull'asse x e il secondo elemento rappresentante l'offset sull'asse y
+     */
+    public void setBoundingOffset(int[] boundingOffset) {
+        this.boundingOffset[0] = boundingOffset[0];
+        this.boundingOffset[1] = boundingOffset[1];
+    }
+
+    /**
+     * Imposta la mappa do gioco (stage) per l'entità.
+     *
+     * @param stage il modello dello stage
+     */
+    public void setStage(StageModel stage) {
+        this.stage = stage;
+        notifyListeners();
+    }
+
+    /**
+     * Restituisce la proprietà SimpleIntegerProperty della coordinata X del centro dell'entità.
+     *
+     * @return la proprietà centerX come SimpleIntegerProperty
+     */
+    public SimpleIntegerProperty centerXProperty() {
+        return (SimpleIntegerProperty) centerX;
+    }
+
+    /**
+     * Restituisce la proprietà SimpleIntegerProperty della coordinata Y del centro dell'entità.
+     *
+     * @return la proprietà centerY come SimpleIntegerProperty
+     */
+    public SimpleIntegerProperty centerYProperty() {
+        return (SimpleIntegerProperty) centerY;
+    }
+
+    /**
+     * Restituisce la coordinata X del centro dell'entità.
+     *
+     * @return la coordinata X del centro dell'entità
+     */
+    public int getCenterX() {
+        return centerX.get();
+    }
+
+    /**
+     * Restituisce la coordinata Y del centro dell'entità.
+     *
+     * @return la coordinata Y del centro dell'entità
+     */
+    public int getCenterY() {
+        return centerY.get();
+    }
+
+    /**
+     * Calcola il centro di massa dell'entità.
+     *
+     * @return un array di interi contenente le coordinate x e y del centro di massa dell'entità
+     */
+    public int[] centerOfMass() {
+        return new int[] {centerX.get(), centerY.get()};
+    }
+
+    /**
+     * Cancella tutte le caselle occupate.
+     */
+    public void clearOccupiedTiles() {
+        for (EmptyTile tile : occupiedTiles) {
+            tile.setOccupant(null);
+        }
+        occupiedTiles.clear();
+    }
+
+    /**
+     * Occupa le caselle su cui si trova l'entità.
+     */
+    public void setOccupiedTiles() {
+        clearOccupiedTiles();     
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                // skip the cornern tiles {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
+                if (x != 0 && y !=0 && (x == y || x == -y)) continue;
+                int tileX = centerX.get() + x * boundingBox[0] / 2;
+                int tileY = centerY.get() + y * boundingBox[1] / 2;
+                EmptyTile tile = stage.getEmptyTileAtPosition(tileX, tileY);
+                tile.setOccupant(this);
+                occupiedTiles.add(tile);
+            }
+        }
+    }
+
+
+    /**
+     * Sposta l'entità di una determinata quantità nelle direzioni specificate.
+     *
+     * @param dx La quantità di spostamento sull'asse x.
+     * @param dy La quantità di spostamento sull'asse y.
+     */
+    public void move(int dx, int dy) {
+        int x_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dx)); // explicit cast to int
+        int y_move = (int) Math.round(this.velocityProperty().get() * Double.valueOf(dy)); // explicit cast to int
+        if (canMoveTo(dx, dy) && (checkCollision(dx, dy) == null || checkCollision(dx, dy) == this)) {
+            xProperty().set(getX() + x_move);
+            yProperty().set(getY() + y_move);
+            // Update tiles occupancy
+            setOccupiedTiles();
+            notifyListeners();
+        }
+        else isMoving = false;
+    }
+
+    /**
+     * Controlla se la casella in cui l'entita' si vuole muovere e' gia' occupata da un'altra entita'.
+     * 
+     * @param dx la quantita' di spostamento sull'asse x
+     * @param dy la quantita' di spostamento sull'asse y
+     * 
+     * @return l'entita' che occupa la casella in cui l'entita' si vuole muovere
+     */
+    public EntityModel checkCollision(int dx, int dy) {
+        int xSign = Integer.signum(dx);
+        int ySign = Integer.signum(dy);
+        int directionOffset = 3;
+        int tileXCollision = (int) centerX.get() + xSign * boundingBox[0] / 2 + xSign * directionOffset;
+        int tileYCollision = (int) centerY.get()  + ySign * boundingBox[1] / 2 + ySign * directionOffset;
+        return stage.getEmptyTileAtPosition(tileXCollision, tileYCollision).getOccupant();
+    }
+
+    /**
+     * Verifica se l'entità può spostarsi in una determinata direzione.
+     * 
+     * @param dx lo spostamento sull'asse x
+     * @param dy lo spostamento sull'asse y
+     * @return true se l'entità può spostarsi, false altrimenti
+     */
+    protected boolean canMoveTo(int dx, int dy) {
+        int xSign = Integer.signum(dx);
+        int ySign = Integer.signum(dy);
+        int tileX = centerX.get();
+        int tileY = centerY.get() ;
+        int directionOffset = 2;
+        Tile collisionTile;
+        if (dx != 0){
+            int tileXCollision = (int) centerX.get() + xSign * boundingBox[0] / 2 + xSign * directionOffset;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileY);
+            // controlla la tile direttamente sull'asse x della bounding box
+            if (!collisionTile.isWalkable()) return false;
+            // scontro col bordo di una tile mentre sopra non c'e' nulla --> e' uno spigolo e bisogna fermarsi
+            int tileYCollision = (int) centerY.get()  - boundingBox[1] / 2;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
+            tileYCollision = (int) centerY.get()  + boundingBox[1] / 2;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileX, tileYCollision) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
+        }
+        // stessa cosa se lo spostamento e' sull'asse y
+        else if (dy != 0){
+            int tileYCollision = (int) centerY.get() + ySign * boundingBox[1] / 2 + ySign * directionOffset;
+            collisionTile = stage.getTileAtPosition(tileX, tileYCollision);
+            if (!collisionTile.isWalkable()) return false;
+            int tileXCollision = (int) centerX.get() - boundingBox[0] / 2;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
+            tileXCollision = (int) centerX.get() + boundingBox[0] / 2;
+            collisionTile = stage.getTileAtPosition(tileXCollision, tileYCollision);
+            if (stage.getTileAtPosition(tileXCollision, tileY) instanceof EmptyTile && !collisionTile.isWalkable()) return false;
+        }
+        return true; // in tutte le direzioni della bouinding box non c'e' collisione
+    }
+
+
+    /**
+     * Avvia il movimento dell'entità nella direzione specificata.
+     *
+     * @param direction un array di interi che rappresenta la direzione del movimento.
+     *                  L'elemento in posizione 0 rappresenta la direzione sull'asse x,
+     *                  mentre l'elemento in posizione 1 rappresenta la direzione sull'asse y.
+     */
+    public void startMoving(int[] direction) {
+            lastDirection[0] = direction[0];
+            lastDirection[1] = direction[1];
+            isMoving = true;
+            if (direction[0] == 0 && direction[1] == 0) {
+                isMoving = false;
+            }
+    }
+
+    /**
+     * Avvia il movimento dell'entità nella direzione specificata.
+     *
+     * @param dx lo spostamento sull'asse x
+     * @param dy lo spostamento sull'asse y
+     */
+    public void startMoving(int dx, int dy) {
+        lastDirection[0] = dx;
+        lastDirection[1] = dy;
+        isMoving = true;
+        if (dx == 0 && dy == 0) {
+            isMoving = false;
+        }
+}
+
+    /**
+     * Avvia il movimento dell'entità nella direzione specificata.
+     *
+     * @param direction la direzione del movimento (UP, DOWN, LEFT, RIGHT)
+     */
+    public void startMoving(String direction) {
+        switch (direction) {
+            case "UP":
+                lastDirection[0] = 0;
+                lastDirection[1] = -1;
+                isMoving = true;
+                break;
+            case "DOWN":
+                lastDirection[0] = 0;
+                lastDirection[1] = 1;
+                isMoving = true;
+                break;
+            case "LEFT":
+                lastDirection[0] = -1;
+                lastDirection[1] = 0;
+                isMoving = true;
+                break;
+            case "RIGHT":
+                lastDirection[0] = 1;
+                lastDirection[1] = 0;
+                isMoving = true;
+                break;
+            default:
+                isMoving = false;
+                break;
+        }
+    }
+
+    /**
+    * Ferma il movimento dell'entità.
+    */
+    public void stopMoving() {
+        isMoving = false;
+        notifyListeners();
+    }
+
+    /**
+     * Aggiorna il modello dell'entità.
+     * 
+     * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
+     */
+    public void updateState(double elapsedTime){
+        if (isDead()) {
+            return;
+        }
+        timeSinceLastMove += elapsedTime;
+        // il tempo di delay viene diviso per la velocita' in modo da diminuire se aumenta la velocita'
+        if (isMoving && timeSinceLastMove >= delayMove / velocity.get()) {
+            move(lastDirection[0], lastDirection[1]);
+            timeSinceLastMove = 0.0; // Reset the timer
+        }
+        notifyListeners();
+    }
+
+}
+package com.esame;
+
+import javafx.beans.InvalidationListener;
+
+/**
+ * Questa interfaccia rappresenta un osservatore dello stato di una entita'.
+ * Gli osservatori dello stato delle entita' possono essere registrati per ricevere
+ * notifiche quando lo stato di un'entita' cambia.
+ */
+public interface EntityStateObserver extends InvalidationListener {
+    
+    /**
+     * Metodo chiamato quando lo stato dell'entita' viene aggiornato.
+     * 
+     * @param entityModel l'entita' che ha aggiornato il suo stato
+     */
+    void update(EntityModel entityModel);
+}
+package com.esame;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.geometry.Rectangle2D;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.Observable;
+import javafx.util.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.IntStream;
+
+
+/**
+ * La classe EntityView rappresenta la vista di un'entità nel gioco.
+ * Questa classe gestisce l'immagine sprite dell'entità e fornisce metodi per animare l'entità in diverse direzioni.
+ */
+public class EntityView implements EntityStateObserver{
+
+    /**
+     * L'immagine sprite dell'entità.
+     */
+    private final ImageView EntitySprite;
+
+    /**
+     * L'ultima direzione di movimento dell'entità.
+     */
+    private String lastDirection;
+
+    /**
+     * La mappa delle posizioni degli sprite per le diverse direzioni.
+     */  
+    private Map<String, Integer> directionSprite = new HashMap<>();
+
+    /**
+     * L'animazione della camminata dell'entità.
+     */
+    private Timeline walkAnimation = null;
+
+    /**
+     * Indica se l'animazione dello sprite deve essere riprodotta in modo inverso automaticamente.
+     */
+    private boolean autoReverse = false;
+
+    /**
+     * Il numero di frame dell'animazione dello sprite.
+     */
+    private int frames = 4;
+
+    /**
+     * La riga dello sprite dell'entità.
+     */
+    int row = 0;
+
+    /**
+     * Costruisce una nuova istanza di EntityView.
+     *
+     * @param spriteName  il nome dello sprite dell'entità
+    **/
+    public EntityView(String spriteName)
+    {
+        this(spriteName, false, 4, 0);
+    }
+
+    /**
+     * Costruisce una nuova istanza di EntityView.
+     * 
+     * @param spriteName il nome dello sprite dell'entità
+     * @param autoReverse indica se l'animazione dello sprite deve essere riprodotta in modo inverso automaticamente
+     * @param frames il numero di frame dell'animazione dello sprite
+     */
+    public EntityView(String spriteName, boolean autoReverse, int frames)
+    {
+        this(spriteName, autoReverse, frames, 0);
+    }
+    
+    /**
+     * Costruisce una nuova istanza di EntityView.
+     * 
+     * @param spriteName il nome dello sprite dell'entità
+     * @param autoReverse indica se l'animazione dello sprite deve essere riprodotta in modo inverso automaticamente
+     * @param frames il numero di frame dell'animazione dello sprite
+     * @param row la riga dello sprite dell'entità
+     */
+    public EntityView(String spriteName, boolean autoReverse, int frames, int row) {
+        this.autoReverse = autoReverse;
+        this.frames = frames;
+        this.row = row;
+        // this.spriteName = spriteName;
+        this.directionSprite = new HashMap<String, Integer>() {{
+            put("DOWN",  16 + 16 * frames * 0);
+            put("LEFT",  16 + 16 * frames * 1);
+            put("RIGHT", 16 + 16 * frames * 2);
+            put("UP",    16 + 16 * frames * 3);
+        }};
+
+        // Load the sprite image
+        Image image = new Image(getClass().getResourceAsStream("/sprites/" + spriteName + ".png"));
+        this.EntitySprite = new ImageView(image);
+        
+        // Set the default sprite for the entity
+        EntitySprite.setViewport(new Rectangle2D(directionSprite.get("DOWN") + 16, 24 * row, 16, 24)); 
+
+        /* CODE USED IF USING JAVAFX PROPERTIES INSTEAD OF CLASSIC OBSERVABLE PATTERN */
+        // Bind the ImageView's position to the model's position
+        // EntitySprite.layoutXProperty().bind(model.xProperty());
+        // EntitySprite.layoutYProperty().bind(model.yProperty());
+    }
+
+    /**
+     * Restituisce lo sprite dell'entità come un oggetto ImageView.
+     *
+     * @return lo sprite dell'entità come un oggetto ImageView
+     */
+    public ImageView getEntitySprite() {
+        return EntitySprite;
+    }
+
+    /**
+     * Crea e avvia l'animazione della camminata dell'entità nella direzione specificata.
+     *
+     * @param direction La direzione in cui l'entità deve camminare.
+     * @param velocity La velocità dell'entità.
+     */
+    public void startWalking(String direction, double velocity) {
+        if (lastDirection != direction) {
+            lastDirection = direction;
+            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16, 24 * row, 16, 24)); // Iniziliazza la direzione della view
+            // Stop the current animation if it's running
+            if (walkAnimation != null && walkAnimation.getStatus() == Animation.Status.RUNNING) {
+                walkAnimation.stop();
+            }
+            double animationFrameTime = 0.2 / velocity;
+            walkAnimation = new Timeline();
+            IntStream.range( 0, frames).forEach(i -> {
+                walkAnimation.getKeyFrames().add(
+                    new KeyFrame(Duration.seconds(animationFrameTime * i), e -> EntitySprite.setViewport(new Rectangle2D(directionSprite.get(direction) + 16 * i, 24 * row, 16, 24)))
+                );
+            });
+            walkAnimation.setAutoReverse(autoReverse);
+            walkAnimation.setCycleCount(Animation.INDEFINITE);
+            walkAnimation.play();
+        }
+        if (walkAnimation.getStatus() !=  Animation.Status.RUNNING){
+            walkAnimation.play();
+        }
+    }
+
+    /**
+     * Ferma l'animazione della camminata dell'entità e imposta la vista dell'entità
+     * all'ultima direzione di movimento.
+     */
+    public void stopWalking() {
+        if (walkAnimation != null) {
+            walkAnimation.stop();
+        }
+        if (lastDirection != null) {
+            EntitySprite.setViewport(new Rectangle2D(directionSprite.get(lastDirection) + 16, 24 * row, 16, 24));
+        }
+    }
+
+    /**
+     * Imposta il numero di frames per l'entità.
+     *
+     * @param frames il numero di frames da impostare
+     */
+    public void setFrames(int frames) {
+        this.frames = frames;
+    }
+
+    /**
+     * Rimuove l'ImageView della bomba dal pannello se l'osservable bomba è stato invalidato.
+     */
+    @Override
+    public void invalidated(Observable observable) {
+        EntitySprite.setVisible(false);
+    }
+
+    /**
+     * Aggiorna la vista dell'entità.
+     *
+     * @param model il modello dell'entità
+     */
+    @Override
+    public void update(EntityModel model) {
+        // Update the position of the entity
+        EntitySprite.layoutXProperty().set(model.getX());
+        EntitySprite.layoutYProperty().set(model.getY());
+        if (model.isDead()) {
+            EntitySprite.setVisible(false);
+            return;
+        }
+        if (model.isMoving()) {
+            startWalking(model.getLastDirectionString(), model.velocityProperty().get());
+        }
+        else {
+            stopWalking();
+        }
+    }
+}
+package com.esame;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.animation.AnimationTimer;
+// import stuff to have a dialog box
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.Alert.AlertType;
+import java.util.Optional;
+
+/**
+ * La classe GameApp rappresenta l'applicazione principale del gioco JBomberman.
+ * Estende la classe Application e gestisce l'inizializzazione del gioco, la creazione della scena di gioco,
+ * l'aggiornamento del gioco e la gestione degli eventi.
+ */
+public class GameApp extends Application {
+    
+    /**
+     * I dati del giocatore.
+     */
+    private PlayerData data;
+
+    /**
+     * Il modello dello stage.
+     */
+    private StageModel stageModel;
+
+    /**
+     * Il controller del giocatore.
+     */
+    private PlayerController playerController;
+
+    /**
+     * Il controller delle bombe.
+     */
+    private BombController bombController;
+
+    /**
+     * Il modello del giocatore.
+     */
+    private PlayerModel playerModel;
+
+    /**
+     * Il controller degli avversari.
+     */
+    private EnemiesController enemiesController;
+
+    /**
+     * Il numero di nemici.
+     */
+    private int numberOfEnemies;
+
+    /**
+     * La musica di sottofondo.
+     */
+    private BackgroundMusic backgroundMusic = new BackgroundMusic();
+
+    /**
+        * Inizializza il gioco con i dati del giocatore e il numero di nemici.
+        * 
+        * @param data I dati del giocatore
+        * @param numberOfEnemies Il numero di nemici
+        * @return null
+        */
+    public Void initializeGame(PlayerData data, int numberOfEnemies) {
+        this.data = data;
+        this.numberOfEnemies = numberOfEnemies;
+        return null;
+    }
+
+    /**
+     * Avvia il gioco. Questo metodo viene chiamato quando il gioco e' inizializzato.
+     * Viene avviato il loop del gioco e vengono gestiti gli eventi di morte del giocatore e completamento del livello.
+     * Una volta che il giocatore muore o completa il livello, viene visualizzata una finestra di dialogo
+     * che chiede al giocatore se vuole riprovare, tornare al menu principale o uscire dal gioco.
+     * 
+     * @param primaryStage lo stage principale dell'applicazione
+     */
+    @Override
+    public void start(Stage primaryStage) {        
+        // Setup the game with the provided player data
+        setupGame(primaryStage, data.getLastLevelInt());
+        // Create and start the game loop using AnimationTimer
+        AnimationTimer gameLoop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                // Check for player death or level completion
+                if (playerModel.isDead() || (enemiesController.getEnemies().isEmpty() && playerModel.isOnNextLevelDoor())) {
+                    // Stop the game loop first to prevent any updates while the dialog is shown
+                    playerModel.stopMoving(); 
+                    backgroundMusic.stopMusic();
+                    this.stop();
+                    int current_level = data.getLastLevelInt();
+                    // save the data
+                    if (playerModel.isDead()) {
+                        data.setLostGames(data.getLostGamesInt() + 1);
+                        AudioUtils.playSoundEffect("GameOver.mp3");
+                    } else {
+                        data.setWinGames(data.getWinGamesInt() + 1);
+                        AudioUtils.playSoundEffect("StageClear.mp3");
+                        // Don't go to higher levels than 3
+                        if (data.getLastLevelInt() < 3) {
+                            data.setLastLevel(data.getLastLevelInt() + 1);
+                        }
+                        else {
+                            numberOfEnemies ++ ;
+                        }
+                    }
+                    data.setScore(playerModel.getScore());
+                    data.setPlayedGames(data.getPlayedGamesInt() + 1);
+                    savePlayerData();
+
+                    // Use Platform.runLater to show the dialog after the current animation frame is processed
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(AlertType.CONFIRMATION);
+                        // Applying the CSS file to the DialogPane
+                        DialogPane dialogPane = alert.getDialogPane();
+                        dialogPane.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
+                        // Add buttons to the dialog
+                        alert.setTitle(playerModel.isDead() ? "Game Over!" : "Level Complete!");
+                        alert.getDialogPane().setGraphic(null);
+                        alert.setHeaderText(playerModel.isDead() ? "Game over!" : "Level Complete!");
+                        if (!playerModel.isDead()) {
+                            if (current_level == 3) {
+                                alert.setContentText("Congratulations! You have completed all levels! Let's try more enemies?");
+                            } else {
+                                alert.setContentText("Well done! Proceed to the next level?");
+                            }
+                        } else {
+                            alert.setContentText("You can do it! Try again!");
+                        }
+                        ButtonType buttonRestartOrContinue = new ButtonType(playerModel.isDead() ? "Try again" : "Continue");
+                        ButtonType buttonExit = new ButtonType("Exit to Main Menu");
+                        ButtonType buttonQuit = new ButtonType("Quit");
+                        
+                        alert.getButtonTypes().setAll(buttonRestartOrContinue, buttonExit, buttonQuit);
+
+                        Optional<ButtonType> result = alert.showAndWait();
+                        if (result.isPresent() && result.get() == buttonRestartOrContinue) {
+                            if (playerModel.isDead()) {
+                                // Restart current level if the player died
+                                playerModel = null;
+                                setupGame(primaryStage, data.getLastLevelInt());
+                            } else {
+                                // Setup game for next level if the current one was completed
+                                setupGame(primaryStage, data.getLastLevelInt());
+                            }
+                            // Restart the game loop
+                            this.start();
+                        } else if (result.isPresent() && result.get() == buttonExit) {
+                            // Instead of closing the primary stage, re-use it for the pre-game setup
+                            Platform.runLater(() -> {
+                                MainMenu mainMenu = new MainMenu();
+                                try {
+                                    mainMenu.start(primaryStage);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        }
+                        else if (result.isPresent() && result.get() == buttonQuit) {
+                            // Stop the background music
+                            backgroundMusic.stopMusic();
+                            AudioUtils.stopAll();
+                            // Quit the application
+                            Platform.exit();
+                        }
+                    });
+                } else {
+                    // Regular game update logic if no special conditions met
+                    enemiesController.updateState(1.0 / 60.0);
+                    playerController.updateState(1.0 / 60.0);
+                    bombController.updateState(1.0 / 60.0);
+                    stageModel.notifyListeners();
+                }
+            }
+        };
+        gameLoop.start();
+    }
+    
+
+    /**
+     * Imposta il gioco con la scena principale e i componenti necessari.
+     * 
+     * @param primaryStage lo stage principale del gioco
+     * @param level il livello del gioco
+     */
+    private void setupGame(Stage primaryStage, int level) {
+        AudioUtils.playSoundEffect("StageStart.mp3");
+        // Use a StackPane as the root to allow layering of the map and the player
+        StackPane root = new StackPane();
+        Pane bombLayer = new Pane();
+        Pane gameLayer = new Pane();
+        BorderPane borderPane = new BorderPane();
+
+        // Initialize the Stage
+        this.stageModel = new StageModel();
+        StageView stageView = new StageView(level);
+        stageModel.addListener(stageView);
+
+        Scene mainScene = new Scene(borderPane, 272, 224);
+        mainScene.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
+        primaryStage.setTitle("Jbomberan level " + level);
+        primaryStage.setScene(mainScene);
+        primaryStage.show();
+
+        // initialize playerModel, view, and controller
+        if (this.playerModel == null) {
+            stageModel.setPlayer(playerModel);
+            this.playerModel = new PlayerModel(32, 6, stageModel);
+        }
+        else {
+            this.playerModel.setPosition(32, 6);
+            this.playerModel.setStage(stageModel);
+        }
+        stageModel.setPlayer(playerModel);
+        this.playerController = new PlayerController(playerModel, Integer.parseInt(data.getAvatar()));
+        this.enemiesController = new EnemiesController(numberOfEnemies, stageModel, gameLayer, level);
+
+        // Layer the map and the player on the StackPane
+        root.getChildren().add(stageView.getPane()); // Map as the base layer
+        gameLayer.getChildren().add(playerController.getView().getEntitySprite()); // Add Bomberman on top of the map
+        root.getChildren().add(bombLayer); // Add the bomb layer to the root
+        root.getChildren().add(gameLayer); // Add the game layer to the root
+
+        // usa un BorderPane per posizionare l'HUD sopra il gioco
+        HUDView hudView = new HUDView();
+        PlayerSound playerSound = new PlayerSound(); // inizializza il playerSound
+        // aggiungi HUD come osservatore del playerModel
+        playerModel.addListener(hudView);
+        playerModel.addListener(playerSound); // aggiungi playerSound come osservatore del playerModel
+        hudView.update(playerModel); // initializza l'HUD con i valori iniziali
+        borderPane.setCenter(root); // Set the game (map + player) as the center
+        borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
+
+        // Setup the controller with the scene
+        this.bombController = new BombController(playerModel, bombLayer);
+        new InputController(playerController, bombController, mainScene);
+        backgroundMusic.playMusic("Background.mp3");
+    }
+
+    /**
+        * Salva i dati del giocatore nel file savedGames.txt.
+        */
+    public void savePlayerData() {
+        try {
+            // Get the path to the JAR file
+            String jarPath = new File(GameApp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            // Get the directory of the JAR file
+            String dirPath = new File(jarPath).getParent();
+            // Construct the path to the players.txt file in the same directory
+            File file = new File(dirPath, "savedGames.txt");
+            // Prepare data to save
+            String dataToSave = data.getDataString();
+            // Check if data for the player already exists and needs to be updated, or append new data
+            List<String> lines = file.exists() ? Files.readAllLines(file.toPath()) : new ArrayList<>();
+            lines.removeIf(String::isEmpty); // Remove any empty lines
+            boolean dataExists = false;
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                String nickname = line.split(",")[0];
+                if (nickname.equals(data.getNickname())) {
+                    lines.set(i, dataToSave); // Update existing data
+                    dataExists = true;
+                    break;
+                }
+            }
+            if (!dataExists && !dataToSave.isEmpty()) {
+                lines.add(dataToSave); // Append new player data
+            }
+            // Write data to the file
+            Files.write(file.toPath(), lines);
+        } catch (URISyntaxException e) {
+            System.err.println("Error parsing URI: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO error occurred: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+}
+package com.esame;
+import javafx.beans.Observable;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+
+
+/**
+ * La classe HUDView rappresenta la vista dell'HUD (Heads-Up Display) del gioco.
+ * Implementa l'interfaccia EntityStateObserver per osservare lo stato del giocatore.
+ */
+public class HUDView implements EntityStateObserver{
+
+    /**
+     * Il pannello dell'HUD.
+     */
+    private HBox hudPane;
+
+    /**
+     * Etichetta per visualizzare il punteggio del giocatore.
+     */
+    private Label scoreLabel;
+
+    /**
+     * Etichetta per visualizzare le vite del giocatore.
+     */
+    private Label livesLabel;
+
+    /**
+     * Etichetta per visualizzare la capacità delle bombe del giocatore.
+     */
+    private Label bombCapacityLabel;
+
+    /**
+     * Etichetta per visualizzare il raggio delle bombe del giocatore.
+     */
+    private Label bombRadiusLabel;
+
+    /**
+     * Costruttore della classe HUDView.
+     * Inizializza gli elementi dell'HUD e li aggiunge al pannello principale.
+     */
+    public HUDView() {
+        hudPane = new HBox(10);
+        hudPane.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
+        hudPane.setAlignment(Pos.TOP_CENTER);
+        
+        scoreLabel = new Label();
+        livesLabel = new Label();
+        bombCapacityLabel = new Label();
+        bombRadiusLabel = new Label();
+
+        /*
+         * Codice opzionale, usa JavaFX puoi usare il binding per aggiornare i valori
+         * invece del classico Observer pattern.
+         * Se si usa il JavaFx, e' necessario avere il playerModel come parametro del costruttore
+         */
+        // bombCapacityLabel.textProperty().bind(playerModel.bombCapacityProperty().asString("Bombs: %d"));
+        // bombRadiusLabel.textProperty().bind(playerModel.bombRadiusProperty().asString("Radius: %d"));
+        // scoreLabel.textProperty().bind(playerModel.scoreProperty().asString("Score: %d"));
+        // livesLabel.textProperty().bind(playerModel.lifeProperty().asString("Life: %d"));
+
+        // // Aggiungi un listener per cambiare il colore del testo a seconda del valore della vita
+        // playerModel.lifeProperty().addListener((observable, oldValue, newValue) -> {
+        //     if (newValue.intValue() == 3) {
+        //         livesLabel.setTextFill(Color.GREEN);
+        //     } else if (newValue.intValue() == 2) {
+        //         livesLabel.setTextFill(Color.INDIANRED);
+        //     } else if (newValue.intValue() == 1) {
+        //         livesLabel.setTextFill(Color.CRIMSON);
+        //     }
+        // });
+
+        hudPane.getChildren().addAll(scoreLabel, livesLabel, bombCapacityLabel, bombRadiusLabel);
+    }
+
+    /**
+     * Restituisce il pannello dell'HUD.
+     * 
+     * @return il pannello dell'HUD
+     */
+    public HBox getHudPane() {
+        return hudPane;
+    }
+
+
+    /**
+     * Metodo chiamato quando un'osservabile è stato invalidato.
+     * 
+     * @param observable l'osservabile invalidato
+     */
+    @Override
+    public void invalidated(Observable observable) {
+        scoreLabel.setText("Score: /");
+        bombCapacityLabel.setText("Bombs: /");
+        bombRadiusLabel.setText("Radius: /");
+        livesLabel.setText("Life: /");      
+    }
+    
+
+    /**
+     * Metodo di aggiornamento chiamato quando lo stato del giocatore cambia.
+     * Aggiorna i valori dell'HUD in base allo stato del giocatore.
+     * 
+     * @param playerEntityModel il modello dell'entità del giocatore
+     */
+    @Override
+    public void update(EntityModel playerEntityModel) {
+        PlayerModel playerModel = (PlayerModel) playerEntityModel;
+        scoreLabel.setText("Score: " + playerModel.getScore());
+        bombCapacityLabel.setText("Bombs: " + playerModel.getBombCapacity());
+        bombRadiusLabel.setText("Radius: " + playerModel.getBombRadius());
+        livesLabel.setText("Life: " + playerModel.getLife());
+        // Seleziona il colore della vita a seconda del valore
+        if (playerModel.getLife() == 3) {
+            livesLabel.setTextFill(Color.GREEN);
+        } else if (playerModel.getLife() == 2) {
+            livesLabel.setTextFill(Color.INDIANRED);
+        } else if (playerModel.getLife() == 1) {
+            livesLabel.setTextFill(Color.CRIMSON);
+        }
+    }
+}
+package com.esame;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+
+/**
+ * Questa classe gestisce l'input da tastiera per muovere il player e piazzare le bombe.
+ */
+public class InputController {
+
+    /**
+     * L'insieme dei tasti premuti.
+     */
+    private final Set<KeyCode> keysPressed = ConcurrentHashMap.newKeySet(); // per far muovere il player appena si preme un tasto
+
+    /**
+     * La scena in cui si verificano gli eventi di input.
+     */
+    private Scene scene;
+
+    /**
+     * Il controller del player.
+     */
+    private PlayerController player;
+
+    /**
+     * Il controller delle bombe.
+     */
+    private BombController bomb;
+
+
+    /**
+     * Costruttore della classe InputController.
+     * Crea un oggetto InputController con il player, la bomba e la scena specificati.
+     *
+     * @param player il controller del player
+     * @param bomb il controller della bomba
+     * @param scene la scena in cui si verificano gli eventi di input
+     */
+    public InputController(PlayerController player, BombController bomb,  Scene scene) {
+        this.player = player;
+        this.bomb = bomb;
+        this.scene = scene;
+        attachEventListeners();
+    }
+
+
+    /**
+     * Attiva gli "event listeners" per la scena: gestisce gli input da tastiera per muovere il player e piazzare le bombe.
+     */
+    private void attachEventListeners() {
+        scene.setOnKeyPressed(event -> {
+            KeyCode code = event.getCode();
+            if (!keysPressed.contains(code)) { // Check to prevent repeated calls for the same key press
+                keysPressed.add(code);
+                pressedController(); // Move as soon as the key is pressed
+            }
+        });
+        scene.setOnKeyReleased(event -> {
+            keysPressed.remove(event.getCode());
+            releaseController();
+        });
+    }
+    
+    /**
+     * Gestisce gli input e li invia al player e alla bomba.
+     */
+    private void pressedController() {
+        if (keysPressed.contains(KeyCode.SPACE)) {
+            bomb.input();
+        } 
+        if (keysPressed.contains(KeyCode.UP)) {
+            player.input("UP");
+        } else if (keysPressed.contains(KeyCode.DOWN)) {
+            player.input("DOWN");
+        } else if (keysPressed.contains(KeyCode.LEFT)) {
+            player.input("LEFT");
+        } else if (keysPressed.contains(KeyCode.RIGHT)) {
+            player.input("RIGHT");
+        } else {
+            player.input(null);
+        }
+    }
+    
+    /**
+     * Gestiisce il rilascio degli input e li invia al player.
+     */
+    public void releaseController() {
+        if (keysPressed.contains(KeyCode.UP)) {
+            player.input("UP");
+        } else if (keysPressed.contains(KeyCode.DOWN)) {
+            player.input("DOWN");
+        } else if (keysPressed.contains(KeyCode.LEFT)) {
+            player.input("LEFT");
+        } else if (keysPressed.contains(KeyCode.RIGHT)) {
+            player.input("RIGHT");
+        } else {
+            player.input(null);
+        }
+    }
+}
+package com.esame;
+import javafx.application.Application;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * La classe MainMenu rappresenta il menu principale del gioco JBomberman.
+ * Questa classe estende la classe Application di JavaFX e gestisce la visualizzazione
+ * e l'interazione con gli elementi del menu principale.
+ */
+public class MainMenu extends Application {
+
+    /**
+     * Mappa dei dati dei giocatori.
+     */
+    private Map<String, PlayerData> playerDataMap = new HashMap<>();
+
+    /**
+     * L'anteprima dell'avatar selezionato.
+     */
+    private ImageView avatarPreview = new ImageView();
+
+    /**
+     * Etichetta per visualizzare le statistiche del giocatore.
+     */
+    private Label statsLabel1 = new Label(); 
+
+    /**
+     * Etichetta per visualizzare le statistiche del giocatore.
+     */
+    private Label statsLabel2 = new Label(); 
+
+    /**
+     * Avvia l'applicazione del menu principale.
+     *
+     * @param primaryStage lo stage principale dell'applicazione
+     * @throws Exception se si verifica un'eccezione durante l'avvio dell'applicazione
+     */
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        // fai partire la musica
+        BackgroundMusic backgroundMusic = new BackgroundMusic();
+        backgroundMusic.playMusic("MainMenu.mp3");
+
+        // Inizializza lo stage
+        Font.loadFont(getClass().getResourceAsStream("/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"), 14);
+        primaryStage.setTitle("JBomberman");
+        readPlayerData(); // Read player data from file
+        TextField nicknameField = new TextField();
+        nicknameField.setPrefWidth(10);
+
+        // Number of enemies
+        // Spinner for selecting the number of enemies
+        Spinner<Integer> enemySpinner = new Spinner<>(1, 30, 4);
+        enemySpinner.setEditable(true);
+
+        // Listen for changes in the nickname field and update stats
+        nicknameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            PlayerData data = playerDataMap.get(newValue);
+            if (data != null) {
+                // Update stats label with player data
+                statsLabel1.setText(String.format("Played Games: %s; Won: %s; Lost: %s;", data.getPlayedGames(), data.getWinGames(), data.getLostGames()));
+                statsLabel2.setText(String.format("Last Level: %s; Highest Score: %s", data.getLastLevel(), data.getScore()));
+            } else {
+                statsLabel1.setText("New player!");
+                statsLabel2.setText("");
+            }
+        });
+
+        // Select Avatar
+        ComboBox<String> avatarComboBox = new ComboBox<>();
+        avatarComboBox.getItems().addAll("1", "2", "3", "4"); // Assuming these are your avatar options
+        String defaultAvatar = "1"; // Default avatar
+        // prova a caricare l'ultimo avatar usato
+        if (playerDataMap.containsKey(nicknameField.getText())) {
+            defaultAvatar = playerDataMap.get(nicknameField.getText()).getAvatar();
+        }
+        avatarComboBox.setValue(defaultAvatar);
+        updateAvatarPreview(defaultAvatar); // Update the avatar preview based on the default value (1)
+        avatarComboBox.setOnAction(e -> updateAvatarPreview(avatarComboBox.getValue()));
+
+        // Start Game Button
+        Button startGameButton = new Button("Start Game");
+        startGameButton.setOnAction(e -> {
+            String nickname = nicknameField.getText();
+            String avatar = avatarComboBox.getValue();
+            PlayerData data = playerDataMap.getOrDefault(nickname, new PlayerData(nickname, avatar, "1", "0", "0", "0", "0")); 
+            try {
+                GameApp gameApp = new GameApp();
+                backgroundMusic.stopMusic();
+                gameApp.initializeGame(data, enemySpinner.getValue());
+                gameApp.start(new Stage());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            primaryStage.close(); // Close the setup window
+        });
+
+        // Setup the layout
+        VBox layout = new VBox(10, new Label("Nickname:"), nicknameField, 
+                                new Label("Number of Enemies:"), enemySpinner, 
+                                new Label("Choose Avatar:"), avatarComboBox, avatarPreview, 
+                                statsLabel1, statsLabel2, 
+                                startGameButton);
+        Scene scene = new Scene(layout, 272, 310);
+        scene.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    /**
+     * Legge i dati dei giocatori dal file savedGames.txt e li memorizza in una mappa.
+     */
+    private void readPlayerData() {
+        // List<PlayerData> playerDataList = new ArrayList<>();
+        try {
+            // Get the path to the JAR file
+            String jarPath = new File(MainMenu.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            // Get the directory of the JAR file
+            String dirPath = new File(jarPath).getParent();
+            // Construct the path to the players.txt file in the same directory
+            File file = new File(dirPath, "savedGames.txt");
+
+            if (file.exists()) {
+                // Read all lines from the players.txt file
+                List<String> lines = Files.readAllLines(file.toPath());
+                // Parse each line into PlayerData objects
+                for (String line : lines) {
+                    String[] parts = line.split(",");
+                    if (parts.length == 7) {
+                        String nickname = parts[0];
+                        String avatarNumber = parts[1];
+                        String lastLevel = parts[2];
+                        String playedGames = parts[3];
+                        String winGames = parts[4];
+                        String lostGames = parts[5];
+                        String score = parts[6];
+                        PlayerData playerData = new PlayerData(nickname, avatarNumber, lastLevel, playedGames, winGames, lostGames, score);
+                        playerDataMap.put(nickname, playerData);
+                    }
+                }
+            }
+        } catch (URISyntaxException e) {
+            System.err.println("Error parsing URI: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO error occurred: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Aggiorna l'anteprima dell'avatar con l'immagine corrispondente al numero dell'avatar specificato.
+     *
+     * @param avatarNumber il numero dell'avatar da visualizzare
+     */
+    private void updateAvatarPreview(String avatarNumber) {
+        Image avatarImage = new Image(getClass().getResourceAsStream("/sprites/bomberman.png"));
+        int avatarIndex = Integer.parseInt(avatarNumber) - 1; // Assuming avatarNumber starts at 1
+        avatarPreview.setImage(avatarImage); // avatarPreview should be an ImageView
+        avatarPreview.setViewport(new Rectangle2D(0, 24 * avatarIndex, 47, 24)); // Update this to match your sprite sheet
+    }
+
+    /**
+     * Questo metodo è il punto di ingresso principale dell'applicazione.
+     * Pre-carica tutti gli effetti sonori e avvia l'applicazione.
+     *
+     * @param args gli argomenti della riga di comando
+     */
+    public static void main(String[] args) {
+        AudioUtils.preloadAll(); // Preload all sound effects
+        launch(args);
+    }
+
+    /**
+     * Mostra la scena del menu principale.
+     *
+     * @param stage lo stage su cui mostrare la scena
+     * @throws Exception se si verifica un'eccezione durante la visualizzazione della scena
+     */
+    public void show(Stage stage) throws Exception {
+        // Setup your pre-game scene
+        VBox layout = new VBox(10);
+        Scene scene = new Scene(layout, 400, 400);
+        stage.setScene(scene);
+        stage.show();
+    }
+}
+package com.esame;
+/**
+ * Questa classe rappresenta il controller del giocatore.
+ * Gestisce l'input del giocatore e aggiorna il modello e la vista corrispondenti.
+ */
+public class PlayerController {
+
+    /**
+     * Il modello del giocatore.
+     */
+    private PlayerModel model;
+
+    /**
+     * La vista del giocatore.
+     */
+    private EntityView view;
+
+    /**
+     * Crea un nuovo oggetto PlayerController con il modello e la vista specificati.
+     *
+     * @param model il modello del giocatore
+     * @param avatar il numero dell'avatar del giocatore
+     */
+    public PlayerController(PlayerModel model, int avatar) {
+        this.model = model;
+        this.view = new EntityView("bomberman", true, 3, avatar - 1);
+        model.addListener(view);
+    }
+
+    /**
+     * Gestisce l'input del giocatore.
+     * Se la direzione non è nulla, avvia il movimento del giocatore nella direzione specificata.
+     * Altrimenti, ferma il movimento del giocatore.
+     *
+     * @param directionString la direzione del movimento del giocatore come stringa
+     */
+    public void input(String directionString) {
+        if (directionString != null) {
+            model.startMoving(directionString);
+        } else {
+            model.stopMoving();
+        }
+    }
+
+    /**
+     * Restituisce il modello del giocatore.
+     *
+     * @return il modello del giocatore
+     */
+    public PlayerModel getModel() {
+        return model;
+    }
+
+    /**
+     * Restituisce la vista del giocatore.
+     *
+     * @return la vista del giocatore
+     */
+    public EntityView getView() {
+        return view;
+    }
+
+    /**
+     * Aggiorna il modello e la vista del giocatore.
+     *
+     * @param elapsed il tempo trascorso dall'ultimo aggiornamento
+     */
+    public void updateState(double elapsed) {
+        model.updateState(elapsed);
+    }
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta i dati di un giocatore.
+ */
+public class PlayerData {
+
+    /**
+     * Il nickname del giocatore.
+     */
+    private String nickname;
+
+    /**
+     * L'avatar del bomberman.
+     */
+    private String avatar;
+
+    /**
+     * L'ultimo livello completato dal giocatore.
+     */
+    private String lastLevel;
+
+    /**
+     * Il numero di partite giocate dal giocatore.
+     */
+    private String playedGames;
+
+    /**
+     * Il numero di partite vinte dal giocatore.
+     */
+    private String winGames;
+
+    /**
+     * Il numero di partite perse dal giocatore.
+     */
+    private String lostGames;
+
+    /**
+     * Il punteggio del giocatore.
+     */
+    private String score;
+
+    /**
+     * Costruttore della classe PlayerData.
+     *
+     * @param nickname     il nickname del giocatore
+     * @param avatar       l'avatar del giocatore
+     * @param lastLevel    l'ultimo livello completato dal giocatore
+     * @param playedGames  il numero di partite giocate dal giocatore
+     * @param winGames     il numero di partite vinte dal giocatore
+     * @param lostGames    il numero di partite perse dal giocatore
+     * @param score        il punteggio del giocatore
+     */
+    public PlayerData(String nickname, String avatar, String lastLevel, String playedGames, String winGames, String lostGames, String score) {
+        this.nickname = nickname;
+        this.avatar = avatar;
+        this.lastLevel = lastLevel;
+        this.playedGames = playedGames;
+        this.winGames = winGames;
+        this.lostGames = lostGames;
+        this.score = score;
+    }
+
+    /**
+     * Restituisce il nickname del giocatore.
+     *
+     * @return il nickname del giocatore
+     */
+    public String getNickname() {
+        return nickname;
+    }
+
+    /**
+     * Imposta il nickname del giocatore.
+     *
+     * @param nickname il nuovo nickname del giocatore
+     */
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    /**
+     * Restituisce l'avatar del giocatore.
+     *
+     * @return l'avatar del giocatore
+     */
+    public String getAvatar() {
+        return avatar;
+    }
+
+    /**
+     * Imposta l'avatar del giocatore.
+     *
+     * @param avatar il nuovo avatar del giocatore
+     */
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    /**
+     * Restituisce l'ultimo livello completato dal giocatore come stringa.
+     *
+     * @return l'ultimo livello completato dal giocatore come stringa
+     */
+    public String getLastLevel() {
+        return lastLevel;
+    }
+
+    /**
+     * Restituisce l'ultimo livello completato dal giocatore come intero.
+     *
+     * @return l'ultimo livello completato dal giocatore come intero
+     */
+    public int getLastLevelInt() {
+        return Integer.parseInt(lastLevel);
+    }
+
+    /**
+     * Imposta l'ultimo livello completato dal giocatore come intero.
+     *
+     * @param lastLevel il nuovo ultimo livello completato dal giocatore come intero
+     */
+    public void setLastLevel(int lastLevel) {
+        this.lastLevel = Integer.toString(lastLevel);
+    }
+
+    /**
+     * Restituisce il numero di partite giocate dal giocatore come stringa.
+     *
+     * @return il numero di partite giocate dal giocatore come stringa
+     */
+    public String getPlayedGames() {
+        return playedGames;
+    }
+
+    /**
+     * Restituisce il numero di partite giocate dal giocatore come intero.
+     *
+     * @return il numero di partite giocate dal giocatore come intero
+     */
+    public int getPlayedGamesInt() {
+        return Integer.parseInt(playedGames);
+    }
+
+    /**
+     * Imposta il numero di partite giocate dal giocatore come intero.
+     *
+     * @param playedGames il nuovo numero di partite giocate dal giocatore come intero
+     */
+    public void setPlayedGames(int playedGames) {
+        this.playedGames = Integer.toString(playedGames);
+    }
+
+    /**
+     * Imposta il numero di partite vinte dal giocatore come intero.
+     *
+     * @param winGames il nuovo numero di partite vinte dal giocatore come intero
+     */
+    public void setWinGames(int winGames) {
+        this.winGames = Integer.toString(winGames);
+    }
+
+    /**
+     * Restituisce il numero di partite vinte dal giocatore come intero.
+     *
+     * @return il numero di partite vinte dal giocatore come intero
+     */
+    public int getWinGamesInt() {
+        return Integer.parseInt(winGames);
+    }
+
+    /**
+     * Restituisce il numero di partite vinte dal giocatore come stringa.
+     *
+     * @return il numero di partite vinte dal giocatore come stringa
+     */
+    public String getWinGames() {
+        return winGames;
+    }
+
+    /**
+     * Imposta il numero di partite vinte dal giocatore come stringa.
+     *
+     * @param winGames il nuovo numero di partite vinte dal giocatore come stringa
+     */
+    public void setWinGames(String winGames) {
+        this.winGames = winGames;
+    }
+
+    /**
+     * Restituisce il numero di partite perse dal giocatore come stringa.
+     *
+     * @return il numero di partite perse dal giocatore come stringa
+     */
+    public String getLostGames() {
+        return lostGames;
+    }
+
+    /**
+     * Restituisce il numero di partite perse dal giocatore come intero.
+     *
+     * @return il numero di partite perse dal giocatore come intero
+     */
+    public int getLostGamesInt() {
+        return Integer.parseInt(lostGames);
+    }
+
+    /**
+     * Imposta il numero di partite perse dal giocatore come intero.
+     *
+     * @param lostGames il nuovo numero di partite perse dal giocatore come intero
+     */
+    public void setLostGames(int lostGames) {
+        this.lostGames = Integer.toString(lostGames);
+    }
+
+    /**
+     * Restituisce il punteggio del giocatore come stringa.
+     *
+     * @return il punteggio del giocatore come stringa
+     */
+    public String getScore() {
+        return score;
+    }
+
+    /**
+     * Imposta il punteggio del giocatore come intero.
+     * Se il nuovo punteggio è maggiore del punteggio attuale, il punteggio viene aggiornato.
+     *
+     * @param newScore il nuovo punteggio del giocatore come intero
+     */
+    public void setScore(int newScore) {
+        int currentScore = Integer.parseInt(getScore());
+        if (currentScore < newScore) {
+            this.score = Integer.toString(newScore);
+        }
+    }
+
+    /**
+     * Restituisce una stringa che rappresenta i dati del giocatore.
+     *
+     * @return una stringa che rappresenta i dati del giocatore
+     */
+    public String getDataString() {
+        return nickname + "," + avatar + "," + lastLevel + "," + playedGames + "," + winGames + "," + lostGames + "," + score;
+    }
+}
+package com.esame;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
+/**
+ * Questa classe rappresenta il modello del giocatore nel gioco Bomberman.
+ * Estende la classe EntityModel e implementa il pattern Observer per notificare gli osservatori
+ * sullo stato del giocatore.
+ */
+public class PlayerModel extends EntityModel {
+
+    /**
+     * Il punteggio del giocatore.
+     */
+    private final IntegerProperty score = new SimpleIntegerProperty(0);
+
+    /**
+     * Il numero di bombe che il giocatore può piazzare.
+     */
+    private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
+
+    /**
+     * Il raggio delle bombe del giocatore.
+     */
+    private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
+
+    /**
+     * Se il giocatore ha appena perso una vita.
+     */
+    private boolean justLostLife = false;
+
+    /**
+     * Se il giocatore ha appena ottenuto un power-up.
+     */
+    private boolean justGainedPowerUp = false;
+
+    /**
+     * Il tempo di recupero del giocatore dopo aver perso una vita.
+     */
+    private int recoveryTime = 20;
+
+    /**
+     * Se il giocatore è in fase di recupero.
+     */
+    private boolean recovering = false;
+
+    /**
+     * Costruttore della classe PlayerModel.
+     * 
+     * @param initialX la coordinata x iniziale del giocatore
+     * @param initialY la coordinata y iniziale del giocatore
+     * @param stage il modello dello stage di gioco
+     */
+    public PlayerModel(int initialX, int initialY, StageModel stage) {
+        super(initialX, initialY, new int[] {13, 13}, new int[] {7, 17}, 3, stage);
+        // Set default values for lives and score or any additional setup.
+        this.score.set(0); // Initial score
+    }
+
+    /**
+     * Restituisce la proprietà del numero di vite del giocatore.
+     * 
+     * @return la proprietà del numero di vite del giocatore
+     */
+    public IntegerProperty lifeProperty() {
+        return this.life;
+    }
+
+    /**
+     * Metodo chiamato quando il giocatore perde una vita.
+     */
+    @Override
+    public void loseLife(int amount) {
+        loseLife();
+    }
+
+    /**
+     * Metodo chiamato quando il giocatore perde una vita.
+     */
+    public void loseLife() {
+        if (this.recovering) return;
+        this.life.set(getLife() - 1);
+        if (isDead()) {
+            clearOccupiedTiles();
+        }
+        this.recovering = true;
+        justLostLife = true;
+        notifyListeners();
+    }
+
+    /**
+     * Verifica se il giocatore ha appena perso una vita.
+     * 
+     * @return true se il giocatore ha appena perso una vita, false altrimenti
+     */
+    public boolean justLostLife() {
+        if (justLostLife) {
+            justLostLife = false;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Verifica la collisione del giocatore con un'altra entità.
+     * 
+     * @param dx la variazione della coordinata x
+     * @param dy la variazione della coordinata y
+     * @return l'entità con cui il giocatore ha colliso
+     */
+    @Override
+    public EntityModel checkCollision(int dx, int dy) {
+        EntityModel occupant = super.checkCollision(dx, dy);
+        if (occupant instanceof EnemyModel) {
+            loseLife(1);
+        }
+        notifyListeners();
+        return occupant;
+    }
+    
+    /**
+     * Restituisce la proprietà del punteggio del giocatore.
+     * 
+     * @return la proprietà del punteggio del giocatore
+     */
+    public IntegerProperty scoreProperty() {
+        return this.score;
+    }
+
+    /**
+     * Restituisce il punteggio del giocatore.
+     * 
+     * @return il punteggio del giocatore
+     */
+    public int getScore() {
+        return this.score.get();
+    }
+
+    /**
+     * Restituisce la proprietà del numero di bombe che il giocatore può piazzare.
+     * 
+     * @return la proprietà del numero di bombe che il giocatore può piazzare
+     */
+    public IntegerProperty bombCapacityProperty() {
+        return this.bombCapacity;
+    }
+
+    /**
+     * Restituisce il numero di bombe che il giocatore può piazzare.
+     * 
+     * @return il numero di bombe che il giocatore può piazzare
+     */
+    public int getBombCapacity() {
+        return this.bombCapacity.get();
+    }
+
+    /**
+     * Aumenta il numero di bombe che il giocatore può piazzare.
+     */
+    public void increaseBombCapacity() {
+        this.bombCapacity.set(this.bombCapacity.get() + 1);
+        justGainedPowerUp = true;
+        notifyListeners();
+    }
+
+    /**
+     * Restituisce la proprietà del raggio delle bombe del giocatore.
+     * 
+     * @return la proprietà del raggio delle bombe del giocatore
+     */
+    public IntegerProperty bombRadiusProperty() {
+        return this.bombRadius;
+    }
+
+    /**
+     * Restituisce il raggio delle bombe del giocatore.
+     * 
+     * @return il raggio delle bombe del giocatore
+     */
+    public int getBombRadius() {
+        return this.bombRadius.get();
+    }
+
+    /**
+     * Aumenta il raggio delle bombe del giocatore.
+     */
+    public void increaseBombRadius() {
+        this.bombRadius.set(this.bombRadius.get() + 1);
+        justGainedPowerUp = true;
+        notifyListeners();
+    }
+
+    /**
+     * Aumenta la velocità del giocatore.
+     */
+    public void increaseSpeed() {
+        // this.velocity.set(this.velocity.get() + 0.3);
+        if (this.delayMove > 0.01) this.delayMove -= 0.01;
+        justGainedPowerUp = true;
+        notifyListeners();
+    }
+
+    /**
+     * Verifica se il giocatore ha appena ottenuto un power-up.
+     * 
+     * @return true se il giocatore ha appena ottenuto un power-up, false altrimenti
+     */
+    public boolean justGainedPowerUp() {
+        if (justGainedPowerUp) {
+            justGainedPowerUp = false;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Aggiunge un punteggio al punteggio del giocatore.
+     * 
+     * @param points il punteggio da aggiungere
+     */
+    public void addScore(int points) {
+        this.score.set(this.score.get() + points);  
+        notifyListeners();
+    }
+
+    /**
+     * Verifica se il giocatore si trova sulla porta per il livello successivo.
+     * 
+     * @return true se il giocatore si trova sulla porta per il livello successivo, false altrimenti
+     */
+    public boolean isOnNextLevelDoor() {
+        for (EmptyTile tile : occupiedTiles) {
+            if (tile instanceof SpecialTile && ((SpecialTile) tile).getType() == SpecialTileType.nextLevelDoor) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Aggiorna il giocatore.
+     * 
+     * @param elapsedTime il tempo trascorso dall'ultimo aggiornamento
+     */
+    @Override
+    public void updateState(double elapsedTime) {
+        super.updateState(elapsedTime);
+        if (this.recovering) {
+            this.recoveryTime--;
+            if (this.recoveryTime == 0) {
+                this.recovering = false;
+                this.recoveryTime = 20;
+            }
+        }
+    }
+    
+}
+
+package com.esame;
+
+import javafx.beans.Observable;
+
+/**
+ * Questa classe implementa l'interfaccia EntityStateObserver e gestisce la riproduzione dei suoni del giocatore.
+ */
+public class PlayerSound implements EntityStateObserver {
+
+    /**
+     * Il ritardo tra i suoni del movimento del giocatore.
+     */
+    private int audioDelay = 120;
+
+    /**
+     * Metodo chiamato quando un'osservabile è stato invalidato.
+     * 
+     * @param observable l'osservabile invalidato
+     */
+    @Override
+    public void invalidated(Observable observable) {
+        AudioUtils.stopAll();      
+    }
+
+    /**
+     * Aggiorna il suono del giocatore in base allo stato del modello del giocatore.
+     *
+     * @param playerEntityModel il modello dell'entità del giocatore
+     */
+    @Override
+    public void update(EntityModel playerEntityModel) {
+        PlayerModel playerModel = (PlayerModel) playerEntityModel; // fai il casting dell'entità a PlayerModel
+        if (playerModel.justLostLife()) { // Assume this method exists and tracks if a life was recently lost
+            AudioUtils.playSoundEffect("LoseLife.mp3");
+        }
+        if (playerModel.justGainedPowerUp()) { // Similarly, assume this checks for recent power-up acquisition
+            AudioUtils.playSoundEffect("ItemGet.mp3");
+        }
+        if (playerModel.isMoving()) {
+            audioDelay -= 1;
+            if (audioDelay <= 0) {
+                AudioUtils.playSoundEffect("Walking.mp3");
+                audioDelay = 120;
+            }
+        }
+    }
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta un power-up nel gioco JBomberman.
+ * Un power-up è una casella speciale che può essere applicata al Bomberman per ottenere abilità speciali.
+ * Ogni power-up ha un comportamento specifico che viene applicato al giocatore quando ci passa sopra.
+ */
+public class PowerUp extends SpecialTile{
+
+    /*
+     * Se il power-up è stato applicato.
+     */
+    private boolean applied = false;
+
+    /*
+     * Il comportamento del power-up.
+     */
+    private PowerUpBehaviour behaviour;
+
+    /**
+     * Crea un nuovo oggetto PowerUp con le coordinate specificate e il tipo di casella speciale (SpecialTileType).
+     * In base al tipo di SpecialTileType, viene assegnato un comportamento specifico al power-up.
+     * 
+     * @param x    la coordinata x del power-up
+     * @param y    la coordinata y del power-up
+     * @param type il tipo di casella speciale del power-up
+     */
+    public PowerUp(int x, int y, SpecialTileType type) {
+        super(x, y, type);
+        if (type == SpecialTileType.pupBlast) {
+            this.behaviour = new PowerUpBlast();
+        }
+        else if (type == SpecialTileType.pupBomb) {
+            this.behaviour = new PowerUpBomb();
+        }
+        else if (type == SpecialTileType.pupSpeed) {
+            this.behaviour = new PowerUpSpeed();
+        }
+    }
+
+    /**
+     * Imposta l'entita' che occupa la casella.
+     * Se l'occupante è un giocatore, viene applicato il power-up al giocatore.
+     * Dopo l'applicazione del power-up, la casella speciale viene resa non visualizzabile.
+     * 
+     * @param occupant l'enità che occupa la casella
+     */
+    @Override
+    public void setOccupant(EntityModel occupant) {
+        super.setOccupant(occupant);
+        if (applied) return;
+        if (occupant instanceof PlayerModel) {
+            applyPowerUp((PlayerModel) occupant);
+        }
+        setDisplayable(false);
+        applied = true;
+    }
+
+    /**
+     * Verifica se il power-up può essere detonato.
+     * Un power-up può essere detonato se non è stato ancora applicato.
+     * Se il power-up è stato applicato, si comporta come una casella vuota normale.
+     * 
+     * @return true se il power-up può essere detonato, false altrimenti
+     */
+    @Override
+    public boolean isDetonable() {
+        if (!applied) return true; // Il power-up può essere detonato se non è stato applicato
+        return super.isDetonable(); // Il power-up è stato applicato, quindi si comporta come una casella vuota normale
+    }
+
+    /**
+     * Applica il power-up al giocatore specificato con il comportamento specifico del tipo di power-up.
+     * 
+     * @param playerModel il giocatore a cui applicare il power-up
+     */
+    public void applyPowerUp(PlayerModel playerModel) {
+        behaviour.applyPowerUp(playerModel);
+    };
+}
+package com.esame;
+
+/**
+ * Questa interfaccia rappresenta il comportamento di un power-up.
+ * Un power-up è un potere specialo dato al Bomberman
+ * e ha un effetto specifico quando viene utilizzato.
+ */
+public interface PowerUpBehaviour {
+    /**
+     * Applica il power-up al modello del giocatore specificato.
+     *
+     * @param playerModel il modello del giocatore a cui applicare il power-up
+     */
+    void applyPowerUp(PlayerModel playerModel);
+}package com.esame;
+/**
+ * Questa classe rappresenta un power-up che aumenta il raggio delle bombe di un giocatore.
+ * Implementa l'interfaccia PowerUpBehaviour.
+ */
+public class PowerUpBlast implements PowerUpBehaviour{
+
+    /**
+     * Applica il power-up al modello del giocatore, aumentando il raggio delle bombe.
+     *
+     * @param playerModel il modello del giocatore a cui applicare il power-up
+     */
+    @Override
+    public void applyPowerUp(PlayerModel playerModel){
+        playerModel.increaseBombRadius();
+    }
+
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta un power-up che aumenta il numero di bombe che un giocatore può piazzare.
+ * Implementa l'interfaccia PowerUpBehaviour.
+ */
+public class PowerUpBomb implements PowerUpBehaviour{
+    
+    /**
+     * Applica il power-up al modello del giocatore, aumentando il numero di bombe che può piazzare.
+     * 
+     * @param playerModel il modello del giocatore a cui applicare il power-up
+     */
+    @Override
+    public void applyPowerUp(PlayerModel playerModel){
+        playerModel.increaseBombCapacity();
+    }
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta un power-up che aumenta la velocità di un giocatore.
+ * Implementa l'interfaccia PowerUpBehaviour.
+ */
+public class PowerUpSpeed implements PowerUpBehaviour{
+    
+    /**
+     * Applica il power-up di aumento della velocità al modello del giocatore.
+     * 
+     * @param playerModel il modello del giocatore a cui applicare il power-up
+     */
+    @Override
+    public void applyPowerUp(PlayerModel playerModel){
+        playerModel.increaseSpeed();
+    }
+
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta una casella speciale nel gioco JBomberman.
+ * Estende la classe EmptyTile.
+ */
+public class SpecialTile extends EmptyTile{
+
+    /**
+     * Il tipo di SpecialTile.
+     */
+    protected SpecialTileType type;
+
+    /**
+     * Costruisce un oggetto SpecialTile con le coordinate specificate e il tipo di casella speciale.
+     * 
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @param type il tipo di casella speciale
+     */
+    public SpecialTile(int x, int y, SpecialTileType type) {
+        super(x, y);
+        setType(type);
+        setDisplayable(true);
+    }
+
+    /**
+     * Restituisce il tipo di casella speciale.
+     * 
+     * @return il tipo di casella speciale
+     */
+    public SpecialTileType getType() {
+        return type;
+    }
+
+    /**
+     * Imposta il tipo di casella speciale.
+     * 
+     * @param type il tipo di casella speciale
+     */
+    public void setType(SpecialTileType type) {
+        this.type = type;
+    }
+}
+package com.esame;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Rappresenta i tipi di tessere speciali disponibili nel gioco.
+ */
+enum SpecialTileType {
+
+  /**
+   * Casella che aumenta il raggio di esplosione delle bombe del giocatore.
+   */
+  pupBlast,
+
+  /**
+   * Casella che aumenta il numero di bombe che il giocatore può piazzare.
+   */
+  pupBomb,
+
+  /**
+   * Casella che aumenta la velocità di movimento del giocatore.
+   */
+  pupSpeed,
+
+  /**
+   * Casella che fa accedere il giocatore al livello successivo.
+   */
+  nextLevelDoor;
+
+  /**
+   * Restituisce un tipo di power-up casuale, escludendo il tipo nextLevelDoor.
+   *
+   * @return un tipo di casella speciale casuale
+   */
+  public static SpecialTileType getRandomPowerUpType() {
+      // Convert array to a modifiable list
+      List<SpecialTileType> values = new ArrayList<>(Arrays.asList(values()));
+      values.remove(SpecialTileType.nextLevelDoor); // Now this operation is supported
+      int size = values.size();
+      Random random = new Random();
+      return values.get(random.nextInt(size));
+  }
+
+}package com.esame;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.beans.Observable;
+import javafx.beans.InvalidationListener;
+import java.util.Random;
+
+/**
+ * Questa classe rappresenta il modello dello stage di gioco.
+ * Contiene le informazioni sulle dimensioni dello stage e sui vari tipi di caselle.
+ */
+public class StageModel implements Observable {
+
+    /**
+     * La lista degli osservatori dello stage.
+     */
+    private List<StageObserver> observers = new ArrayList<>();
+
+    /**
+     * La larghezza dello stage.
+     */
+    private final int width = 17;
+
+    /**
+     * L'altezza dello stage.
+     */
+    private final int height = 13;
+
+    /**
+     * La probabilità di aggiungere una casella PowerUp.
+     */
+    private double powerUpProbability = 0.8; // 80% chance of adding a PowerUp tile
+
+    /**
+     * La dimensione di un singolo tile.
+     */
+    private final int tileSize = 16; // Assuming each tile is 16x16 pixels
+
+    /**
+     * Il numero di caselle libere nello stage.
+     */
+    final int freeSlots = 110; // Number of free slots in the stage
+
+    /**
+     * Il numero di caselle distruttibili nello stage.
+     */
+    private final int destructibleTilesStart;
+
+    /**
+     * Il numero di caselle distruttibili distrutte.
+     */
+    private int destructedTiles = 0;
+
+    /**
+     * L'elenco degli indici delle caselle libere.
+     */
+    private final List<int[]> freeTileIndex = new ArrayList<>();
+
+    /**
+     * La matrice delle caselle dello stage.
+     */
+    private Tile[][] tiles = new Tile[width][height];
+
+    /**
+     * L'oggetto Random per la generazione di numeri casuali.
+     */
+    private Random rand = new Random();
+
+    /**
+     * Il modello del giocatore.
+     */
+    private PlayerModel player;
+
+    /**
+     * Il danno inflitto da una bomba.
+     */
+    private int damage = 100;
+
+    /**
+     * La casella con la porta al livello successivo.
+     */
+    private SpecialTile nextLevelDoor;
+    
+
+    /**
+     * Costruisce un nuovo oggetto StageModel con parametri predefiniti.
+     */
+    public StageModel() {
+        this(0.2, 0.04); // Default destructible and non-destructible percentages
+    }
+
+    /**
+     * Costruisce un nuovo oggetto StageModel con la percentuale specificata di caselle distruttibili e non distruttibili.
+     *
+     * @param destructiblePercentage   La percentuale di caselle distruttibili.
+     * @param nonDestructiblePercentage La percentuale di caselle non distruttibili.
+     */
+    public StageModel(double destructiblePercentage, double nonDestructiblePercentage) {
+        // Calculate the total number of free positions
+        int destructibleTilesCount = (int) (freeSlots * destructiblePercentage);
+        destructibleTilesStart = destructibleTilesCount;
+        int nonDestructibleTilesCount = (int) ((freeSlots-destructibleTilesCount) * nonDestructiblePercentage);
+
+        // Fill the stage with non-walkable borders and predefined tiles
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (x < 2 || x > width - 3 || y == 0 || y == height - 1 || (x % 2 == 1 && y % 2 == 0)) {
+                    tiles[x][y] = new Tile(x * tileSize, y * tileSize, false, false); // Non-destructible and not displayable
+                }
+            }
+        }
+        // lascia la posizione in alto a sinsitra per il giocatore
+        tiles[2][1] = new EmptyTile(2, 1);
+        tiles[2][2] = new EmptyTile(2, 2);
+        tiles[3][1] = new EmptyTile(3, 1);
+        for (int x = 2; x < width - 2; x++) {
+            for (int y = 1; y < height - 1; y++) {
+                // lascia le posizioni nell'angolo in alto a sinistra libere per far muovere il giocatore
+                if (tiles[x][y] == null && !(x == 2 && y == 1) && !(x == 2 && y == 2) && !(x == 3 && y == 1)) {
+                    freeTileIndex.add(new int[] {x, y});
+                }   
+            }
+        }
+    
+        // Randomly place destructible and non-destructible tiles
+        for (int i = 0; i < destructibleTilesCount; i++) {
+            int[] position = freeTileIndex.remove(rand.nextInt(freeTileIndex.size()));
+            tiles[position[0]][position[1]] = new Tile(position[0] * tileSize, position[1] * tileSize, true);
+        }
+        for (int i = 0; i < nonDestructibleTilesCount; i++) {
+            int[] position = freeTileIndex.remove(rand.nextInt(freeTileIndex.size()));
+            tiles[position[0]][position[1]] = new Tile(position[0] * tileSize, position[1] * tileSize, false);
+        }
+
+        // in all the other freeTileIndex, add empty tiles
+        for (int[] position : freeTileIndex) {
+            tiles[position[0]][position[1]] = new EmptyTile(position[0], position[1]);
+        }
+    }
+
+    /**
+     * Imposta il giocatore principale nello stage.
+     *
+     * @param player il giocatore da impostare
+     */
+    public void setPlayer(PlayerModel player) {
+        this.player = player;
+    }
+
+    /**
+     * Restituisce la Tile corrispondente alle coordinate specificate.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     *
+     * @param x la coordinata x della Tile
+     * @param y la coordinata y della Tile
+     * @return la Tile corrispondente alle coordinate specificate, o null se le coordinate sono fuori dai limiti
+     */
+    public Tile getTile(int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            return tiles[x][y];
+        }
+        return null; // Out of bounds
+    }
+
+    /**
+     * Restituisce una casella vuota nella posizione specificata.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     *
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @return la casella vuota nella posizione specificata, o una casella vuota fittizia se la posizione è fuori dai limiti
+     */
+    public EmptyTile getEmptyTile(int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            if (tiles[x][y] instanceof EmptyTile)
+            return (EmptyTile) tiles[x][y];
+        }
+        return new EmptyTile(x, y); // return a dummy empty tile
+    }
+
+    /**
+     * Restituisce la casella alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la casella alla posizione specificata
+     */
+    public Tile getTileAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        return getTile(tileX, tileY);
+    }
+
+    /**
+     * Restituisce la casella vuota alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la casella vuota alla posizione specificata
+     */
+    public EmptyTile getEmptyTileAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        return getEmptyTile(tileX, tileY);
+    }
+
+    /**
+     * Restituisce l'elenco degli indici delle caselle libere.
+     *
+     * @return l'elenco degli indici delle caselle libere
+     */
+    public List<int[]> getFreeTileIndex() {
+        return freeTileIndex;
+    }
+
+    /**
+     * Restituisce la casella con la porta al livello successivo.
+     *
+     * @return la casella al livello successivo
+     */
+    public SpecialTile getNextLevelDoor() {
+        return nextLevelDoor;
+    }
+
+    /**
+     * Imposta una casella nella posizione specificata.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     *
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @param tile la casella da impostare
+     */
+    public void setTile(int x, int y, Tile tile) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            tiles[x][y] = tile;
+        }
+    }
+
+    /**
+     * Imposta la casella alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @param tile la casella da impostare
+     */
+    public void setTileAtPosition(int x, int y, Tile tile) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        setTile(tileX, tileY, tile);
+    }
+
+    /**
+     * Restituisce la bomba alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la bomba alla posizione specificata
+     */
+    public BombModel getBombAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        if (getTile(tileX, tileY) instanceof BombModel) {
+            return (BombModel) getTile(tileX, tileY);
+        }
+        return null;
+    }
+
+    /**
+     * Restituisce la casella vuota alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return la casella vuota alla posizione specificata
+     */
+    public int[] getTileStartCoordinates(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        return new int[] {tileX * tileSize, tileY * tileSize};
+    }
+
+    /**
+     * Verifica se la posizione specificata è un bordo.
+     * Le coordinate x e y sono in termini di caselle.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return true se la posizione specificata è un bordo, false altrimenti
+     */
+    public boolean isBorder(int x, int y) {
+        return x < 2 * tileSize || x >= (width - 3) * tileSize || y < tileSize || y >= (height - 2) * tileSize;
+    }
+
+    /**
+     * Distrugge una casella nella posizione specificata.
+     * Le coordinate x e y sono in termini di caselle, non di pixel.
+     * 
+     * @param x la coordinata x della casella da distruggere
+     * @param y la coordinata y della casella da distruggere
+     * @return true se la casella è stata distrutta con successo, false se la casella è fuori dai limiti
+     */
+    public boolean destroyTile(int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height && tiles[x][y] != null) {
+            // the tile is not destructible
+            if (!tiles[x][y].isDestructible()) return true;
+            // the tile is empty but occupied
+            if ((tiles[x][y] instanceof EmptyTile) && ((EmptyTile) tiles[x][y]).isOccupied()) {
+                EmptyTile occupiedTile = (EmptyTile) tiles[x][y];
+                EntityModel occupant = occupiedTile.getOccupant();
+                occupant.loseLife(damage);
+                if (tiles[x][y] instanceof BombModel) {
+                    setTile(x, y, new EmptyTile(x, y));
+                    ((EmptyTile) tiles[x][y]).setOccupant(occupant);
+                }
+                if (player != null && !(occupant instanceof PlayerModel)) {
+                    player.addScore(damage);
+                }
+            }
+            // the tile is a special tile (but not a next level door)
+            else if (tiles[x][y] instanceof PowerUp) {
+                setTile(x, y, new EmptyTile(x, y));
+            }
+            // the tiles is destructible tile, in case add powerup or next level door
+            else if (!(tiles[x][y] instanceof EmptyTile)){
+                double nextLevelDoorProbability = (double) destructedTiles / destructibleTilesStart;
+                if (this.nextLevelDoor == null && rand.nextDouble() < nextLevelDoorProbability) {
+                        setTile(x, y, new SpecialTile(x, y, SpecialTileType.nextLevelDoor)); // Create a new instance of NextLevelDoor
+                        this.nextLevelDoor = (SpecialTile) tiles[x][y];
+                } 
+                else if (rand.nextDouble() < powerUpProbability) {
+                    setTile(x, y, new PowerUp(x, y, SpecialTileType.getRandomPowerUpType())); // Create a new instance of PowerUp
+                }
+                else setTile(x, y, new EmptyTile(x, y));
+                destructedTiles++;
+            }
+            // the tile was simply empty
+            else {
+                setTile(x, y, new EmptyTile(x, y));
+            }
+            freeTileIndex.add(new int[] {x, y});
+            // tile destroyed
+            return true;
+        }
+        // tile out of bounds
+        return false;
+    }
+
+    /**
+    * Distrugge la casella alla posizione specificata.
+    *
+    * @param x la coordinata x della posizione
+    * @param y la coordinata y della posizione
+    * @return true se la casella è stata distrutta con successo, false altrimenti
+    */
+    public boolean destroyTileAtPosition(int x, int y) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        return destroyTile(tileX, tileY);
+    }
+
+    /**
+     * Verifica se la posizione specificata può esplodere.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @return true se la posizione specificata può esplodere, false altrimenti
+     */
+    public boolean canExplodeAtPosition(int x, int y) {
+        Tile tile = getTileAtPosition(x, y);
+        return tile == null || tile.isDestructible();
+    }
+
+    /**
+     * Aggiunge una bomba alla posizione specificata.
+     * Le coordinate x e y sono in termini di pixel.
+     *
+     * @param x la coordinata x della posizione
+     * @param y la coordinata y della posizione
+     * @param bombRadius il raggio della bomba
+     * @return true se la bomba è stata aggiunta con successo, false altrimenti
+     */
+    public boolean addBombAtPosition(int x, int y, int bombRadius) {
+        int tileX = (int) (x / tileSize);
+        int tileY = (int) (y / tileSize);
+        Tile tile = tiles[tileX][tileY];
+        if (!(tile instanceof EmptyTile) || tile instanceof BombModel || tile == this.nextLevelDoor) {
+            return false;
+        }
+        EntityModel previousOccupant = ((EmptyTile) tiles[tileX][tileY]).getOccupant();
+        tiles[tileX][tileY] = new BombModel(tileX * tileSize, tileY * tileSize, bombRadius);
+        ((EmptyTile) tiles[tileX][tileY]).setOccupant(previousOccupant);
+        return true;
+    }
+
+    
+    /**
+     * Restituisce la dimensione di un singolo tile.
+     *
+     * @return la dimensione del tile
+     */
+    public int getTileSize() {
+        return tileSize;
+    }
+
+    /**
+     * Restituisce la larghezza del modello dello stage.
+     *
+     * @return la larghezza del modello dello stage
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * Restituisce l'altezza del modello dello stage.
+     *
+     * @return l'altezza del modello dello stage
+     */
+    public int getHeight() {
+        return height;
+    }
+
+    /**
+     * Restituisce un array di interi che rappresenta una posizione casuale di una casella libera nel modello dello stage.
+     * 
+     * @return un array di interi che rappresenta una posizione casuale di una casella libera, o null se non ci sono più caselle libere disponibili
+     */
+    public int[] getRandomFreeTile() {
+        if (freeTileIndex.isEmpty()) {
+            return null; // No more free tiles available
+        }
+        int randomIndex = rand.nextInt(freeTileIndex.size());
+        return freeTileIndex.remove(randomIndex);
+    }
+
+    /**
+     * Aggiunge un osservatore dello stage.
+     */
+    public void addListener(InvalidationListener listener) {
+        observers.add((StageObserver) listener);
+    }
+
+    /**
+     * Rimuove un osservatore dello stage.
+     */
+    public void removeListener(InvalidationListener listener) {
+        observers.remove((StageObserver) listener);
+    }
+
+    /**
+     * Notifica tutti gli osservatori dello stage.
+     */
+    public void notifyListeners() {
+        observers.forEach(observer -> observer.update(this));
+    }
+
+}
+package com.esame;
+import javafx.beans.InvalidationListener;
+
+/**
+ * Questa interfaccia rappresenta un osservatore dello stato dello stage.
+ */
+public interface StageObserver extends InvalidationListener{
+    
+    /**
+     * Metodo chiamato quando lo stato dello stage viene aggiornato.
+     * 
+     * @param stageModel lo stage che ha aggiornato il suo stato
+     */
+    void update(StageModel stageModel);
+}
+package com.esame;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Pane;
+
+/**
+ * La classe StageView rappresenta la vista dello stage di gioco.
+ * Contiene un pannello con un'immagine di sfondo del palco e
+ * un'immagine contenente le sprite delle caselle.
+ */
+public class StageView implements StageObserver {
+
+    /**
+     * Il pannello per contenere il palco e le caselle.
+     */
+    private Pane pane = new Pane(); // Pannello per contenere il palco e le caselle
+
+    /**
+     * L'immagine di sfondo del palco.
+     */
+    private Image stageImage; // Immagine di sfondo del palco
+
+    /**
+     * L'immagine contenente le sprite delle caselle.
+     */ 
+    private Image tilesImage; // Immagine contenente le sprite delle caselle
+
+    /**
+     * L'immagine combinata che contiene lo sfondo del palco e le caselle.
+     */
+    private ImageView combinedView;
+
+    /**
+     * Costruttore della classe StageView.
+     * Carica le immagini del palco e delle caselle in base al numero di livello fornito.
+     * Inizializza la vista combinata e aggiunge la vista dell'immagine al pannello.
+     * Esegue l'aggiornamento iniziale della vista.
+     *
+     * @param levelNumber Il numero di livello
+     */
+    public StageView(int levelNumber) {
+        // Carica le immagini del palco e delle caselle in base al numero di livello
+        stageImage = new Image(getClass().getResourceAsStream("/sprites/level" + levelNumber + "_stage.png"));
+        tilesImage = new Image(getClass().getResourceAsStream("/sprites/level" + levelNumber + "_tiles.png"));
+        combinedView = new ImageView();
+        pane.getChildren().add(combinedView); // Aggiunge la vista combinata all'interno del pannello
+    }
+
+    /**
+     * Aggiorna la vista del palco.
+     * Crea un'immagine combinata che contiene lo sfondo del palco e le caselle.
+     * 
+     * @param stage Il modello dello stage
+     */
+    @Override
+    public void update(StageModel stage) {
+        int tileSize = stage.getTileSize();
+        int width = stage.getWidth() * tileSize;
+        int height = stage.getHeight() * tileSize;
+        WritableImage combinedImage = new WritableImage(width, height);
+        PixelWriter writer = combinedImage.getPixelWriter();
+
+        // Copia lo sfondo del palco nell'immagine combinata
+        PixelReader stageReader = stageImage.getPixelReader();
+        writer.setPixels(0, 0, width, height, stageReader, 0, 0);
+
+        // Itera sulle caselle e le aggiunge all'immagine combinata
+        PixelReader tilesReader = tilesImage.getPixelReader();
+        for (int x = 0; x < stage.getWidth(); x++) {
+            for (int y = 0; y < stage.getHeight(); y++) {
+                Tile tile = stage.getTile(x, y);
+                if (tile.isDisplayable()) {
+                    if (tile instanceof SpecialTile) {
+                        PixelReader powerUpReader = new Image(getClass().getResourceAsStream("/sprites/" + ((SpecialTile) tile).getType().toString() + ".png")).getPixelReader();
+                        writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, powerUpReader, 0, 0);
+                    }
+                    else {
+                        int srcX = tile.isDestructible() ? 16 : 0;
+                        writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, srcX, 0);
+                    }
+                }
+                else if (tile instanceof EmptyTile && !stage.getTile(x, y - 1).isDestructible()){
+                    // Se la casella non è visualizzabile, ma la casella sopra di essa non è distruttibile, visualizza la casella ombra
+                    writer.setPixels(x * tileSize, y * tileSize, tileSize, tileSize, tilesReader, 32, 0);
+                }
+            }
+        }
+        combinedView.setImage(combinedImage);
+    }
+
+    /**
+     * Restituisce il pannello che contiene la vista del palco.
+     *
+     * @return Il pannello che contiene la vista del palco
+     */
+    public Pane getPane() {
+        return pane;
+    }
+
+    /**
+     * Rimuove la vista combinata dal pannello se il modello dello stage è stato invalidato.
+     */
+    public void invalidated(javafx.beans.Observable observable) {
+        pane.getChildren().remove(combinedView);
+    }
+
+}
+package com.esame;
+
+/**
+ * Questa classe rappresenta una casella nel gioco Bomberman.
+ * Estende la classe XYModel e contiene informazioni sulla sua posizione e proprietà.
+ */
+public class Tile extends XYModel{
+
+    /**
+     * Indica se la casella è distruttibile.
+     */
+    protected boolean isDestructible;
+
+    /**
+     * Indica se la casella è visualizzabile.
+     */
+    protected boolean isDisplayable = true;
+
+    /**
+     * Indica se la casella è attraversabile.
+     */
+    protected boolean isWalkable = false;
+
+    /**
+     * Costruttore della classe Tile.
+     * 
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @param isDestructible indica se la casella è distruttibile o meno
+     */
+    public Tile(int x, int y, boolean isDestructible) {
+        super(x, y);
+        this.isDestructible = isDestructible;
+    }
+
+    /**
+     * Costruttore della classe Tile.
+     * 
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @param isDestructible indica se la casella è distruttibile o meno
+     * @param isDisplayable indica se la casella è visualizzabile o meno
+     */
+    public Tile(int x, int y, boolean isDestructible, boolean isDisplayable) {
+        super(x, y);
+        this.isDestructible = isDestructible;
+        this.isDisplayable = isDisplayable;
+    }
+
+    /**
+     * Costruttore della classe Tile.
+     * 
+     * @param x la coordinata x della casella
+     * @param y la coordinata y della casella
+     * @param isDestructible indica se la casella è distruttibile o meno
+     * @param isDisplayable indica se la casella è visualizzabile o meno
+     * @param isWalkable indica se la casella è attraversabile o meno
+     */
+    public Tile(int x, int y, boolean isDestructible, boolean isDisplayable, boolean isWalkable) {
+        super(x, y);
+        this.isDestructible = isDestructible;
+        this.isDisplayable = isDisplayable;
+        this.isWalkable = isWalkable;
+    }
+
+    /**
+     * Verifica se la casella è distruttibile.
+     * 
+     * @return true se la casella è distruttibile, false altrimenti
+     */
+    public boolean isDestructible() {
+        return isDestructible;
+    }
+
+    /**
+     * Verifica se la casella è attraversabile.
+     * 
+     * @return true se la casella è attraversabile, false altrimenti
+     */
+    public boolean isWalkable() {
+        return isWalkable;
+    }
+
+    /**
+     * Verifica se la casella è detonabile da una bomba.
+     * 
+     * @return true se la casella è distruttibile e visualizzabile, false altrimenti
+     */
+    public boolean isDetonable() {
+        return isDestructible && isDisplayable;
+    }
+
+    /**
+     * Imposta se la casella è attraversabile o meno.
+     * 
+     * @param walkable true se la casella è attraversabile, false altrimenti
+     */
+    public void setWalkable(boolean walkable) {
+        isWalkable = walkable;
+    }
+
+    /**
+     * Verifica se la casella è visualizzabile.
+     * 
+     * @return true se la casella è visualizzabile, false altrimenti
+     */
+    public boolean isDisplayable() {
+        return isDisplayable;
+    }
+
+    /**
+     * Imposta se la casella è visualizzabile o meno.
+     * 
+     * @param displayable true se la casella è visualizzabile, false altrimenti
+     */
+    public void setDisplayable(boolean displayable) {
+        isDisplayable = displayable;
+    }
+
+}
+package com.esame;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
+/**
+ * Questa classe astratta rappresenta un oggetto con coordinate x e y
+ */
+public abstract class XYModel {
+
+    /**
+     * La coordinata x.
+     */
+    protected final IntegerProperty x = new SimpleIntegerProperty();
+
+    /**
+     * La coordinata y.
+     */
+    protected final IntegerProperty y = new SimpleIntegerProperty();
+
+    /**
+     * Costruisce un nuovo oggetto XYModel con coordinate (0, 0).
+     */
+    public XYModel() {
+        this(0, 0);
+    }
+
+    /**
+     * Costruisce un nuovo oggetto XYModel con le coordinate specificate.
+     *
+     * @param x la coordinata x
+     * @param y la coordinata y
+     */
+    public XYModel(int x, int y) {
+        this.x.set(x);
+        this.y.set(y);
+    }
+
+    /**
+     * Restituisce la proprietà x.
+     *
+     * @return la proprietà x
+     */
+    public IntegerProperty xProperty() {
+        return x;
+    }
+
+    /**
+     * Restituisce la proprietà y.
+     *
+     * @return la proprietà y
+     */
+    public IntegerProperty yProperty() {
+        return y;
+    }
+
+    /**
+     * Restituisce la coordinata x.
+     *
+     * @return la coordinata x
+     */
+    public int getX() {
+        return x.get();
+    }
+
+    /**
+     * Restituisce la coordinata y.
+     *
+     * @return la coordinata y
+     */
+    public int getY() {
+        return y.get();
+    }
+
+    /**
+     * Imposta la coordinata x.
+     *
+     * @param x la nuova coordinata x
+     */
+    public void setX(int x) {
+        this.x.set(x);
+    }
+
+    /**
+     * Imposta la coordinata y.
+     *
+     * @param y la nuova coordinata y
+     */
+    public void setY(int y) {
+        this.y.set(y);
+    }
+
+    /**
+     * Imposta la posizione con le coordinate specificate.
+     *
+     * @param x la nuova coordinata x
+     * @param y la nuova coordinata y
+     */
+    public void setPosition(int x, int y) {
+        this.x.set(x);
+        this.y.set(y);
+    }
+}

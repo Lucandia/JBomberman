@@ -3,10 +3,6 @@
 skinparam linetype polyline
 skinparam linetype ortho
 
-class com.esame.App {
-	{method}  {static} +main ( args : [Ljava.lang.String; ) : void
-}
-
 class com.esame.AudioUtils {
 	{field} {static} -clips : java.util.Map
 	{field} {static} -playingClips : java.util.Set
@@ -172,11 +168,15 @@ class com.esame.InputController {
 	{method} +releaseController () : void
 }
 
+class com.esame.JBomberMan {
+	{method}  {static} +main ( args : [Ljava.lang.String; ) : void
+}
+
 class com.esame.MainMenu {
 	{field} -avatarPreview : javafx.scene.image.ImageView
 	{field} -statsLabel1 : javafx.scene.control.Label
 	{field} -statsLabel2 : javafx.scene.control.Label
-	{method}  {static} +main ( args : [Ljava.lang.String; ) : void
+	{method}  {static} +launchMainMenu ( args : [Ljava.lang.String; ) : void
 	{method} -readPlayerData () : void
 	{method} +show ( stage : javafx.stage.Stage ) : void
 	{method} +start ( primaryStage : javafx.stage.Stage ) : void
@@ -332,7 +332,7 @@ abstract class com.esame.XYModel {
 	{method} +yProperty () : javafx.beans.property.IntegerProperty
 }
 
-com.esame.App -->  com.esame.MainMenu : launch
+com.esame.JBomberMan -->  com.esame.MainMenu : launchMainMenu
 com.esame.BombController "1" o-- "0..*"  com.esame.BombModel : bombList
 com.esame.BombController -->  com.esame.StageModel : stage
 com.esame.BombModel "1" o-- "0..*"  com.esame.BombView : observers

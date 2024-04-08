@@ -1,5 +1,7 @@
 package com.esame;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.IntegerProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -28,28 +30,55 @@ public class HUDView implements EntityStateObserver{
     private Label livesLabel;
 
     /**
-     * Etichetta per visualizzare la capacità delle bombe del giocatore.
+     * Etichetta per visuallizzare il tempo rimanente.
      */
-    private Label bombCapacityLabel;
+    private Label timerLabel;
 
-    /**
-     * Etichetta per visualizzare il raggio delle bombe del giocatore.
-     */
-    private Label bombRadiusLabel;
+    // /**
+    //  * Etichetta per visualizzare la capacità delle bombe del giocatore (non attivata attualmente).
+    //  */
+    // private Label bombCapacityLabel;
+
+    // /**
+    //  * Etichetta per visualizzare il raggio delle bombe del giocatore (non attivata attualmente).
+    //  */
+    // private Label bombRadiusLabel;
 
     /**
      * Costruttore della classe HUDView.
      * Inizializza gli elementi dell'HUD e li aggiunge al pannello principale.
      */
-    public HUDView() {
+    public HUDView(IntegerProperty timer) {
         hudPane = new HBox(10);
         hudPane.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
         hudPane.setAlignment(Pos.TOP_CENTER);
         
-        scoreLabel = new Label();
+        timerLabel = new Label();
         livesLabel = new Label();
-        bombCapacityLabel = new Label();
-        bombRadiusLabel = new Label();
+        scoreLabel = new Label();
+
+        // Utilizza JavaFX per creare un binding tra il timer e l'etichetta del timer
+        timerLabel.textProperty().bind(Bindings.createStringBinding(() -> {
+            int seconds = timer.get();
+            int minutes = seconds / 60;
+            int remainingSeconds = seconds % 60;
+            return String.format("Time: %02d:%02d", minutes, remainingSeconds);
+        }, timer));
+
+        // Seleziona il colore del timer a seconda del valore
+        timer.addListener((observable, oldValue, newValue) -> {
+            if (newValue.intValue() <= 10) {
+            timerLabel.setTextFill(Color.CRIMSON);
+            } else if (newValue.intValue() <= 30) {
+            timerLabel.setTextFill(Color.INDIANRED);
+            } else {
+            timerLabel.setTextFill(Color.GREEN);
+            }
+        });
+        
+        // Opzionale, se si vuole visualizzare la quantita' di bombe e il raggio delle bombe
+        // bombCapacityLabel = new Label();
+        // bombRadiusLabel = new Label();
 
         /*
          * Codice opzionale, usa JavaFX puoi usare il binding per aggiornare i valori
@@ -72,7 +101,7 @@ public class HUDView implements EntityStateObserver{
         //     }
         // });
 
-        hudPane.getChildren().addAll(scoreLabel, livesLabel, bombCapacityLabel, bombRadiusLabel);
+        hudPane.getChildren().addAll(livesLabel, scoreLabel, timerLabel);
     }
 
     /**
@@ -92,10 +121,12 @@ public class HUDView implements EntityStateObserver{
      */
     @Override
     public void invalidated(Observable observable) {
-        scoreLabel.setText("Score: /");
-        bombCapacityLabel.setText("Bombs: /");
-        bombRadiusLabel.setText("Radius: /");
-        livesLabel.setText("Life: /");      
+        // bombCapacityLabel.setText("Bombs: /");
+        // bombRadiusLabel.setText("Radius: /");
+        livesLabel.setText("Life: 0"); 
+        scoreLabel.setText("Score: 0");
+        timerLabel.setText("Time: 00:00");     
+
     }
     
 
@@ -108,9 +139,8 @@ public class HUDView implements EntityStateObserver{
     @Override
     public void update(EntityModel playerEntityModel) {
         PlayerModel playerModel = (PlayerModel) playerEntityModel;
-        scoreLabel.setText("Score: " + playerModel.getScore());
-        bombCapacityLabel.setText("Bombs: " + playerModel.getBombCapacity());
-        bombRadiusLabel.setText("Radius: " + playerModel.getBombRadius());
+        // bombCapacityLabel.setText("Bombs: " + playerModel.getBombCapacity());
+        // bombRadiusLabel.setText("Radius: " + playerModel.getBombRadius());
         livesLabel.setText("Life: " + playerModel.getLife());
         // Seleziona il colore della vita a seconda del valore
         if (playerModel.getLife() == 3) {
@@ -120,5 +150,6 @@ public class HUDView implements EntityStateObserver{
         } else if (playerModel.getLife() == 1) {
             livesLabel.setTextFill(Color.CRIMSON);
         }
+        scoreLabel.setText("Score: " + playerModel.getScore());
     }
 }

@@ -20,8 +20,8 @@ com/esame/PowerUpBomb.class
 com/esame/EnemyModel1.class
 com/esame/BombView.class
 com/esame/BombController.class
-com/esame/App.class
 com/esame/MainMenu.class
+com/esame/JBomberMan.class
 com/esame/EnemyModel.class
 com/esame/BackgroundMusic.class
 com/esame/EmptyTile.class

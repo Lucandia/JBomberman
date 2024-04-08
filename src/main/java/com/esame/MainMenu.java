@@ -176,12 +176,10 @@ public class MainMenu extends Application {
 
     /**
      * Questo metodo è il punto di ingresso principale dell'applicazione.
-     * Pre-carica tutti gli effetti sonori e avvia l'applicazione.
      *
      * @param args gli argomenti della riga di comando
      */
-    public static void main(String[] args) {
-        AudioUtils.preloadAll(); // Preload all sound effects
+    public static void launchMainMenu(String[] args) {
         launch(args);
     }
 

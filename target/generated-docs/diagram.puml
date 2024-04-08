@@ -1,10 +1,5 @@
 @startuml
 
-class com.esame.App {
-	{method}  {static} +main ( args : [Ljava.lang.String; ) : void
-}
-
-
 class com.esame.AudioUtils {
 	{field} {static} -clips : java.util.Map
 	{field} {static} -playingClips : java.util.Set
@@ -160,6 +155,7 @@ class com.esame.EntityView {
 
 class com.esame.GameApp {
 	{field} -numberOfEnemies : int
+	{field} -timer : javafx.beans.property.IntegerProperty
 	{method} +initializeGame ( data : com.esame.PlayerData , numberOfEnemies : int ) : Void
 	{method} +savePlayerData () : void
 	{method} -setupGame ( primaryStage : javafx.stage.Stage , level : int ) : void
@@ -168,11 +164,10 @@ class com.esame.GameApp {
 
 
 class com.esame.HUDView {
-	{field} -bombCapacityLabel : javafx.scene.control.Label
-	{field} -bombRadiusLabel : javafx.scene.control.Label
 	{field} -hudPane : javafx.scene.layout.HBox
 	{field} -livesLabel : javafx.scene.control.Label
 	{field} -scoreLabel : javafx.scene.control.Label
+	{field} -timerLabel : javafx.scene.control.Label
 	{method} +invalidated ( observable : javafx.beans.Observable ) : void
 	{method} +update ( playerEntityModel : com.esame.EntityModel ) : void
 }
@@ -187,11 +182,16 @@ class com.esame.InputController {
 }
 
 
+class com.esame.JBomberMan {
+	{method}  {static} +main ( args : [Ljava.lang.String; ) : void
+}
+
+
 class com.esame.MainMenu {
 	{field} -avatarPreview : javafx.scene.image.ImageView
 	{field} -statsLabel1 : javafx.scene.control.Label
 	{field} -statsLabel2 : javafx.scene.control.Label
-	{method}  {static} +main ( args : [Ljava.lang.String; ) : void
+	{method}  {static} +launchMainMenu ( args : [Ljava.lang.String; ) : void
 	{method} -readPlayerData () : void
 	{method} +show ( stage : javafx.stage.Stage ) : void
 	{method} +start ( primaryStage : javafx.stage.Stage ) : void
