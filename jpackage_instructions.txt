@@ -1,0 +1,7 @@
+jpackage --type dmg \
+  --input target \
+  --name "JBomberman" \
+  --main-jar jbomberman-1.0-SNAPSHOT.jar \
+  --main-class com.esame.App \
+  --runtime-image target/image \
+  --dest .
