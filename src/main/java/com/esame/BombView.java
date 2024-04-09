@@ -214,7 +214,7 @@ public class BombView implements BombObserver{
         // Create and play the explosion animation
         Timeline explosionAnimation = new Timeline();
         for (int frameIndex = 0; frameIndex < 5; frameIndex++) { // For each frame of the explosion
-            final int index = frameIndex;
+            final int index = frameIndex; // deve essere final per essere usato nell'azione successiva
             explosionAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(index * frameTime), e -> {
                 for (ImageView sprite : explosionSprites) {
                     Rectangle2D viewport = sprite.getViewport();

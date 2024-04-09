@@ -23,12 +23,12 @@ public abstract class EntityModel extends XYModel implements Observable{
     /**
      * La vita dell'entità.
      */
-    protected final IntegerProperty life = new SimpleIntegerProperty(100);
+    protected IntegerProperty life = new SimpleIntegerProperty(100);
 
     /**
      * La velocità dell'entità.
      */
-    protected final DoubleProperty velocity = new SimpleDoubleProperty(1);
+    protected DoubleProperty velocity = new SimpleDoubleProperty(1);
 
     /**
      * La coordinata X del centro dell'entità.
@@ -53,12 +53,12 @@ public abstract class EntityModel extends XYModel implements Observable{
     /**
      * La bounding box dell'entità.
      */
-    protected final int[] boundingBox = {0, 0};
+    protected int[] boundingBox = {0, 0};
 
     /**
      * L'offset della bounding box.
      */
-    protected final int[] boundingOffset = {0, 0};
+    protected int[] boundingOffset = {0, 0};
 
     /**
      * Indica se l'entità si sta muovendo.

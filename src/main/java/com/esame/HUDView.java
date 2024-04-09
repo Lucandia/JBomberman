@@ -47,6 +47,8 @@ public class HUDView implements EntityStateObserver{
     /**
      * Costruttore della classe HUDView.
      * Inizializza gli elementi dell'HUD e li aggiunge al pannello principale.
+     * 
+     * @param timer il timer del gioco
      */
     public HUDView(IntegerProperty timer) {
         hudPane = new HBox(10);

@@ -51,7 +51,7 @@ public class EntityView implements EntityStateObserver{
     /**
      * La riga dello sprite dell'entità.
      */
-    int row = 0;
+    private int row = 0;
 
     /**
      * Costruisce una nuova istanza di EntityView.

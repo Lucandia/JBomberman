@@ -39,7 +39,7 @@ public class StageModel implements Observable {
     /**
      * Il numero di caselle libere nello stage.
      */
-    final int freeSlots = 110; // Number of free slots in the stage
+    private final int freeSlots = 110; // Number of free slots in the stage
 
     /**
      * Il numero di caselle distruttibili nello stage.
@@ -54,7 +54,7 @@ public class StageModel implements Observable {
     /**
      * L'elenco degli indici delle caselle libere.
      */
-    private final List<int[]> freeTileIndex = new ArrayList<>();
+    private List<int[]> freeTileIndex = new ArrayList<>();
 
     /**
      * La matrice delle caselle dello stage.

@@ -8,12 +8,7 @@ import javafx.scene.text.Font;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,7 +53,7 @@ public class MainMenu extends Application {
         // Inizializza lo stage
         Font.loadFont(getClass().getResourceAsStream("/fonts/Pixelify_Sans/static/PixelifySans-Regular.ttf"), 14);
         primaryStage.setTitle("JBomberman");
-        readPlayerData(); // Read player data from file
+        playerDataMap = PlayerData.readPlayerData(); // Read player data from file
         TextField nicknameField = new TextField();
         nicknameField.setPrefWidth(10);
 
@@ -119,47 +114,6 @@ public class MainMenu extends Application {
         scene.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    /**
-     * Legge i dati dei giocatori dal file savedGames.txt e li memorizza in una mappa.
-     */
-    private void readPlayerData() {
-        // List<PlayerData> playerDataList = new ArrayList<>();
-        try {
-            // Get the path to the JAR file
-            String jarPath = new File(MainMenu.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-            // Get the directory of the JAR file
-            String dirPath = new File(jarPath).getParent();
-            // Construct the path to the players.txt file in the same directory
-            File file = new File(dirPath, "savedGames.txt");
-
-            if (file.exists()) {
-                // Read all lines from the players.txt file
-                List<String> lines = Files.readAllLines(file.toPath());
-                // Parse each line into PlayerData objects
-                for (String line : lines) {
-                    String[] parts = line.split(",");
-                    if (parts.length == 7) {
-                        String nickname = parts[0];
-                        String avatarNumber = parts[1];
-                        String lastLevel = parts[2];
-                        String playedGames = parts[3];
-                        String winGames = parts[4];
-                        String lostGames = parts[5];
-                        String score = parts[6];
-                        PlayerData playerData = new PlayerData(nickname, avatarNumber, lastLevel, playedGames, winGames, lostGames, score);
-                        playerDataMap.put(nickname, playerData);
-                    }
-                }
-            }
-        } catch (URISyntaxException e) {
-            System.err.println("Error parsing URI: " + e.getMessage());
-        } catch (IOException e) {
-            System.err.println("IO error occurred: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("An unexpected error occurred: " + e.getMessage());
-        }
     }
 
     /**

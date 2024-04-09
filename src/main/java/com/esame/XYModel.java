@@ -10,12 +10,12 @@ public abstract class XYModel {
     /**
      * La coordinata x.
      */
-    protected final IntegerProperty x = new SimpleIntegerProperty();
+    protected IntegerProperty x = new SimpleIntegerProperty();
 
     /**
      * La coordinata y.
      */
-    protected final IntegerProperty y = new SimpleIntegerProperty();
+    protected IntegerProperty y = new SimpleIntegerProperty();
 
     /**
      * Costruisce un nuovo oggetto XYModel con coordinate (0, 0).

@@ -16,7 +16,7 @@ public class EnemyModel2 extends EnemyModel {
     public EnemyModel2(int initialX, int initialY, StageModel stage) {
         super(initialX, initialY, new int[] {15, 15}, new int[] {8, 17}, 200, stage);
         // Metà della velocità del nemico originale, altrimenti e' troppo difficile da battere
-        this.setVelocity(this.getVelocity() * 0.7);
+        this.setVelocity(this.getVelocity() * 0.8);
     }
 
     /**

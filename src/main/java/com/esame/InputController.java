@@ -12,7 +12,7 @@ public class InputController {
     /**
      * L'insieme dei tasti premuti.
      */
-    private final Set<KeyCode> keysPressed = ConcurrentHashMap.newKeySet(); // per far muovere il player appena si preme un tasto
+    private Set<KeyCode> keysPressed = ConcurrentHashMap.newKeySet(); // per far muovere il player appena si preme un tasto
 
     /**
      * La scena in cui si verificano gli eventi di input.

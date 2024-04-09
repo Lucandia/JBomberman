@@ -12,17 +12,17 @@ public class PlayerModel extends EntityModel {
     /**
      * Il punteggio del giocatore.
      */
-    private final IntegerProperty score = new SimpleIntegerProperty(0);
+    private IntegerProperty score = new SimpleIntegerProperty(0);
 
     /**
      * Il numero di bombe che il giocatore può piazzare.
      */
-    private final IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
+    private IntegerProperty bombCapacity = new SimpleIntegerProperty(1); 
 
     /**
      * Il raggio delle bombe del giocatore.
      */
-    private final IntegerProperty bombRadius = new SimpleIntegerProperty(1);
+    private IntegerProperty bombRadius = new SimpleIntegerProperty(1);
 
     /**
      * Se il giocatore ha appena perso una vita.

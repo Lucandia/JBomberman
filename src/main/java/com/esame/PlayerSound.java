@@ -40,7 +40,8 @@ public class PlayerSound implements EntityStateObserver {
             audioDelay -= 1;
             if (audioDelay <= 0) {
                 AudioUtils.playSoundEffect("Walking.mp3");
-                audioDelay = 120;
+                // Reset the delay based on the player's velocity
+                audioDelay = (int) (120 * playerModel.getVelocity());
             }
         }
     }

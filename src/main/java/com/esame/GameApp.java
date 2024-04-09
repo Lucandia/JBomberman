@@ -6,12 +6,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -129,7 +123,7 @@ public class GameApp extends Application {
                     }
                     data.setScore(playerModel.getScore());
                     data.setPlayedGames(data.getPlayedGamesInt() + 1);
-                    savePlayerData();
+                    data.savePlayerData();
 
                     // Use Platform.runLater to show the dialog after the current animation frame is processed
                     Platform.runLater(() -> {
@@ -247,10 +241,8 @@ public class GameApp extends Application {
 
         // usa un BorderPane per posizionare l'HUD sopra il gioco
         HUDView hudView = new HUDView(timer);
-        PlayerSound playerSound = new PlayerSound(); // inizializza il playerSound
         // aggiungi HUD come osservatore del playerModel
         playerModel.addListener(hudView);
-        playerModel.addListener(playerSound); // aggiungi playerSound come osservatore del playerModel
         hudView.update(playerModel); // initializza l'HUD con i valori iniziali
         borderPane.setCenter(root); // Set the game (map + player) as the center
         borderPane.setTop(hudView.getHudPane()); // Set the HUD at the top
@@ -271,46 +263,6 @@ public class GameApp extends Application {
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
-    }
-
-    /**
-        * Salva i dati del giocatore nel file savedGames.txt.
-        */
-    public void savePlayerData() {
-        try {
-            // Get the path to the JAR file
-            String jarPath = new File(GameApp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-            // Get the directory of the JAR file
-            String dirPath = new File(jarPath).getParent();
-            // Construct the path to the players.txt file in the same directory
-            File file = new File(dirPath, "savedGames.txt");
-            // Prepare data to save
-            String dataToSave = data.getDataString();
-            // Check if data for the player already exists and needs to be updated, or append new data
-            List<String> lines = file.exists() ? Files.readAllLines(file.toPath()) : new ArrayList<>();
-            lines.removeIf(String::isEmpty); // Remove any empty lines
-            boolean dataExists = false;
-            for (int i = 0; i < lines.size(); i++) {
-                String line = lines.get(i);
-                String nickname = line.split(",")[0];
-                if (nickname.equals(data.getNickname())) {
-                    lines.set(i, dataToSave); // Update existing data
-                    dataExists = true;
-                    break;
-                }
-            }
-            if (!dataExists && !dataToSave.isEmpty()) {
-                lines.add(dataToSave); // Append new player data
-            }
-            // Write data to the file
-            Files.write(file.toPath(), lines);
-        } catch (URISyntaxException e) {
-            System.err.println("Error parsing URI: " + e.getMessage());
-        } catch (IOException e) {
-            System.err.println("IO error occurred: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("An unexpected error occurred: " + e.getMessage());
-        }
     }
 
 }

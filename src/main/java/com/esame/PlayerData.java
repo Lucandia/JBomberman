@@ -1,5 +1,14 @@
 package com.esame;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Questa classe rappresenta i dati di un giocatore.
  */
@@ -244,4 +253,89 @@ public class PlayerData {
     public String getDataString() {
         return nickname + "," + avatar + "," + lastLevel + "," + playedGames + "," + winGames + "," + lostGames + "," + score;
     }
+
+   /**
+     * Legge i dati dei giocatori dal file savedGames.txt e li memorizza in una mappa.
+     * 
+     * @return una mappa contenente i dati dei giocatori
+     */
+    public static Map<String, PlayerData> readPlayerData() {
+        Map<String, PlayerData> playerDataMap = new HashMap<>();
+        try {
+            // Get the path to the JAR file
+            String jarPath = new File(PlayerData.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            // Get the directory of the JAR file
+            String dirPath = new File(jarPath).getParent();
+            // Construct the path to the players.txt file in the same directory
+            File file = new File(dirPath, "savedGames.txt");
+
+            if (file.exists()) {
+                // Read all lines from the players.txt file
+                List<String> lines = Files.readAllLines(file.toPath());
+                // Parse each line into PlayerData objects
+                for (String line : lines) {
+                    String[] parts = line.split(",");
+                    if (parts.length == 7) {
+                        String nickname = parts[0];
+                        String avatarNumber = parts[1];
+                        String lastLevel = parts[2];
+                        String playedGames = parts[3];
+                        String winGames = parts[4];
+                        String lostGames = parts[5];
+                        String score = parts[6];
+                        PlayerData playerData = new PlayerData(nickname, avatarNumber, lastLevel, playedGames, winGames, lostGames, score);
+                        playerDataMap.put(nickname, playerData);
+                    }
+                }
+            }
+        return playerDataMap;
+        } catch (URISyntaxException e) {
+            System.err.println("Error parsing URI: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("IO error occurred: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+        }
+        return playerDataMap;
+    }
+
+    /**
+        * Salva i dati del giocatore nel file savedGames.txt.
+        */
+        public void savePlayerData() {
+            try {
+                // Get the path to the JAR file
+                String jarPath = new File(PlayerData.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+                // Get the directory of the JAR file
+                String dirPath = new File(jarPath).getParent();
+                // Construct the path to the players.txt file in the same directory
+                File file = new File(dirPath, "savedGames.txt");
+                // Prepare data to save
+                String dataToSave = getDataString();
+                // Check if data for the player already exists and needs to be updated, or append new data
+                List<String> lines = file.exists() ? Files.readAllLines(file.toPath()) : new ArrayList<>();
+                lines.removeIf(String::isEmpty); // Remove any empty lines
+                boolean dataExists = false;
+                for (int i = 0; i < lines.size(); i++) {
+                    String line = lines.get(i);
+                    String nickname = line.split(",")[0];
+                    if (nickname.equals(getNickname())) {
+                        lines.set(i, dataToSave); // Update existing data
+                        dataExists = true;
+                        break;
+                    }
+                }
+                if (!dataExists && !dataToSave.isEmpty()) {
+                    lines.add(dataToSave); // Append new player data
+                }
+                // Write data to the file
+                Files.write(file.toPath(), lines);
+            } catch (URISyntaxException e) {
+                System.err.println("Error parsing URI: " + e.getMessage());
+            } catch (IOException e) {
+                System.err.println("IO error occurred: " + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("An unexpected error occurred: " + e.getMessage());
+            }
+        }
 }

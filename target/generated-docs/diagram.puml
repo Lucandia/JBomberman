@@ -144,7 +144,7 @@ class com.esame.EntityView {
 	{field} -directionSprite : java.util.Map
 	{field} -frames : int
 	{field} -lastDirection : String
-	{field} ~row : int
+	{field} -row : int
 	{field} -walkAnimation : javafx.animation.Timeline
 	{method} +invalidated ( observable : javafx.beans.Observable ) : void
 	{method} +startWalking ( direction : String , velocity : double ) : void
@@ -157,7 +157,6 @@ class com.esame.GameApp {
 	{field} -numberOfEnemies : int
 	{field} -timer : javafx.beans.property.IntegerProperty
 	{method} +initializeGame ( data : com.esame.PlayerData , numberOfEnemies : int ) : Void
-	{method} +savePlayerData () : void
 	{method} -setupGame ( primaryStage : javafx.stage.Stage , level : int ) : void
 	{method} +start ( primaryStage : javafx.stage.Stage ) : void
 }
@@ -192,7 +191,6 @@ class com.esame.MainMenu {
 	{field} -statsLabel1 : javafx.scene.control.Label
 	{field} -statsLabel2 : javafx.scene.control.Label
 	{method}  {static} +launchMainMenu ( args : [Ljava.lang.String; ) : void
-	{method} -readPlayerData () : void
 	{method} +show ( stage : javafx.stage.Stage ) : void
 	{method} +start ( primaryStage : javafx.stage.Stage ) : void
 	{method} -updateAvatarPreview ( avatarNumber : String ) : void
@@ -218,6 +216,8 @@ class com.esame.PlayerData {
 	{method} +getLostGamesInt () : int
 	{method} +getPlayedGamesInt () : int
 	{method} +getWinGamesInt () : int
+	{method}  {static} +readPlayerData () : java.util.Map
+	{method} +savePlayerData () : void
 }
 
 
@@ -291,7 +291,7 @@ class com.esame.StageModel {
 	{field} -damage : int
 	{field} -destructedTiles : int
 	{field} -destructibleTilesStart : int
-	{field} ~freeSlots : int
+	{field} -freeSlots : int
 	{field} -freeTileIndex : java.util.List
 	{field} -height : int
 	{field} -powerUpProbability : double
@@ -387,6 +387,7 @@ com.esame.InputController -->  com.esame.PlayerController : player
 com.esame.MainMenu "1" o-- "0..*"  com.esame.PlayerData : playerDataMap
 com.esame.PlayerController -->  com.esame.EntityView : view
 com.esame.PlayerController -->  com.esame.PlayerModel : model
+com.esame.PlayerController -->  com.esame.PlayerSound : audio
 com.esame.PlayerModel --|>  com.esame.EntityModel
 com.esame.PlayerSound ..|>  com.esame.EntityStateObserver
 com.esame.PowerUp -->  com.esame.PowerUpBehaviour : behaviour

@@ -71,7 +71,7 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.esame.App</mainClass>
+                            <mainClass>com.esame.JBomberMan</mainClass>
                         </configuration>
                     </execution>
                 </executions>

@@ -16,6 +16,11 @@ public class PlayerController {
     private EntityView view;
 
     /**
+     * L'audio del giocatore.
+     */
+    private PlayerSound audio;
+
+    /**
      * Crea un nuovo oggetto PlayerController con il modello e la vista specificati.
      *
      * @param model il modello del giocatore
@@ -24,7 +29,9 @@ public class PlayerController {
     public PlayerController(PlayerModel model, int avatar) {
         this.model = model;
         this.view = new EntityView("bomberman", true, 3, avatar - 1);
+        this.audio = new PlayerSound(); // inizializza il playerSound
         model.addListener(view);
+        model.addListener(audio);
     }
 
     /**
