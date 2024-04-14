@@ -152,6 +152,9 @@ public class GameApp extends Application {
 
                         Optional<ButtonType> result = alert.showAndWait();
                         if (result.isPresent() && result.get() == buttonRestartOrContinue) {
+                            // Stop the music
+                            backgroundMusic.stopMusic();
+                            AudioUtils.stopAll();
                             if (lost) {
                                 // Restart current level if the player died
                                 playerModel = null;
@@ -163,6 +166,9 @@ public class GameApp extends Application {
                             // Restart the game loop
                             this.start();
                         } else if (result.isPresent() && result.get() == buttonExit) {
+                            // Stop the music
+                            backgroundMusic.stopMusic();
+                            AudioUtils.stopAll();
                             // Instead of closing the primary stage, re-use it for the pre-game setup
                             Platform.runLater(() -> {
                                 MainMenu mainMenu = new MainMenu();
@@ -174,7 +180,7 @@ public class GameApp extends Application {
                             });
                         }
                         else if (result.isPresent() && result.get() == buttonQuit) {
-                            // Stop the background music
+                            // Stop the music
                             backgroundMusic.stopMusic();
                             AudioUtils.stopAll();
                             // Quit the application

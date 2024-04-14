@@ -93,6 +93,7 @@ public class MainMenu extends Application {
             String nickname = nicknameField.getText();
             String avatar = avatarComboBox.getValue();
             PlayerData data = playerDataMap.getOrDefault(nickname, new PlayerData(nickname, avatar, "1", "0", "0", "0", "0")); 
+            data.setAvatar(avatar); // Update the avatar. COMMENT THIS LINE TO KEEP THE SAME AVATAR FOR THE PLAYER
             try {
                 GameApp gameApp = new GameApp();
                 backgroundMusic.stopMusic();
