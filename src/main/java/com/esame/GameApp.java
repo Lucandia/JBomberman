@@ -207,7 +207,7 @@ public class GameApp extends Application {
      * @param level il livello del gioco
      */
     private void setupGame(Stage primaryStage, int level) {
-        timer.set(180); // Set the timer to 3 minutes
+        timer.set(60*4); // Set the timer to 4 minutes
         AudioUtils.playSoundEffect("StageStart.mp3");
         // Use a StackPane as the root to allow layering of the map and the player
         StackPane root = new StackPane();
