@@ -28,7 +28,7 @@ public abstract class EntityModel extends XYModel implements Observable{
     /**
      * La velocità dell'entità.
      */
-    protected DoubleProperty velocity = new SimpleDoubleProperty(1);
+    protected DoubleProperty velocity = new SimpleDoubleProperty(1.3);
 
     /**
      * La coordinata X del centro dell'entità.

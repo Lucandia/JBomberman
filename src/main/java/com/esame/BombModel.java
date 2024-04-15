@@ -36,7 +36,7 @@ public class BombModel extends EmptyTile implements Observable{
     /**
      * Il timer della bomba.
      */
-    private final double totalTime = 3; // Bomb timer in seconds
+    private final double totalTime = 2.2; // Bomb timer in seconds
 
     /**
      * Il timer della bomba.
@@ -46,7 +46,7 @@ public class BombModel extends EmptyTile implements Observable{
     /**
      * Il tempo in cui la bomba è camminabile.
      */
-    private double walkableTime = totalTime / 5; // time on which you can walk on the bomb
+    private double walkableTime = totalTime / 6; // time on which you can walk on the bomb
 
     /**
      * Costruttore della classe BombModel.
