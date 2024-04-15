@@ -47,6 +47,7 @@ public class MainMenu extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         // fai partire la musica
+        AudioUtils.preloadAll(); // Preload all sound effects
         BackgroundMusic backgroundMusic = new BackgroundMusic();
         backgroundMusic.playMusic("MainMenu.mp3");
 

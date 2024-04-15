@@ -1,5 +1,6 @@
 package com.esame;
-import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,12 +15,12 @@ public class AudioUtils {
     /**
      * Insieme contenente tutte le clip sonore in riproduzione.
      */
-    private static Set<AudioClip> playingClips = new HashSet<>();
+    private static Set<MediaPlayer> playingClips = new HashSet<>();
 
     /**
      * Mappa contenente gli effetti sonori caricati in memoria.
      */
-    private static final Map<String, AudioClip> clips = new HashMap<>();
+    private static final Map<String, MediaPlayer> clips = new HashMap<>();
 
     /**
      * Carica in memoria un effetto sonoro specificato dal nome del file.
@@ -29,7 +30,12 @@ public class AudioUtils {
     public static void preloadSoundEffect(String audioFileName) {
         URL soundEffectUrl = AudioUtils.class.getResource("/audio/" + audioFileName);
         if (soundEffectUrl != null) {
-            AudioClip clip = new AudioClip(soundEffectUrl.toString());
+            Media media = new Media(soundEffectUrl.toExternalForm());
+            MediaPlayer clip = new MediaPlayer(media);
+            clip.setOnEndOfMedia(() -> {
+                clip.stop();
+                playingClips.remove(clip);
+            });
             clips.put(audioFileName, clip);
         } else {
             System.err.println("Impossibile caricare in memoria il file audio: " + audioFileName);
@@ -42,21 +48,23 @@ public class AudioUtils {
      * @param audioFileName Il nome del file audio da riprodurre.
      */
     public static void playSoundEffect(String audioFileName) {
-        AudioClip clip = clips.get(audioFileName);
+        MediaPlayer clip = clips.get(audioFileName);
         if (clip != null) {
-            clip.play();
-            playingClips.add(clip);
+            if (!playingClips.contains(clip)) {
+                clip.play();
+                playingClips.add(clip);
+            }
         } else {
             System.err.println("Effetto sonoro non caricato in memoria: " + audioFileName);
         }
-        playingClips.removeIf(oldclip -> !oldclip.isPlaying());
     }
+    
 
     /**
      * Ferma tutti gli effetti sonori attualmente in riproduzione.
      */
     public static void stopAll() {
-        playingClips.forEach(AudioClip::stop);
+        playingClips.forEach(MediaPlayer::stop);
         playingClips.clear();
     }
 

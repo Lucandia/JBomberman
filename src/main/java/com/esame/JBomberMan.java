@@ -7,13 +7,11 @@ package com.esame;
 public class JBomberMan {
     
     /**
-     * Il metodo main avvia l'esecuzione del gioco.
-     * Pre-carica tutti gli effetti sonori e avvia l'applicazione.
+     * Il metodo main avvia l'esecuzione del gioco lanciando il menu principale.
      * 
      * @param args gli argomenti della riga di comando
      */
     public static void main(String[] args) {
-        AudioUtils.preloadAll(); // Preload all sound effects
         MainMenu.launchMainMenu(args);
     }
 }
