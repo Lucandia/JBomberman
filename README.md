@@ -1,5 +1,16 @@
 # JBomberman
 
-Per muovere il giocatore usa le frecce.
+#### - Use the arrow keys to move:
 
-Per piazzare le bombe usa la barra spaziatrice.
+#### - Use the spacebar to drop bombs
+
+## Features
+
+- 3 levels
+- 3 power-ups types
+- 2 enemies types
+- 3 minutes to complete each level
+- custom number of enemies
+
+
+
